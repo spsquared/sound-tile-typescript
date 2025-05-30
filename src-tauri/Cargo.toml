@@ -1,9 +1,9 @@
 [package]
-name = "sound-tile-typescript"
+name = "Sound Tile"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-edition = "2021"
+description = "Tile-based music visualizer"
+authors = ["spsquared"]
+edition = "2025"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "sound-tile-typescript",
+  "productName": "Sound Tile",
   "version": "0.1.0",
   "identifier": "com.sound-tile.app",
   "build": {

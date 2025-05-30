@@ -1,0 +1,159 @@
+/* whole-page things */
+
+body {
+    font-family: 'Source Code Pro', Courier, monospace;
+    background-color: black;
+    color: white;
+    overflow: hidden;
+    margin: 0px 0px;
+    scroll-behavior: smooth;
+}
+
+:root {
+    color-scheme: dark;
+}
+
+img {
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+input,
+button,
+select,
+option {
+    font-family: 'Source Code Pro', Courier, monospace;
+}
+
+h1 {
+    font-size: 48px;
+    font-weight: 700;
+    font-family: 'Source Code Pro', Courier, monospace;
+    line-height: 1.1em;
+    margin: 0.2em 0px;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 600;
+    font-family: 'Source Code Pro', Courier, monospace;
+    line-height: 1.1em;
+    margin: 0.2em 0px;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Source Code Pro', Courier, monospace;
+    line-height: 1.1em;
+    margin: 0.2em 0px;
+}
+
+p {
+    font-size: 14px;
+    margin: 8px 8px;
+    text-align: justify;
+}
+
+b {
+    font-weight: bold;
+}
+
+i {
+    font-style: italic;
+}
+
+a[no-deco] {
+    text-decoration: none;
+}
+
+code {
+    padding: 0px 0.3em;
+    font-family: 'Source Code Pro', Courier, monospace;
+    background-color: #FFF3;
+    border-radius: 0.2em;
+}
+
+ul,
+ol {
+    margin: 0px 0px;
+}
+
+/* scroll bars */
+
+@supports selector(::-webkit-scrollbar) {
+    *::-webkit-scrollbar {
+        width: 16px;
+        height: 16px;
+        background-color: #222;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-clip: padding-box;
+        background-color: #555;
+    }
+
+    *::-webkit-scrollbar-thumb:vertical {
+        border-left: 3px solid transparent;
+        border-right: 3px solid transparent;
+    }
+
+    *::-webkit-scrollbar-thumb:horizontal {
+        border-top: 3px solid transparent;
+        border-bottom: 3px solid transparent;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: #5A5A5A;
+    }
+
+    *::-webkit-scrollbar-thumb:active {
+        background-color: #4A4A4A;
+    }
+
+    *::-webkit-scrollbar-button {
+        width: 16px;
+        height: 16px;
+        background-color: #222;
+    }
+
+    *::-webkit-scrollbar-button:hover {
+        background-color: #444;
+    }
+
+    *::-webkit-scrollbar-button:active {
+        background-color: #777;
+    }
+
+    *::-webkit-scrollbar-button:single-button {
+        background-size: 12px 12px;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    *::-webkit-scrollbar-button:single-button:vertical:decrement {
+        background-image: url(/assets/arrow-up.svg);
+    }
+
+    *::-webkit-scrollbar-button:single-button:vertical:increment {
+        background-image: url(/assets/arrow-down.svg);
+    }
+
+    *::-webkit-scrollbar-button:single-button:horizontal:decrement {
+        background-image: url(/assets/arrow-left.svg);
+    }
+
+    *::-webkit-scrollbar-button:single-button:horizontal:increment {
+        background-image: url(/assets/arrow-right.svg);
+    }
+
+    *::-webkit-scrollbar-corner {
+        background-color: #222;
+    }
+}
+
+@supports (not (selector(::-webkit-scrollbar))) {
+    * {
+        scrollbar-color: #555 #222;
+    }
+}

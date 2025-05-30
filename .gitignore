@@ -32,6 +32,8 @@ dist-ssr
 .env.local
 
 # Definitely don't want these on GitHub
+*.key
+*.crt
 *.pem
 
 *.code-workspace
