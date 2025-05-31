@@ -3,6 +3,9 @@ const props = defineProps<{
     title?: string
     color1?: string
     color2?: string
+    color3?: string
+    color4?: string
+    icon?: string
     borderWidth?: string
     disabled?: boolean
 }>();
@@ -29,7 +32,6 @@ defineExpose({
 .toggle {
     display: inline-block;
     position: relative;
-    top: 1px;
     width: 42px;
     height: 22px;
     --border-width: v-bind("$props.borderWidth ?? '1px'");
@@ -44,10 +46,10 @@ defineExpose({
 
 .toggleSlider {
     position: absolute;
-    top: calc(7px - var(--border-width));
-    left: calc(6px - var(--border-width));
-    width: 30px;
-    height: 8px;
+    top: calc(5px - var(--border-width));
+    left: calc(4px - var(--border-width));
+    width: 34px;
+    height: 12px;
     background-color: v-bind("$props.color1 ?? '#F00'");
     border: var(--border-width) solid white;
     transition: 0.1s linear background-color;
@@ -58,23 +60,30 @@ defineExpose({
     content: '';
     box-sizing: border-box;
     position: absolute;
-    top: -7px;
+    top: -5px;
     left: 0px;
     width: 22px;
     height: 22px;
-    background-color: gray;
+    background-color: v-bind("$props.color3 ?? 'var(--input-color)'");
     border: var(--border-width) solid white;
     border-radius: 4px;
-    transition: 0.1s linear;
-    transform: translateX(-6px);
+    transition: 0.1s linear transform, 50ms linear background-color;
+    transform: translateX(-4px);
+    background-image: v-bind('`url("${$props.icon}")`');
+    background-position: 50% 50%;
+    background-size: 80% 80%;
 }
 
 .toggleInput:checked+.toggleSlider {
-    background-color: v-bind("$props.color1 ?? '#0C0'");
+    background-color: v-bind("$props.color2 ?? '#0C0'");
 }
 
 .toggleInput:checked+.toggleSlider::before {
-    transform: translateX(14px);
+    transform: translateX(16px);
+}
+
+.toggle:hover .toggleSlider::before {
+    background-color: v-bind("$props.color4 ?? 'var(--input-hover-color)'");
 }
 
 .toggleDisabled {

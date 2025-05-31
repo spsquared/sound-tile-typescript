@@ -1,9 +1,9 @@
 interface Window {
-    readonly documentPictureInPicture?: DocumentPictureInPicture;
+    readonly documentPictureInPicture?: DocumentPictureInPicture
 }
 
 interface DocumentPictureInPicture {
-    readonly window: Window;
+    readonly window: Window
     requestWindow(options?: {
         width?: number,
         height?: number

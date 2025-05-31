@@ -4,9 +4,6 @@ window.addEventListener('load', (e) => {
         document.getElementById('notSupported')!.style.display = 'block';
         return;
     }
-    if (window.documentPictureInPicture == undefined || !window.isSecureContext) {
-        (document.getElementById('pipButton') as HTMLInputElement).disabled = true;
-    }
     if (!loaded) return;
     document.getElementById('loadingCover')!.style.opacity = '0';
     window.onerror = null;

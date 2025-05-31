@@ -1,16 +1,27 @@
 /* whole-page things */
 
 body {
+    margin: 0px 0px;
     font-family: 'Source Code Pro', Courier, monospace;
     background-color: black;
     color: white;
-    overflow: hidden;
+    scroll-behavior: smooth;
+}
+
+#root {
+    width: 100vw;
+    height: 100vh;
     margin: 0px 0px;
+    overflow: hidden;
     scroll-behavior: smooth;
 }
 
 :root {
     color-scheme: dark;
+    --input-color: #888;
+    --input-hover-color: #999;
+    --input-border-radius: 4px;
+    --input-disabled-color: #555;
 }
 
 img {
@@ -21,8 +32,52 @@ img {
 input,
 button,
 select,
-option {
+option,
+label {
     font-family: 'Source Code Pro', Courier, monospace;
+}
+
+input,
+button,
+select,
+label[button] {
+    margin: 0px;
+    border-radius: var(--input-border-radius);
+    background-color: var(--input-color);
+    color: white;
+    transition: 50ms linear background-color;
+    cursor: pointer;
+}
+
+input[type=button],
+input[type=submit],
+input[type=text],
+input[type=number],
+button,
+select {
+    appearance: none;
+    border: none;
+    margin: 0px;
+}
+
+input[type=text],
+input[type=number] {
+    cursor: text;
+}
+
+input:hover,
+button:hover,
+select:hover,
+label[button]:hover {
+    background-color: var(--input-hover-color);
+}
+
+input:disabled,
+button:disabled,
+select:disabled,
+label[button][disabled=true] {
+    background-color: var(--input-disabled-color);
+    cursor: not-allowed;
 }
 
 h1 {
@@ -61,6 +116,14 @@ b {
 
 i {
     font-style: italic;
+}
+
+a {
+    color: dodgerblue;
+}
+
+a:visited {
+    color: steelblue;
 }
 
 a[no-deco] {
@@ -132,19 +195,19 @@ ol {
     }
 
     *::-webkit-scrollbar-button:single-button:vertical:decrement {
-        background-image: url(/assets/arrow-up.svg);
+        background-image: url(@/img/arrow-up.svg);
     }
 
     *::-webkit-scrollbar-button:single-button:vertical:increment {
-        background-image: url(/assets/arrow-down.svg);
+        background-image: url(@/img/arrow-down.svg);
     }
 
     *::-webkit-scrollbar-button:single-button:horizontal:decrement {
-        background-image: url(/assets/arrow-left.svg);
+        background-image: url(@/img/arrow-left.svg);
     }
 
     *::-webkit-scrollbar-button:single-button:horizontal:increment {
-        background-image: url(/assets/arrow-right.svg);
+        background-image: url(@/img/arrow-right.svg);
     }
 
     *::-webkit-scrollbar-corner {

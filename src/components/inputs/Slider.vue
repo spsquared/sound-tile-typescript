@@ -7,12 +7,15 @@ const props = defineProps<{
     title?: string
     color1?: string
     color2?: string
+    color3?: string
+    color4?: string
     vertical?: boolean
     trackWidth?: string
     endBorderWidth?: string
     sideBorderWidth?: string
     thumbWidth?: string
     thumbLength?: string
+    thumbRadius?: string
     icon?: string
     disabled?: boolean
 }>();
@@ -32,12 +35,17 @@ const value = defineModel({ default: 0 });
 <style scoped>
 .slider {
     display: inline-block;
+    /* fixes positioning inline & sizing issues in grids/flexboxes */
     position: relative;
     top: 6px;
+    max-width: min-content;
+    max-height: min-content;
+    --length: v-bind("$props.length ?? 'unset'");
     --progress: v-bind("(value - ($props.min ?? 0)) / ($props.max ?? 100)");
     --track-width: v-bind("$props.trackWidth ?? '8px'");
     --thumb-width: v-bind("$props.thumbWidth ?? '20px'");
     --thumb-length: v-bind("$props.thumbLength ?? '10px'");
+    --thumb-radius: v-bind("$props.thumbRadius ?? '2px'");
     --side-borders: v-bind("$props.sideBorderWidth ?? '1px'");
     --end-borders: v-bind("$props.endBorderWidth ?? '1px'");
 }
@@ -45,7 +53,7 @@ const value = defineModel({ default: 0 });
 .sliderInput {
     display: block;
     appearance: none;
-    width: unset;
+    width: calc(var(--length) - var(--end-borders) * 2);
     height: var(--thumb-width);
     border: 0px;
     margin: 0px var(--end-borders);
@@ -57,7 +65,7 @@ const value = defineModel({ default: 0 });
     writing-mode: vertical-rl;
     direction: rtl;
     width: var(--thumb-width);
-    height: unset;
+    height: calc(var(--length) - var(--end-borders) * 2);
     margin: var(--end-borders) 0px;
 }
 
@@ -73,7 +81,7 @@ const value = defineModel({ default: 0 });
     border-bottom-width: var(--side-borders);
     border-left-width: var(--end-borders);
     border-right-width: var(--end-borders);
-    background-color: #333;
+    background-color: v-bind("$props.color1 ?? '#333'");
     pointer-events: none;
 }
 
@@ -115,21 +123,26 @@ const value = defineModel({ default: 0 });
     left: calc(var(--progress) * (100% - var(--thumb-length)));
     width: var(--thumb-length);
     height: var(--thumb-width);
-    border-radius: 2px;
-    background-color: gray;
-    background-image: v-bind("`url(${$props.icon})`");
+    border-radius: var(--thumb-radius);
+    transition: 50ms linear background-color;
+    background-color: v-bind("$props.color3 ?? 'var(--input-color)'");
+    background-image: v-bind('`url("${$props.icon}")`');
     background-position: 50% 50%;
     background-size: 80% 80%;
 }
 
 .sliderThumb::before {
     content: '';
-    background-color: dodgerblue;
+    background-color: v-bind("$props.color2 ?? 'dodgerblue'");
     position: absolute;
     top: calc((var(--thumb-width) - var(--track-width)) / 2);
     right: var(--thumb-length);
     width: 1000000vw;
     height: var(--track-width);
+}
+
+.slider:hover .sliderThumb {
+    background-color: v-bind("$props.color4 ?? 'var(--input-hover-color)'");
 }
 
 .sliderVertical .sliderThumb {
@@ -148,6 +161,10 @@ const value = defineModel({ default: 0 });
 
 .sliderInput:active {
     cursor: grabbing;
+}
+
+.sliderDisabled>.sliderTrack {
+    border-color: #555 !important;
 }
 
 .sliderDisabled>.sliderInput {

@@ -1,0 +1,1 @@
+export const copyright = 'Copyright (C) 2025 Sampleprovider(sp)';
