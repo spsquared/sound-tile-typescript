@@ -182,13 +182,8 @@ function uploadCoverArt() {
     opacity: 1;
 }
 
-#mdatPlaylist::-webkit-scrollbar {
-    width: 8px;
-}
-
-#mdatPlaylist::-webkit-scrollbar-button {
-    width: 8px;
-    height: 8px;
-    background-size: 100% 100%;
+#mdatPlaylist {
+    --scrollbar-size: 8px;
+    --scrollbar-padding: 0px;
 }
 </style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TileEditor from '@/visualizer/editor';
+import TileSource from './TileSource.vue';
 
 </script>
 
@@ -11,6 +12,9 @@ import TileEditor from '@/visualizer/editor';
         <div id="treeModeToggleSlider"></div>
         <div id="tileModeImg"></div>
         <div id="treeModeImg"></div>
+    </div>
+    <div id="tileSourceContainer">
+        <TileSource v-for="tile in TileEditor.state.tileTypes" :tile="tile"></TileSource>
     </div>
 </template>
 
@@ -49,7 +53,7 @@ import TileEditor from '@/visualizer/editor';
     height: 58px;
     /* transform fixes layering (transform displays on top of non-transformed) */
     transform: translateY(0px);
-    background-position: 50% 50%;
+    background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
     pointer-events: none;
@@ -100,5 +104,21 @@ import TileEditor from '@/visualizer/editor';
     height: 4px;
     background-color: white;
     pointer-events: none;
+}
+
+#tileSourceContainer {
+    display: flex;
+    border-left: 4px solid white;
+    padding: 0px 8px;
+    column-gap: 8px;
+    flex-grow: 1;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    --scrollbar-size: 10px;
+}
+
+#tileSourceContainer::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: white;
 }
 </style>

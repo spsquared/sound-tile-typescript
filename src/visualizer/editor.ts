@@ -1,22 +1,29 @@
 import { reactive } from "vue";
-import { Tile } from "./tiles";
+import { AudioLevelsTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
 
 /**
  * Tile editing system.
  */
 export class TileEditor {
-    /**List of all tile classes that can be used */
-    private static readonly tileTypes: (typeof Tile)[];
-
-    static registerTile(t: typeof Tile): void {
-        this.tileTypes.push(t);
-    }
-
     static readonly state = reactive<{
+        /**List of all tile types that can be created */
+        readonly tileTypes: (typeof Tile)[]
         treeMode: boolean
     }>({
+        tileTypes: [],
         treeMode: false
     });
+
+    static registerTile(t: typeof Tile): void {
+        this.state.tileTypes.push(t);
+        console.log('oof')
+    }
 }
 
 export default TileEditor;
+
+TileEditor.registerTile(VisualizerTile);
+TileEditor.registerTile(AudioLevelsTile);
+TileEditor.registerTile(TextTile);
+TileEditor.registerTile(ImageTile);
+TileEditor.registerTile(Tile);

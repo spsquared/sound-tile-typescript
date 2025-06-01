@@ -77,7 +77,7 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
     grid-column: 3;
     background-color: #A00;
     background-image: url(@/img/play.svg);
-    background-position: 50% 50%;
+    background-position: center;
     background-size: 50% 50%;
     background-repeat: no-repeat;
 }
@@ -118,7 +118,7 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
     grid-column: 5;
     background-color: dodgerblue;
     background-image: url(@/img/picture-in-picture.svg);
-    background-position: 50% 50%;
+    background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
 }

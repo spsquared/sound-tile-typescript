@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ImageTile } from '../tiles';
+import { AudioLevelsTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 
 const props = defineProps<{
-    tile: ImageTile
+    tile: AudioLevelsTile
 }>();
 </script>
 
 <template>
     <BaseTile :tile="props.tile">
+        oof iamges tile
     </BaseTile>
 </template>
 

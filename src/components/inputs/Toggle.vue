@@ -70,7 +70,7 @@ defineExpose({
     transition: 0.1s linear transform, 50ms linear background-color;
     transform: translateX(-4px);
     background-image: v-bind('`url("${$props.icon}")`');
-    background-position: 50% 50%;
+    background-position: center;
     background-size: 80% 80%;
 }
 

@@ -144,10 +144,15 @@ ol {
 
 /* scroll bars */
 
+* {
+    --scrollbar-size: 12px;
+    --scrollbar-padding: 2px;
+}
 @supports selector(::-webkit-scrollbar) {
+    
     *::-webkit-scrollbar {
-        width: 16px;
-        height: 16px;
+        width: var(--scrollbar-size);
+        height: var(--scrollbar-size);
         background-color: #222;
     }
 
@@ -157,13 +162,13 @@ ol {
     }
 
     *::-webkit-scrollbar-thumb:vertical {
-        border-left: 3px solid transparent;
-        border-right: 3px solid transparent;
+        border-left: var(--scrollbar-padding) solid transparent;
+        border-right: var(--scrollbar-padding) solid transparent;
     }
 
     *::-webkit-scrollbar-thumb:horizontal {
-        border-top: 3px solid transparent;
-        border-bottom: 3px solid transparent;
+        border-top: var(--scrollbar-padding) solid transparent;
+        border-bottom: var(--scrollbar-padding) solid transparent;
     }
 
     *::-webkit-scrollbar-thumb:hover {
@@ -175,8 +180,8 @@ ol {
     }
 
     *::-webkit-scrollbar-button {
-        width: 16px;
-        height: 16px;
+        width: var(--scrollbar-size);
+        height: var(--scrollbar-size);
         background-color: #222;
     }
 
@@ -189,7 +194,7 @@ ol {
     }
 
     *::-webkit-scrollbar-button:single-button {
-        background-size: 12px 12px;
+        background-size: calc(var(--scrollbar-size) * 0.75) calc(var(--scrollbar-size) * 0.75);
         background-position: center;
         background-repeat: no-repeat;
     }

@@ -86,7 +86,7 @@ const showCopyright = ref(false);
     border-top: 0px;
     cursor: pointer;
     background-image: url(@/img/arrow-down.svg);
-    background-position: 50% 50%;
+    background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
 }
@@ -115,7 +115,7 @@ const showCopyright = ref(false);
     margin: 0px;
     padding: 0px;
     border-radius: 0px;
-    background-position: 50% 50%;
+    background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
 }
