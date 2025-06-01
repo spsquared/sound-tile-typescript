@@ -5,7 +5,7 @@
   "identifier": "com.sound-tile.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1000",
+    "devUrl": "https://localhost:1000",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },

@@ -3286,8 +3286,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "sound-tile-typescript"
-version = "0.1.0"
+name = "sound-tile"
+version = "0.0.0"
 dependencies = [
  "serde",
  "serde_json",
