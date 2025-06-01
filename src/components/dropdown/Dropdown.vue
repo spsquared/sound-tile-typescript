@@ -39,7 +39,7 @@ const showCopyright = ref(false);
         <br>
         Source code is available on GitHub at
         <br>
-        <a href="https://github.com/spsquared/sound-tile-typescript">spsquared/sound-tile-typescript</a>
+        <a href="https://github.com/spsquared/sound-tile-typescript">github.com/spsquared/sound-tile-typescript</a>
     </FullscreenModal>
 </template>
 
