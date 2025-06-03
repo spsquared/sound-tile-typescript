@@ -148,8 +148,8 @@ ol {
     --scrollbar-size: 12px;
     --scrollbar-padding: 2px;
 }
+
 @supports selector(::-webkit-scrollbar) {
-    
     *::-webkit-scrollbar {
         width: var(--scrollbar-size);
         height: var(--scrollbar-size);
@@ -193,26 +193,31 @@ ol {
         background-color: #777;
     }
 
-    *::-webkit-scrollbar-button:single-button {
+    *::-webkit-scrollbar-button {
         background-size: calc(var(--scrollbar-size) * 0.75) calc(var(--scrollbar-size) * 0.75);
         background-position: center;
         background-repeat: no-repeat;
     }
 
-    *::-webkit-scrollbar-button:single-button:vertical:decrement {
+    *::-webkit-scrollbar-button:vertical:decrement {
         background-image: url(@/img/arrow-up.svg);
     }
 
-    *::-webkit-scrollbar-button:single-button:vertical:increment {
+    *::-webkit-scrollbar-button:vertical:increment {
         background-image: url(@/img/arrow-down.svg);
     }
 
-    *::-webkit-scrollbar-button:single-button:horizontal:decrement {
+    *::-webkit-scrollbar-button:horizontal:decrement {
         background-image: url(@/img/arrow-left.svg);
     }
 
-    *::-webkit-scrollbar-button:single-button:horizontal:increment {
+    *::-webkit-scrollbar-button:horizontal:increment {
         background-image: url(@/img/arrow-right.svg);
+    }
+
+    *::-webkit-scrollbar-button:end:decrement,
+    *::-webkit-scrollbar-button:start:increment {
+        display: none;
     }
 
     *::-webkit-scrollbar-corner {

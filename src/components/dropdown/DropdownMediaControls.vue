@@ -116,6 +116,8 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
 #pipButton {
     grid-row: 3;
     grid-column: 5;
+    border-right: 4px solid white;
+    margin-right: -4px;
     background-color: dodgerblue;
     background-image: url(@/img/picture-in-picture.svg);
     background-position: center;
@@ -133,11 +135,13 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
 </style>
 <style>
 /* forced to invade other scopes, shouldn't break anything though */
+#seekSlider,
 #seekSlider>input {
     min-width: calc(58px * 3 + 4px * 2);
     transition: 500ms ease min-width;
 }
 
+#seekSlider:hover,
 #seekSlider:hover>input {
     min-width: 360px;
 }

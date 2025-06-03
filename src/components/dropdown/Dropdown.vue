@@ -10,6 +10,7 @@ import DropdownEditControls from './DropdownEditControls.vue';
 const open = ref(true);
 const hideTab = ref(false);
 document.addEventListener('keypress', (e) => {
+    if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
     if (e.key.toLowerCase() == 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         open.value = !open.value;
         hideTab.value = !open.value && e.shiftKey;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
+import { onBeforeUnmount, onMounted, Ref, ref } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 
 const coverArt: Ref<HTMLImageElement | null> = ref(null);
@@ -11,6 +11,34 @@ const open = ref(false);
 function uploadCoverArt() {
 
 }
+
+// scrolling text for stuff
+let scrollInterval: NodeJS.Timeout = setTimeout(() => { });
+onMounted(() => {
+    clearInterval(scrollInterval);
+    const scrollPadStart = 6000;
+    const scrollPadEnd = 3000;
+    const scrollSpeed = 0.04;
+    let startTime = performance.now();
+    scrollInterval = setInterval(() => {
+        const hasFocus = document.activeElement == title.value || document.activeElement == subtitle.value;
+        if (hasFocus) {
+            startTime = performance.now();
+        } else {
+            // this is borken and idk why
+            const scrollTime = (Math.max(title.value?.scrollWidth ?? 0, subtitle.value?.scrollWidth ?? 0) - 192) / scrollSpeed;
+            const scroll = (((performance.now() - startTime) % (scrollTime + scrollPadStart + scrollPadEnd)) - scrollPadStart) * scrollSpeed;
+            if (title.value) title.value.scrollLeft = scroll;
+            if (subtitle.value) subtitle.value.scrollLeft = scroll;
+        }
+    }, 40);
+});
+onBeforeUnmount(() => {
+    clearInterval(scrollInterval);
+});
+function preventScrollIfNotFocus(e: WheelEvent) {
+    if (e.target != document.activeElement) e.preventDefault();
+}
 </script>
 
 <template>
@@ -18,8 +46,8 @@ function uploadCoverArt() {
     <div id="mdatControls">
         <div id="mdatBody">
             <img id="mdatCoverArt" ref="coverArt" :src="MediaPlayer.state.current.coverArt" @dblclick="uploadCoverArt()" title="Album cover (double-click to change)">
-            <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.state.current.title" placeholder="Title" autocomplete="off" spellcheck="false">
-            <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.state.current.subtitle" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
+            <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.state.current.title" @wheel="preventScrollIfNotFocus" placeholder="Title" autocomplete="off" spellcheck="false">
+            <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.state.current.subtitle" @wheel="preventScrollIfNotFocus" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
             <div id="mdatPlaylist">
                 <div id="mdatPlaylistOptions">
                     <input id="mdatPlaylistShuffleToggle" type="checkbox" v-model="MediaPlayer.state.shuffle">

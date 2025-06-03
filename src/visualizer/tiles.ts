@@ -26,31 +26,98 @@ export class Tile {
     static readonly component: Component<TileComponentProps> = BaseTileComponent;
     static readonly name: string = 'Blank Tile';
     static readonly image: string = blankTileImg;
+    readonly class: typeof Tile = Tile;
 
-    parent: GroupTile | null;
+    /**Parent tile (don't modify this manually) */
+    parent: GroupTile | null = null;
 
-    constructor(parent: GroupTile | null) {
-        this.parent = parent;
+    constructor() {
     }
 
-    delete(): void {
-        // remove, parent checks if unnecessary
+    destroy(): void {
+        if (this.parent !== null) this.parent.removeChild(this);
     }
 }
 
+/**
+ * Tile to create layouts of other tiles in lines - can be nested to create complex arrangements.
+ */
 export class GroupTile extends Tile {
-    static readonly component: Component<TileComponentProps> = GroupTileComponent;
+    static readonly component = GroupTileComponent;
     static readonly name: string = 'Group Tile';
     static readonly image: string = blankTileImg;
+    readonly class: typeof GroupTile = GroupTile;
 
-    children: Tile[] = [];
+    /**Tiles inside (don't modify this manually) */
+    readonly children: Tile[] = [];
+    /**If children should be laid out vertically (otherwise horizontal) */
+    isVertical: boolean = false;
+    collapseChildren: boolean = false;
+    borderColors: string = 'rgba(255, 255, 255, 1)';
 
-    constructor(parent: GroupTile | null) {
-        super(parent);
+    constructor() {
+        super();
     }
 
-    delete(): void {
-        // override normal tile delete function
+    addChild(tile: Tile): boolean {
+        if (this.children.includes(tile)) return false;
+        this.children.push(tile);
+        tile.parent = this;
+        return true;
+    }
+
+    insertChildBefore(tile: Tile, current: Tile | number): boolean {
+        if (this.children.includes(tile)) return false;
+        const index = typeof current == 'number' ? current : this.children.indexOf(current);
+        if (index < 0 || index >= this.children.length) return false;
+        tile.parent = this;
+        this.children.splice(index, 0, tile);
+        return true;
+    }
+
+    insertChildAfter(tile: Tile, current: Tile | number): boolean {
+        if (this.children.includes(tile)) return false;
+        const index = typeof current == 'number' ? current : this.children.indexOf(current);
+        if (index < 0 || index >= this.children.length) return false;
+        tile.parent = this;
+        this.children.splice(index + 1, 0, tile);
+        return true;
+    }
+
+    replaceChild(current: Tile | number, replace: Tile): Tile | null {
+        const index = typeof current == 'number' ? current : this.children.indexOf(current);
+        if (index < 0 || index >= this.children.length) return null;
+        replace.parent = this;
+        const old = this.children.splice(index, 1, replace)[0];
+        old.parent = null;
+        return old;
+    }
+
+    removeChild(tile: Tile | number): Tile | null {
+        const index = typeof tile == 'number' ? tile : this.children.indexOf(tile);
+        if (index < 0 || index >= this.children.length) return null;
+        const old = this.children.splice(index, 1)[0];
+        old.parent = null;
+        this.checkObsolete();
+        return old;
+    }
+
+    private checkObsolete(): void {
+        if (this.parent === null) return;
+        if (this.children.length == 0) this.destroy();
+        else if (this.children.length == 1) {
+            const parent = this.parent;
+            const child = this.children[0];
+            parent.replaceChild(this, child);
+            // don't call this.destroy() as this effectively destroys the tile
+            if (child instanceof GroupTile) child.checkObsolete();
+            parent.checkObsolete();
+        }
+    }
+
+    destroy(): void {
+        super.destroy();
+        for (const child of this.children) child.destroy();
     }
 }
 
@@ -58,22 +125,26 @@ export class VisualizerTile extends Tile {
     static readonly component = VisualizerTileComponent;
     static readonly name: string = 'Visualizer Tile';
     static readonly image: string = visualizerTileImg;
+    readonly class: typeof VisualizerTile = VisualizerTile;
 }
 
 export class AudioLevelsTile extends Tile {
     static readonly component = AudioLevelsComponent;
     static readonly name: string = 'Channel Audio Levels Tile';
     static readonly image: string = audioLevelsTileImg;
+    readonly class: typeof AudioLevelsTile = AudioLevelsTile;
 }
 
 export class TextTile extends Tile {
     static readonly component = TextTileComponent;
     static readonly name: string = 'Text Tile';
     static readonly image: string = textTileImg;
+    readonly class: typeof TextTile = TextTile;
 }
 
 export class ImageTile extends Tile {
     static readonly component = ImageTileComponent;
     static readonly name: string = 'Image Tile';
     static readonly image: string = imageTileImg;
+    readonly class: typeof ImageTile = ImageTile;
 }

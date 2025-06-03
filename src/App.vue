@@ -2,30 +2,35 @@
 import { reactive } from 'vue';
 import Dropdown from '#/dropdown/Dropdown.vue';
 import FullscreenModal, { ModalMode } from '#/util/FullscreenModal.vue';
+import TileRoot from '#/visualizer/TileRoot.vue';
 
-const errorInf = reactive({
+const errorInfo = reactive({
     message: '',
     filename: '',
     lineno: 0,
-    colno: 0
-})
+    colno: 0,
+    open: false
+});
 window.addEventListener('error', (e) => {
-    errorInf.message = e.message;
-    errorInf.filename = e.filename;
-    errorInf.lineno = e.lineno;
-    errorInf.colno = e.colno;
+    errorInfo.message = e.message;
+    errorInfo.filename = e.filename;
+    errorInfo.lineno = e.lineno;
+    errorInfo.colno = e.colno;
+    errorInfo.open = true;
 });
 </script>
 
 <template>
     <Dropdown></Dropdown>
-    <FullscreenModal title="An Error Occured" :mode="ModalMode.NOTIFY" color="red">
+    <TileRoot></TileRoot>
+    <
+    <FullscreenModal title="An Error Occured" :mode="ModalMode.NOTIFY" color="red" v-model="errorInfo.open">
         <div style="color: red;">
             An unexpected error occured:
             <br>
-            {{ errorInf.message }}
+            {{ errorInfo.message }}
             <br>
-            {{ errorInf.filename }} {{ errorInf.lineno }}:{{ errorInf.colno }}
+            {{ errorInfo.filename }} {{ errorInfo.lineno }}:{{ errorInfo.colno }}
         </div>
     </FullscreenModal>
 </template>

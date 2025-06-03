@@ -14,7 +14,7 @@ import TileSource from './TileSource.vue';
         <div id="treeModeImg"></div>
     </div>
     <div id="tileSourceContainer">
-        <TileSource v-for="tile in TileEditor.state.tileTypes" :tile="tile"></TileSource>
+        <TileSource v-for="tile of TileEditor.state.tileTypes" :tile="tile" :key="tile"></TileSource>
     </div>
 </template>
 
