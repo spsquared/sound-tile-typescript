@@ -9,7 +9,9 @@ const props = defineProps<{
 
 <template>
     <BaseTile :tile="props.tile">
-        oof text tile
+        <template v-slot:content>
+            oof text tile
+        </template>
     </BaseTile>
 </template>
 

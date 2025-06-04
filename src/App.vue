@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
-import Dropdown from '#/dropdown/Dropdown.vue';
-import FullscreenModal, { ModalMode } from '#/util/FullscreenModal.vue';
-import TileRoot from '#/visualizer/TileRoot.vue';
+import FullscreenModal, { ModalMode } from '@/components/util/FullscreenModal.vue';
+import Dropdown from '@/components/dropdown/Dropdown.vue';
+import TileRoot from '@/components/main/TileRoot.vue';
+import TileDrag from '@/components/main/TileDrag.vue';
+import Sidebar from '@/components/sidebar/Sidebar.vue';
 
 const errorInfo = reactive({
     message: '',
@@ -23,7 +25,8 @@ window.addEventListener('error', (e) => {
 <template>
     <Dropdown></Dropdown>
     <TileRoot></TileRoot>
-    <
+    <TileDrag></TileDrag>
+    <Sidebar></Sidebar>
     <FullscreenModal title="An Error Occured" :mode="ModalMode.NOTIFY" color="red" v-model="errorInfo.open">
         <div style="color: red;">
             An unexpected error occured:

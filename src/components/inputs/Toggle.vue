@@ -22,8 +22,8 @@ defineExpose({
 </script>
 
 <template>
-    <label :class="{ toggle: true, toggleDisabled: props.disabled }">
-        <input class="toggleInput" type="checkbox" @change="input" v-model="checked" :title="props.title" :disabled="props.disabled">
+    <label :class="{ toggle: true, toggleDisabled: props.disabled }" :title="props.title">
+        <input class="toggleInput" type="checkbox" @change="input" v-model="checked" :disabled="props.disabled">
         <div class="toggleSlider"></div>
     </label>
 </template>

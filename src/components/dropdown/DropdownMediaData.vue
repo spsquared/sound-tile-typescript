@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, Ref, ref } from 'vue';
+import { onMounted, onUnmounted, Ref, ref } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 
 const coverArt: Ref<HTMLImageElement | null> = ref(null);
@@ -33,7 +33,7 @@ onMounted(() => {
         }
     }, 40);
 });
-onBeforeUnmount(() => {
+onUnmounted(() => {
     clearInterval(scrollInterval);
 });
 function preventScrollIfNotFocus(e: WheelEvent) {

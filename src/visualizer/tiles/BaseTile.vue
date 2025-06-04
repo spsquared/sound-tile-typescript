@@ -9,7 +9,8 @@ const props = defineProps<{
 
 <template>
     <div class="tile">
-        <slot></slot>
+        <slot name="content"></slot>
+        <slot name="options"></slot>
         <div class="tileHeader" v-if="!props.hideHeader">
             <input type="button" class="tileDeleteButton" @click="props.tile.destroy()">
         </div>
@@ -21,8 +22,7 @@ const props = defineProps<{
     contain: size;
     position: relative;
     background-color: black;
-    flex-grow: 1;
-    flex-shrink: 1;
+    flex: 1;
     flex-basis: 0px;
 }
 

@@ -9,9 +9,11 @@ const props = defineProps<{
 
 <template>
     <BaseTile :tile="props.tile" class="groupTile" hide-header>
-        <div :class="{ groupChildren: true, groupChildrenCollapsed: props.tile.collapseChildren }">
-            <component v-for="child of tile.children" :is="child.class.component" :tile="child" :class="{ groupChildCollapsed: props.tile.collapseChildren }"></component>
-        </div>
+        <template v-slot:content>
+            <div :class="{ groupChildren: true, groupChildrenCollapsed: props.tile.collapseChildren }">
+                <component v-for="child of tile.children" :is="child.class.component" :tile="child" :class="{ groupChildCollapsed: props.tile.collapseChildren }"></component>
+            </div>
+        </template>
     </BaseTile>
 </template>
 

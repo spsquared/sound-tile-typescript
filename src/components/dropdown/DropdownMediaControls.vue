@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Slider from '#/inputs/Slider.vue';
+import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '../inputs/Toggle.vue';
 import volumeIcon from '@/img/volume.svg';
 import loopIcon from '@/img/loop-dark.svg';
@@ -10,7 +10,7 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
 
 <template>
     <div id="mediaControls">
-        <Slider id="volumeSlider" ref="volume" v-model="MediaPlayer.state.volume" :min="0" :max="150" :step="1" vertical length="120px" track-width="10px" thumb-length="15px" thumb-width="30px" side-border-width="2px" end-border-width="0px" :icon="volumeIcon"></Slider>
+        <Slider id="volumeSlider" ref="volume" v-model="MediaPlayer.state.volume" :title="`Volume: ${MediaPlayer.state.volume}%`" :min="0" :max="150" :step="1" vertical length="120px" track-width="10px" thumb-length="15px" thumb-width="30px" side-border-width="2px" end-border-width="0px" :icon="volumeIcon"></Slider>
         <Slider id="seekSlider" ref="seek" track-width="58px" thumb-length="20px" thumb-width="58px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
         <div id="mediaControlsBorder1"></div>
         <div id="mediaControlsBorder2"></div>
@@ -18,7 +18,7 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
         <label button id="playButton" for="playCheckbox"></label>
         <div id="mediaControlsTimeContainer">
             <span>{{ '0:00' }}</span>
-            <Toggle v-model="MediaPlayer.state.loop" :icon="loopIcon"></Toggle>
+            <Toggle v-model="MediaPlayer.state.loop" :icon="loopIcon" title="Loop song"></Toggle>
         </div>
         <input type="checkbox" id="pipCheckbox" :disabled="!pipEnabled">
         <label button id="pipButton" for="pipCheckbox" :disabled="!pipEnabled"></label>

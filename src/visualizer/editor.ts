@@ -6,22 +6,33 @@ import { AudioLevelsTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile }
  */
 export class TileEditor {
     static readonly state = reactive<{
-        /**List of all tile types that can be created */
-        readonly tileTypes: (typeof Tile)[]
+        dropdownOpen: boolean
+        sidebarOpen: boolean
+        hideTabs: boolean
+        sidebarScreenWidth: number
+        readonly minSidebarWidthPx: number
+        readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } }
         treeMode: boolean
         readonly dragging: {
             current: Tile | null
+            offset: { x: number, y: number }
         }
     }>({
-        tileTypes: [],
+        dropdownOpen: true,
+        sidebarOpen: false,
+        hideTabs: false,
+        sidebarScreenWidth: 20,
+        minSidebarWidthPx: 200,
+        tileTypes: {},
         treeMode: false,
         dragging: {
-            current: null
+            current: null,
+            offset: { x: 0, y: 0 }
         }
     });
 
-    static registerTile(t: typeof Tile): void {
-        this.state.tileTypes.push(t);
+    static registerTile(t: typeof Tile, id: string, visible: boolean): void {
+        this.state.tileTypes[id] = { Tile: t, visible: visible };
     }
 
     /**Root node in document - never changes (GroupTile type fixes Vue typing errors) */
@@ -31,11 +42,12 @@ export class TileEditor {
 export default TileEditor;
 
 // tiles that get displayed in drag-and-drop source
-TileEditor.registerTile(VisualizerTile);
-TileEditor.registerTile(AudioLevelsTile);
-TileEditor.registerTile(TextTile);
-TileEditor.registerTile(ImageTile);
-TileEditor.registerTile(Tile);
+TileEditor.registerTile(GroupTile, 'g', false);
+TileEditor.registerTile(VisualizerTile, 'v', true);
+TileEditor.registerTile(AudioLevelsTile, 'cp', true); // formerly channel peaks
+TileEditor.registerTile(TextTile, 't', true);
+TileEditor.registerTile(ImageTile, 'i', true);
+TileEditor.registerTile(Tile, 'b', true);
 
 // default state
 const defA = new GroupTile();

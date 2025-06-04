@@ -1,20 +1,31 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import TileSource from './TileSource.vue';
 
+function keypress(e: KeyboardEvent) {
+    if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
+    if (e.key.toLowerCase() == 't' && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
+        TileEditor.state.treeMode = !TileEditor.state.treeMode;
+    }
+}
+onMounted(() => document.addEventListener('keypress', keypress));
+onUnmounted(() => document.removeEventListener('keypress', keypress));
+
+const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).filter((t) => t.visible).map((t) => t.Tile));
 </script>
 
 <template>
     <div id="treeModeToggleContainer">
-        <label button id="tileMode" for="treeModeToggle" :disabled="!TileEditor.state.treeMode"></label>
-        <label button id="treeMode" for="treeModeToggle" :disabled="TileEditor.state.treeMode"></label>
+        <label button id="tileMode" for="treeModeToggle" title="Tile view" :disabled="!TileEditor.state.treeMode"></label>
+        <label button id="treeMode" for="treeModeToggle" title="Tree view" :disabled="TileEditor.state.treeMode"></label>
         <input type="checkbox" id="treeModeToggle" v-model="TileEditor.state.treeMode">
         <div id="treeModeToggleSlider"></div>
         <div id="tileModeImg"></div>
         <div id="treeModeImg"></div>
     </div>
     <div id="tileSourceContainer">
-        <TileSource v-for="tile of TileEditor.state.tileTypes" :tile="tile" :key="tile"></TileSource>
+        <TileSource v-for="tile of sourceTiles" :tile="tile" :key="tile.name"></TileSource>
     </div>
 </template>
 
