@@ -27,11 +27,17 @@ export class Tile {
     static readonly name: string = 'Blank Tile';
     static readonly image: string = blankTileImg;
     readonly class: typeof Tile = Tile;
+    private static idCounter: number = 0;
+    /**ID used by Vue v-for */
+    readonly id: number;
 
+    /**Label used to identify tile in editor */
+    label: string = Tile.name;
     /**Parent tile (don't modify this manually) */
     parent: GroupTile | null = null;
 
     constructor() {
+        this.id = Tile.idCounter++;
     }
 
     destroy(): void {
@@ -48,6 +54,7 @@ export class GroupTile extends Tile {
     static readonly image: string = blankTileImg;
     readonly class: typeof GroupTile = GroupTile;
 
+    label: string = GroupTile.name;
     /**Tiles inside (don't modify this manually) */
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
@@ -126,6 +133,8 @@ export class VisualizerTile extends Tile {
     static readonly name: string = 'Visualizer Tile';
     static readonly image: string = visualizerTileImg;
     readonly class: typeof VisualizerTile = VisualizerTile;
+
+    label: string = VisualizerTile.name;
 }
 
 export class AudioLevelsTile extends Tile {
@@ -133,6 +142,8 @@ export class AudioLevelsTile extends Tile {
     static readonly name: string = 'Channel Audio Levels Tile';
     static readonly image: string = audioLevelsTileImg;
     readonly class: typeof AudioLevelsTile = AudioLevelsTile;
+
+    label: string = AudioLevelsTile.name;
 }
 
 export class TextTile extends Tile {
@@ -140,6 +151,8 @@ export class TextTile extends Tile {
     static readonly name: string = 'Text Tile';
     static readonly image: string = textTileImg;
     readonly class: typeof TextTile = TextTile;
+
+    label: string = TextTile.name;
 }
 
 export class ImageTile extends Tile {
@@ -147,4 +160,6 @@ export class ImageTile extends Tile {
     static readonly name: string = 'Image Tile';
     static readonly image: string = imageTileImg;
     readonly class: typeof ImageTile = ImageTile;
+
+    label: string = ImageTile.name;
 }

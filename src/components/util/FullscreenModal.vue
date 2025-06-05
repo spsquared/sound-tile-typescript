@@ -109,7 +109,7 @@ export const enum ModalMode {
     appearance: none;
     width: 80px;
     height: 32px;
-    border: 2px solid white;
+    border: 4px solid white;
     border-radius: 2px;
     margin: 0px 4px;
     background-color: #555;

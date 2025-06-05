@@ -116,12 +116,13 @@ function preventScrollIfNotFocus(e: WheelEvent) {
 
 #mdatTitle,
 #mdatSubtitle {
+    box-sizing: border-box;
     width: 100%;
     margin: 0px 0px;
     padding: 0px 4px;
     background-color: transparent;
     border: none;
-    box-sizing: border-box;
+    border-radius: 0px;
     font-family: 'Source Code Pro', Courier, monospace;
 }
 

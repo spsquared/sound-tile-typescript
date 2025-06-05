@@ -1,35 +1,43 @@
-import { reactive } from "vue";
+import { reactive, watch } from "vue";
 import { AudioLevelsTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
+
+type tileEditorState = {
+    dropdownOpen: boolean
+    sidebarOpen: boolean
+    hideTabs: boolean
+    sidebarScreenWidth: number
+    readonly minSidebarWidthPx: number
+    readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } }
+    treeMode: boolean
+    readonly dragging: {
+        current: Tile | null
+        offset: { x: number, y: number }
+        size: { w: number, h: number }
+    }
+    sidebarHoverTile: Tile | null
+    locked: boolean
+};
 
 /**
  * Tile editing system.
  */
 export class TileEditor {
-    static readonly state = reactive<{
-        dropdownOpen: boolean
-        sidebarOpen: boolean
-        hideTabs: boolean
-        sidebarScreenWidth: number
-        readonly minSidebarWidthPx: number
-        readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } }
-        treeMode: boolean
-        readonly dragging: {
-            current: Tile | null
-            offset: { x: number, y: number }
-        }
-    }>({
+    static readonly state = reactive<tileEditorState>({
         dropdownOpen: true,
         sidebarOpen: false,
         hideTabs: false,
-        sidebarScreenWidth: 20,
+        sidebarScreenWidth: Number(localStorage.getItem('sidebarScreenWidth') ?? 25),
         minSidebarWidthPx: 200,
         tileTypes: {},
         treeMode: false,
         dragging: {
             current: null,
-            offset: { x: 0, y: 0 }
-        }
-    });
+            offset: { x: 0, y: 0 },
+            size: { w: 0, h: 0 }
+        },
+        sidebarHoverTile: null,
+        locked: false
+    }) as tileEditorState; // fixes Vue typing errors
 
     static registerTile(t: typeof Tile, id: string, visible: boolean): void {
         this.state.tileTypes[id] = { Tile: t, visible: visible };
@@ -37,6 +45,10 @@ export class TileEditor {
 
     /**Root node in document - never changes (GroupTile type fixes Vue typing errors) */
     static readonly root: GroupTile = reactive<GroupTile>(new GroupTile()) as GroupTile;
+
+    static {
+        watch(() => this.state.sidebarScreenWidth, () => localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
+    }
 }
 
 export default TileEditor;

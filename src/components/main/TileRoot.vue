@@ -21,5 +21,6 @@ import TileEditor from '@/visualizer/editor';
     border: 4px solid v-bind("TileEditor.root.borderColors");
     align-items: stretch;
     justify-content: stretch;
+    user-select: none;
 }
 </style>

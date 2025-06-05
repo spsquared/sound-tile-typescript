@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { copyright } from '@/constants';
 import FullscreenModal, { ModalMode } from '@/components/util/FullscreenModal.vue';
 import TileEditor from '@/visualizer/editor';
@@ -23,6 +23,15 @@ function keypress(e: KeyboardEvent) {
 }
 onMounted(() => document.addEventListener('keypress', keypress));
 onUnmounted(() => document.removeEventListener('keypress', keypress));
+
+// removes animating of sidebar spacer width when resizing
+const animateSpacer = ref(false);
+let timeout: NodeJS.Timeout = setTimeout(() => {});
+watch(() => TileEditor.state.sidebarOpen, () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => animateSpacer.value = false, 200);
+    animateSpacer.value = true;
+});
 
 const showCopyright = ref(false);
 </script>
@@ -111,7 +120,7 @@ const showCopyright = ref(false);
 
 #sidebarSpacer {
     min-width: 0px;
-    transition: 200ms ease min-width;
+    transition: v-bind("animateSpacer ? '200ms ease min-width' : ''");
 }
 
 #sidebarShadowToggle:checked+#sidebarSpacer {

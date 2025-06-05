@@ -1,13 +1,22 @@
 <script setup lang="ts">
+import TileEditor from '@/visualizer/editor';
 import { Tile } from '@/visualizer/tiles';
 
 const props = defineProps<{
     tile: typeof Tile
 }>();
+
+function createTile() {
+    if (TileEditor.state.dragging.current === null) {
+        TileEditor.state.dragging.current = new props.tile();
+        TileEditor.state.dragging.offset = { x: 100, y: 10 };
+        TileEditor.state.dragging.size = { w: 200, h: 150 };
+    }
+}
 </script>
 
 <template>
-    <div class="tilePreview">
+    <div class="tilePreview" @mousedown="createTile()">
         <img class="tilePreviewImg" :src="props.tile.image">
         <div class="tilePreviewText">New {{ props.tile.name }}</div>
     </div>

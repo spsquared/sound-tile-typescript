@@ -5,6 +5,7 @@ import SidebarTileEdit from './SidebarTileEdit.vue';
 import SidebarExport from './SidebarExport.vue';
 import SidebarTab from './SidebarTab.vue';
 import editIcon from '@/img/edit.svg';
+import exportIcon from '@/img/export.svg';
 
 function keypress(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
@@ -17,6 +18,7 @@ function keypress(e: KeyboardEvent) {
             TileEditor.state.sidebarOpen = !TileEditor.state.sidebarOpen;
             TileEditor.state.hideTabs = false;
         }
+        endResize();
     }
 }
 onMounted(() => document.addEventListener('keypress', keypress));
@@ -50,7 +52,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- sidebar slides off screen while wrapper shrinks -->
     <input type="checkbox" id="sidebarToggle" v-model="TileEditor.state.sidebarOpen">
     <div id="sidebar">
         <SidebarTileEdit></SidebarTileEdit>
@@ -59,8 +60,8 @@ onUnmounted(() => {
         <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs">
             <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
             <div id="sidebarTabsList">
-                <SidebarTab for="edit" :image="editIcon"></SidebarTab>
-                <SidebarTab for="export" image="@/"></SidebarTab>
+                <SidebarTab for="edit" :image="editIcon" size="70%"></SidebarTab>
+                <SidebarTab for="export" :image="exportIcon"></SidebarTab>
             </div>
         </div>
         <div id="sidebarResize" @mousedown="beginResize"></div>
@@ -104,7 +105,7 @@ onUnmounted(() => {
 #sidebarTabs {
     position: absolute;
     left: -40px;
-    top: 16px;
+    top: 24px;
     transition: 200ms ease transform;
     transform: translateY(0px);
 }
@@ -145,5 +146,7 @@ onUnmounted(() => {
     width: 4px;
     height: 100vh;
     cursor: ew-resize;
+    /* fixes random selecting when resizing */
+    user-select: none;
 }
 </style>

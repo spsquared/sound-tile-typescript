@@ -15,6 +15,7 @@ document.addEventListener('keypress', (e) => {
     else if (key == 'o' && e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) e.preventDefault();
     else if (key == 'p' && e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
 });
+// warn leaving page
 window.addEventListener('beforeunload', (e) => {
     e.preventDefault();
 });

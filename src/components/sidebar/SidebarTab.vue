@@ -5,6 +5,7 @@ import { inject, ref, Ref } from 'vue';
 const props = defineProps<{
     for: string
     image: string
+    size?: string
 }>();
 
 const currentTab = inject('sidebarCurrentTab') as Ref<string> ?? ref('');
@@ -32,10 +33,11 @@ function set() {
     border-left-width: 4px;
     border-radius: 0px;
     background-color: #333;
+    transition: none;
     cursor: pointer;
     background-image: v-bind('`url("${$props.image}")`');
     background-position: center;
-    background-size: 80% 80%;
+    background-size: v-bind("$props.size ?? '80% 80%'");
     background-repeat: no-repeat;
 }
 

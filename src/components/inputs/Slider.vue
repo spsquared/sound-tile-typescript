@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+
 const props = defineProps<{
     min?: number
     max?: number
@@ -20,11 +22,30 @@ const props = defineProps<{
     disabled?: boolean
 }>();
 const value = defineModel({ default: 0 });
+
+// scrollValue allows snapping to step while providing smooth control using scroll wheel
+const scrollValue = ref(value.value);
+function onWheel(e: WheelEvent) {
+    if (props.vertical) {
+        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaY, props.max ?? Infinity));
+    } else {
+        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaX, props.max ?? Infinity));
+
+    }
+    if (props.step != undefined && props.step > 0) {
+        value.value = Number((Math.round(scrollValue.value / props.step) * props.step).toFixed((props.step.toString().split('.')[1] ?? '').length));
+    } else {
+        value.value = scrollValue.value;
+    }
+}
+function endWheel() {
+    scrollValue.value = value.value;
+}
 </script>
 
 <template>
     <label :class="{ slider: true, sliderVertical: props.vertical, sliderDisabled: props.disabled }">
-        <input type="range" class="sliderInput" v-model="value" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
+        <input type="range" class="sliderInput" v-model="value" @wheel="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
         <div class="sliderTrack"></div>
         <div class="sliderThumbWrapper">
             <div class="sliderThumb"></div>

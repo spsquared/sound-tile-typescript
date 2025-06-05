@@ -6,6 +6,8 @@ body {
     background-color: black;
     color: white;
     scroll-behavior: smooth;
+    /* disables swipe navigation for most browsers */
+    overscroll-behavior: none;
 }
 
 #root {
@@ -78,6 +80,12 @@ select:disabled,
 label[button][disabled=true] {
     background-color: var(--input-disabled-color);
     cursor: not-allowed;
+}
+
+input:focus-visible,
+button:focus-visible,
+select:focus-visible {
+    outline: 0px;
 }
 
 h1 {

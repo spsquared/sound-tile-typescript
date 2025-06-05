@@ -125,6 +125,7 @@ const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).fil
     flex-grow: 1;
     overflow-x: scroll;
     overflow-y: hidden;
+    user-select: none;
     --scrollbar-size: 10px;
 }
 
