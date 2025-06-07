@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TileEditor from '@/visualizer/editor';
 import { GroupTile, Tile } from '@/visualizer/tiles';
-import { ref, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import arrowRightIcon from '@/img/arrow-right.svg';
 import arrowDownIcon from '@/img/arrow-down.svg';
 
@@ -9,6 +9,7 @@ const props = defineProps<{
     tile: Tile
     root?: boolean
 }>();
+
 
 function setHover() {
     TileEditor.state.sidebarHoverTile = props.tile;
@@ -33,6 +34,7 @@ function dragTile(e: MouseEvent) {
     }
 }
 
+const destroyDisabled = computed(() => props.root || TileEditor.state.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function deleteTile() {
     TileEditor.pushLayoutHistory();
     props.tile.destroy();
@@ -46,7 +48,7 @@ function deleteTile() {
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length - 1" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
             <div class="editItemDrag" @mousedown="dragTile"></div>
-            <input type="button" class="editItemDeleteButton" title="Delete Tile" @click="deleteTile">
+            <input type="button" class="editItemDeleteButton" title="Delete Tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
         <Transition>
             <div class="editItemGroupChildrenWrapper" v-if="props.tile instanceof GroupTile" v-show="childrenOpen">
@@ -143,6 +145,11 @@ function deleteTile() {
 .editItemDeleteButton:hover {
     background-image: url(@/img/delete-dark.svg);
     background-color: red;
+}
+
+.editItemDeleteButton:disabled {
+    cursor: not-allowed;
+    background-color: transparent;
 }
 
 .editItemGroupChildrenWrapper {

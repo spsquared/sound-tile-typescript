@@ -121,6 +121,7 @@ export class TileEditor {
         this.root.copyProperties(loadedRoot);
         this.root.children.length = 0;
         this.root.children.push(...loadedRoot.children);
+        console.log(this.root.parent)
         return true;
     }
 
@@ -185,7 +186,12 @@ export class TileEditor {
         }
         if (currTile === null) return;
         while (true) {
-            // element shouldn't be null as all parents of currTile must have element for DFS to traverse them
+            if (currTile.element === null) {
+                // parent must be wrong somewhere because the tile has an unmounted parent
+                // previous DFS guarantees not null going down, but not back up the tree
+                console.warn(`${currTile.label} element is null! Perhaps there is a bug and the parent is set wrong?`)
+                break;
+            }
             const rect = fixBoundingRect(currTile.element!.getBoundingClientRect());
             const relX = pos.x - rect.left;
             const relY = pos.y - rect.top;
@@ -255,12 +261,27 @@ export class TileEditor {
         const parent = this.state.drag.drop.tile.parent ?? this.root;
         if (this.state.drag.drop.createGroup) {
             const newGroup = new GroupTile();
-            if (this.state.drag.drop.newGroupVertical) newGroup.orientation = GroupTile.VERTICAL;
-            parent.replaceChild(this.state.drag.drop.tile, newGroup);
-            newGroup.addChild(this.state.drag.drop.tile);
-            const insertFn = (this.state.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
-            insertFn.call(newGroup, this.state.drag.current, this.state.drag.drop.tile);
+            if (this.state.drag.drop.tile == this.root) {
+                // special case for root tile, root has no parent and breaks
+                newGroup.copyProperties(this.root);
+                this.root.orientation = this.state.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
+                // more skipping of normal add/remove functions
+                for (const child of this.root.children) child.parent = newGroup;
+                newGroup.children.push(...this.root.children);
+                this.root.children.length = 0;
+                this.root.addChild(newGroup);
+                const insertFn = (this.state.drag.drop.insertBefore ? this.root.insertChildBefore : this.root.insertChildAfter);
+                insertFn.call(this.root, this.state.drag.current, newGroup);
+            } else {
+                newGroup.copyProperties(parent);
+                if (this.state.drag.drop.newGroupVertical) newGroup.orientation = GroupTile.VERTICAL;
+                parent.replaceChild(this.state.drag.drop.tile, newGroup);
+                newGroup.addChild(this.state.drag.drop.tile);
+                const insertFn = (this.state.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
+                insertFn.call(newGroup, this.state.drag.current, this.state.drag.drop.tile);
+            }
         } else {
+            // drop target tile can't be root because updateDrag parent orientation check always fails
             const insertFn = (this.state.drag.drop.insertBefore ? parent.insertChildBefore : parent.insertChildAfter);
             insertFn.call(parent, this.state.drag.current, this.state.drag.drop.tile);
         }

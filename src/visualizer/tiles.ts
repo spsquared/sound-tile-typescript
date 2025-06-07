@@ -114,15 +114,26 @@ export class GroupTile extends Tile {
         return old;
     }
     private checkObsolete(): void {
-        if (this.parent === null) return;
-        if (this.children.length == 0) this.destroy();
-        else if (this.children.length == 1) {
-            const parent = this.parent;
-            const child = this.children[0];
-            parent.replaceChild(this, child);
-            // don't call this.destroy() as this effectively destroys the tile
-            if (child instanceof GroupTile) child.checkObsolete();
-            parent.checkObsolete();
+        if (this.parent === null) {
+            // special case for root, lower tile then becomes root
+            if (this.children.length == 1 && this.children[0] instanceof GroupTile) {
+                this.copyProperties(this.children[0]);
+                const children = this.children[0].children;
+                for (const child of children) child.parent = this;
+                this.children.length = 0;
+                this.children.push(...children);
+                // don't call this.children[0].destroy() as this effectively destroys the tile
+                this.checkObsolete();
+            }
+        } else {
+            if (this.children.length == 0) this.destroy();
+            else if (this.children.length == 1) {
+                const parent = this.parent;
+                const child = this.children[0];
+                parent.replaceChild(this, child);
+                // don't call this.destroy() as this effectively destroys the tile
+                parent.checkObsolete();
+            }
         }
     }
 

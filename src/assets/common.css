@@ -85,7 +85,8 @@ label[button][disabled=true] {
 input:focus-visible,
 button:focus-visible,
 select:focus-visible {
-    outline: 0px;
+    outline-offset: 0px;
+    outline: 1px solid white;
 }
 
 h1 {

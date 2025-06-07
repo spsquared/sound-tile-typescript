@@ -45,7 +45,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div :class="{ tile: true, highlightTile: TileEditor.state.sidebarHoverTile === props.tile }" ref="tile">
+    <div class="tile" ref="tile">
         <slot name="content"></slot>
         <!-- put this in a popout window -->
         <slot name="options"></slot>
@@ -54,6 +54,9 @@ onBeforeUnmount(() => {
             <div class="tileDrag" @mousedown="dragTile"></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
+        <Transition>
+            <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
+        </Transition>
     </div>
 </template>
 
@@ -64,12 +67,6 @@ onBeforeUnmount(() => {
     background-color: black;
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
-    transition: 50ms linear outline-color;
-    outline: 4px dashed transparent;
-}
-
-.highlightTile {
-    outline-color: red;
 }
 
 .tileHeader {
@@ -136,5 +133,28 @@ onBeforeUnmount(() => {
 
 .tileDeleteButton:disabled {
     background-color: #777;
+}
+
+.tileOutline {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    outline: 4px dashed cyan;
+    outline-offset: -4px;
+    transition: 50ms linear opacity;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.v-enter-from,
+.v-leave-to {
+    opacity: 0;
+}
+
+.v-enter-to,
+.v-leave-from {
+    opacity: 1;
 }
 </style>
