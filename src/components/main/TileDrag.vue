@@ -30,17 +30,15 @@ const draggingPos = computed(() => ({
 </script>
 
 <template>
-    <Transition>
-        <div id="tileDragContainer" v-if="TileEditor.state.drag.current !== null">
-            <div id="tileDragLayoutPreview">
-                <TileDragGhostTile :tile="TileEditor.root"></TileDragGhostTile>
-            </div>
-            <div id="tileDragTile">
-                <component :is="TileEditor.state.drag.current.class.component" :tile="TileEditor.state.drag.current"></component>
-                <div id="tileDragTileHeader">{{ TileEditor.state.drag.current.label }}</div>
-            </div>
+    <div id="tileDragContainer" v-if="TileEditor.state.drag.current !== null">
+        <div id="tileDragLayoutPreview">
+            <TileDragGhostTile :tile="TileEditor.root"></TileDragGhostTile>
         </div>
-    </Transition>
+        <div id="tileDragTile">
+            <component :is="TileEditor.state.drag.current.class.component" :tile="TileEditor.state.drag.current"></component>
+            <div id="tileDragTileHeader">{{ TileEditor.state.drag.current.label }}</div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -52,7 +50,6 @@ const draggingPos = computed(() => ({
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.4);
     user-select: none;
-    transition: 100ms linear opacity;
     cursor: grabbing;
     z-index: 700;
 }
@@ -66,7 +63,6 @@ const draggingPos = computed(() => ({
     width: 100vw;
     height: 100vh;
     border: 4px solid white;
-    transition: 100ms linear opacity;
 }
 
 #tileDragTile {
@@ -90,15 +86,5 @@ const draggingPos = computed(() => ({
     padding: 1px 2px;
     background-color: #555;
     font-size: 13px;
-}
-
-.v-enter-from>#tileDragLayoutPreview,
-.v-leave-to>#tileDragLayoutPreview {
-    opacity: 0;
-}
-
-.v-enter-to>#tileDragLayoutPreview,
-.v-leave-from>#tileDragLayoutPreview {
-    opacity: 1;
 }
 </style>

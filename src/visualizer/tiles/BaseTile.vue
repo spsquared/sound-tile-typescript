@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
+import DraggableWindow from '@/components/window/DraggableWindow.vue';
 
 const props = defineProps<{
     tile: Tile
@@ -9,6 +10,15 @@ const props = defineProps<{
 }>();
 
 const tile = useTemplateRef('tile');
+
+// set element for other code - there should REALLY only be one of these at a time!!
+onMounted(() => {
+    if (props.tile.element !== null) console.warn(`${props.tile.label} element was not null on component mount! Perhaps the tile is in multiple places?`);
+    props.tile.element = tile.value;
+});
+onBeforeUnmount(() => {
+    props.tile.element = null;
+});
 
 function dragTile(e: MouseEvent) {
     const rect = tile.value?.getBoundingClientRect();
@@ -21,7 +31,7 @@ function dragTile(e: MouseEvent) {
     }, e);
 }
 
-const destroyDisabled = computed(() => TileEditor.state.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
+const destroyDisabled = computed(() => TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function deleteTile() {
     if (destroyDisabled.value) return;
     TileEditor.pushLayoutHistory();
@@ -34,26 +44,24 @@ function resetLabelScroll() {
     if (label.value !== null && !labelFocused) label.value.scrollLeft = 0;
 }
 
-// set element for other code - there should REALLY only be one of these at a time!!
-onMounted(() => {
-    if (props.tile.element !== null) console.warn(`${props.tile.label} element was not null on component mount! Perhaps the tile is in multiple places?`);
-    props.tile.element = tile.value;
-});
-onBeforeUnmount(() => {
-    props.tile.element = null;
-});
+function toggleEditTile() {
+    props.tile.editPaneOpen = !props.tile.editPaneOpen;
+}
 </script>
 
 <template>
     <div class="tile" ref="tile">
         <slot name="content"></slot>
-        <!-- put this in a popout window -->
-        <slot name="options"></slot>
+        <DraggableWindow :title="props.tile.label" v-model="props.tile.editPaneOpen">
+            <slot name="options"></slot>
+        </DraggableWindow>
         <div class="tileHeader" v-if="!props.hideHeader">
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
-            <div class="tileDrag" @mousedown="dragTile"></div>
+            <div class="tileDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
+            <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
+        <input type="button" class="tileEditButton" @click="toggleEditTile">
         <Transition>
             <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
         </Transition>
@@ -87,7 +95,6 @@ onBeforeUnmount(() => {
 }
 
 .tileLabel {
-    grid-column: 1;
     min-width: 0px;
     max-width: calc(100% - 84px);
     border-radius: 0px;
@@ -100,7 +107,6 @@ onBeforeUnmount(() => {
 }
 
 .tileDrag {
-    grid-column: 2;
     background-image: url(@/img/drag.svg);
     background-position: center;
     background-size: 100% 100%;
@@ -109,22 +115,25 @@ onBeforeUnmount(() => {
     cursor: grab;
 }
 
+.tileDragDisabled {
+    flex-grow: 1;
+}
+
 .tileDeleteButton {
-    grid-column: 3;
     width: 20px;
     height: 20px;
     border-radius: 0px;
-    background-color: tomato;
-    background-position: 50% 50%;
-    background-repeat: no-repeat;
-    background-size: 80% 80%;
+    background-color: red;
     background-image: url(@/img/delete-dark.svg);
+    background-position: center;
+    background-size: 80% 80%;
+    background-repeat: no-repeat;
     transition: 50ms linear background-color;
     cursor: pointer;
 }
 
 .tileDeleteButton:hover {
-    background-color: red;
+    background-color: tomato;
 }
 
 .tileDeleteButton:active {
@@ -133,6 +142,26 @@ onBeforeUnmount(() => {
 
 .tileDeleteButton:disabled {
     background-color: #777;
+    cursor: not-allowed;
+}
+
+.tileEditButton {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    width: 24px;
+    height: 24px;
+    background-color: dodgerblue;
+    background-image: url(@/img/edit.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 60% 60%;
+    opacity: 0;
+    transition: 100ms linear opacity;
+}
+
+.tileEditButton:hover {
+    opacity: 1;
 }
 
 .tileOutline {

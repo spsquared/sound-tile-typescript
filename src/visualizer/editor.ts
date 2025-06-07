@@ -1,5 +1,6 @@
 import { reactive, watch } from "vue";
 import { AudioLevelsTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
+import { AsyncLock } from "@/components/window/lock";
 
 type tileEditorState = {
     dropdownOpen: boolean
@@ -21,7 +22,7 @@ type tileEditorState = {
         }
     }
     sidebarHoverTile: Tile | null
-    locked: boolean
+    lock: AsyncLock
 };
 
 /**
@@ -58,15 +59,49 @@ export class TileEditor {
             }
         },
         sidebarHoverTile: null,
-        locked: false
+        lock: new AsyncLock()
     }) as tileEditorState; // fixes Vue typing errors
 
     static registerTile(t: typeof Tile, id: string, visible: boolean): void {
         this.state.tileTypes[id] = { Tile: t, visible: visible };
     }
 
-    /**Root node in document - never changes (GroupTile type fixes Vue typing errors) */
+    /**Root node in document - never changes because of reactivity issues (GroupTile type fixes Vue typing errors) */
     static readonly root: GroupTile = reactive<GroupTile>(new GroupTile()) as GroupTile;
+
+    /**
+     * Replace the current layout with a new layout. Consumes the provided tree and returns the root of the new tree.
+     * @param root Provided layout
+     * @returns Reference to root of new tree
+     */
+    static attachRoot(root: GroupTile): GroupTile | null {
+        if (this.state.lock.locked) return null;
+        this.endDrag();
+        this.layoutHistory.length = 0;
+        this.root.copyProperties(root);
+        for (const child of root.children) child.parent = this.root;
+        this.root.children.length = 0;
+        this.root.children.push(...root.children);
+        root.children.length = 0;
+        return this.root;
+    }
+    /**
+     * Remove and return the current layout as a new tree. Deletes the current tree and returns the root of the new tree.
+     * @returns Reference to root of new tree
+     */
+    static detachRoot(): GroupTile | null {
+        if (this.state.lock.locked) return null;
+        this.endDrag();
+        this.layoutHistory.length = 0;
+        const root = new GroupTile();
+        root.copyProperties(this.root);
+        for (const child of this.root.children) child.parent = root;
+        root.children.length = 0;
+        root.children.push(...this.root.children);
+        this.root.children.length = 0;
+        this.root.addChild(new Tile()); // blank tile to fill group tile
+        return root;
+    }
 
     /**Stores layout history separate from tile data - root of history can never be group tile */
     static readonly layoutHistory: Exclude<layoutHistoryEntry, Tile>[] = [];
@@ -121,11 +156,11 @@ export class TileEditor {
         this.root.copyProperties(loadedRoot);
         this.root.children.length = 0;
         this.root.children.push(...loadedRoot.children);
-        console.log(this.root.parent)
         return true;
     }
 
     static startDrag(tile: Tile, offset?: tileEditorState['drag']['offset'], size?: tileEditorState['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
+        if (this.state.lock.locked) return false;
         if (this.state.drag.current !== null) return false;
         this.pushLayoutHistory();
         if (tile.parent !== null) tile.parent.removeChild(tile);
@@ -252,6 +287,7 @@ export class TileEditor {
         }
     }
     static endDrag(): boolean {
+        if (this.state.lock.locked) return false;
         if (this.state.drag.current === null) return false;
         if (this.state.drag.drop.tile === null) {
             this.popLayoutHistory();
@@ -309,14 +345,18 @@ TileEditor.registerTile(ImageTile, 'i', true);
 TileEditor.registerTile(Tile, 'b', true);
 
 // default state
-const defA = new GroupTile();
-defA.orientation = GroupTile.VERTICAL;
-defA.addChild(new VisualizerTile());
-const defB = new GroupTile();
-defB.addChild(new ImageTile());
-defB.addChild(new TextTile());
-defA.addChild(defB);
-defA.addChild(new VisualizerTile());
-TileEditor.root.addChild(defA);
-TileEditor.root.addChild(new VisualizerTile());
-TileEditor.root.addChild(new VisualizerTile());
+{
+    const root = new GroupTile();
+    const subA = new GroupTile();
+    const subB = new GroupTile();
+    subA.orientation = GroupTile.VERTICAL;
+    subA.addChild(new VisualizerTile());
+    subB.addChild(new ImageTile());
+    subB.addChild(new TextTile());
+    subA.addChild(subB);
+    subA.addChild(new VisualizerTile());
+    root.addChild(subA);
+    root.addChild(new VisualizerTile());
+    root.addChild(new VisualizerTile());
+    TileEditor.attachRoot(root);
+}

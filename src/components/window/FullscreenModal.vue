@@ -84,6 +84,7 @@ export const enum ModalMode {
 .modalBody {
     grid-row: 2;
     grid-column: 2;
+    contain: content;
     display: inline-block;
     position: relative;
     bottom: calc(50vh + 50%);

@@ -1,16 +1,20 @@
 export class AsyncLock {
-    private locked = false;
+    private _locked = false;
     private readonly queue: (() => void)[] = [];
 
     async acquire(): Promise<void> {
-        if (this.locked) return new Promise<void>((resolve) => {
+        if (this._locked) return new Promise<void>((resolve) => {
             this.queue.push(() => resolve());
         });
-        this.locked = true;
+        this._locked = true;
     }
 
     release(): void {
         if (this.queue.length > 0) this.queue.shift()?.call(this);
-        else this.locked = false;
+        else this._locked = false;
+    }
+
+    get locked(): boolean {
+        return this._locked;
     }
 }

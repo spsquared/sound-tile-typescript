@@ -28,13 +28,17 @@ function openChildren() {
     childrenOpen.value = true;
 }
 
+function toggleEditTile() {
+    props.tile.editPaneOpen = !props.tile.editPaneOpen;
+}
+
 function dragTile(e: MouseEvent) {
     if (TileEditor.startDrag(props.tile, { x: 100, y: 5 }, { w: 200, h: 150 }, e)) {
         TileEditor.state.sidebarHoverTile = null;
     }
 }
 
-const destroyDisabled = computed(() => props.root || TileEditor.state.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
+const destroyDisabled = computed(() => props.root || TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function deleteTile() {
     TileEditor.pushLayoutHistory();
     props.tile.destroy();
@@ -47,7 +51,8 @@ function deleteTile() {
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length - 1" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
-            <div class="editItemDrag" @mousedown="dragTile"></div>
+            <div class="editItemDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
+            <input type="button" class="editItemEditButton" @click="toggleEditTile">
             <input type="button" class="editItemDeleteButton" title="Delete Tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
         <Transition>
@@ -85,6 +90,7 @@ function deleteTile() {
 
 .editItemGroupIcon,
 .editItemDrag,
+.editItemEditButton,
 .editItemDeleteButton {
     background-position: center;
     background-size: 90% 90%;
@@ -119,15 +125,18 @@ function deleteTile() {
 }
 
 .editItemDrag,
+.editItemEditButton,
 .editItemDeleteButton {
     width: 18px;
     height: 18px;
     border-radius: 0px;
     background-color: transparent;
     opacity: 0;
+    cursor: pointer;
 }
 
 .editItemBar:hover>.editItemDrag,
+.editItemBar:hover>.editItemEditButton,
 .editItemBar:hover>.editItemDeleteButton {
     opacity: 1;
 }
@@ -137,9 +146,17 @@ function deleteTile() {
     cursor: grab;
 }
 
+.editItemEditButton {
+    background-image: url(@/img/edit.svg);
+    background-size: 80% 80%;
+}
+
+.editItemEditButton:hover {
+    background-color: dodgerblue;
+}
+
 .editItemDeleteButton {
     background-image: url(@/img/delete.svg);
-    cursor: pointer;
 }
 
 .editItemDeleteButton:hover {

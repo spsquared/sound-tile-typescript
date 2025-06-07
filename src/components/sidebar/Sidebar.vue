@@ -88,7 +88,7 @@ onUnmounted(() => {
     border-left: 4px solid white;
     background-color: black;
     transition: 200ms ease transform;
-    transform: translateX(var(--sidebar-width));
+    transform: translateX(100%);
     z-index: 600;
     --sidebar-width: max(v-bind("TileEditor.state.sidebarScreenWidth + 'vw'"), v-bind("TileEditor.state.minSidebarWidthPx + 'px'"));
 }

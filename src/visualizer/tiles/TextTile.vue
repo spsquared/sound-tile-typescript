@@ -12,6 +12,9 @@ const props = defineProps<{
         <template v-slot:content>
             oof text tile
         </template>
+        <template v-slot:options>
+            edit textile
+        </template>
     </BaseTile>
 </template>
 

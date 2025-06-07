@@ -125,6 +125,10 @@ import { pipEnabled } from '@/visualizer/pipPlayer';
     background-repeat: no-repeat;
 }
 
+#pipButton:hover {
+    background-color: color-mix(in hsl, dodgerblue 80%, cyan 20%);
+}
+
 #pipCheckbox:checked+#pipButton {
     background-image: url(@/img/picture-in-picture-exit.svg);
 }

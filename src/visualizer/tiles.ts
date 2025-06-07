@@ -30,6 +30,8 @@ export class Tile {
     private static idCounter: number = 0;
     /**ID used by Vue v-for */
     readonly id: number;
+    /**Ref used in components to open window */
+    editPaneOpen: boolean = false;
 
     /**DOM element, only exists while mounted (set by component) */
     element: HTMLElement | null = null;
@@ -156,6 +158,10 @@ export class VisualizerTile extends Tile {
     readonly class: typeof VisualizerTile = VisualizerTile;
 
     label: string = VisualizerTile.name;
+
+    resize(w: number, h: number): void {
+
+    }
 }
 
 export class AudioLevelsTile extends Tile {

@@ -12,6 +12,9 @@ const props = defineProps<{
         <template v-slot:content>
             oof iamges tile
         </template>
+        <template v-slot:options>
+            edit bluapple.png
+        </template>
     </BaseTile>
 </template>
 

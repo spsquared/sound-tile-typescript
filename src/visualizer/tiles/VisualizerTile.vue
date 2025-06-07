@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useResizeObserver } from '@vueuse/core';
+import { throttledWatch, useElementSize } from '@vueuse/core';
 import { VisualizerTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import { useTemplateRef } from 'vue';
@@ -8,16 +8,20 @@ const props = defineProps<{
     tile: VisualizerTile
 }>();
 const canvas = useTemplateRef('canvas');
-useResizeObserver(canvas, (entries) => {
-    // resize canvas
-});
+const { width: canvasWidth, height: canvasHeight } = useElementSize(canvas);
+// guess I don't need my throttling code anymore
+throttledWatch([canvasWidth, canvasHeight], () => {
+    props.tile.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
+}, { throttle: 20 });
 </script>
 
 <template>
     <BaseTile :tile="props.tile">
         <template v-slot:content>
             <canvas class="visualizerCanvas" ref="canvas"></canvas>
-            oof visaulsideer tile
+        </template>
+        <template v-slot:options>
+            TEST TEST TEST TEST
         </template>
     </BaseTile>
 </template>
@@ -27,6 +31,7 @@ useResizeObserver(canvas, (entries) => {
     position: absolute;
     top: 0px;
     left: 0px;
-    background-color: orange;
+    width: 100%;
+    height: 100%;
 }
 </style>

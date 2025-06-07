@@ -12,6 +12,9 @@ const props = defineProps<{
         <template v-slot:content>
             oof audio levels tile
         </template>
+        <template v-slot:options>
+            edit audio levels
+        </template>
     </BaseTile>
 </template>
 

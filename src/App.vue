@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
-import FullscreenModal, { ModalMode } from '@/components/util/FullscreenModal.vue';
+import FullscreenModal, { ModalMode } from '@/components/window/FullscreenModal.vue';
 import Dropdown from '@/components/dropdown/Dropdown.vue';
 import TileRoot from '@/components/main/TileRoot.vue';
 import TileDrag from '@/components/main/TileDrag.vue';

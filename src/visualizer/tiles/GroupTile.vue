@@ -23,6 +23,8 @@ const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', comput
                 <component v-for="child of tile.children" :key="child.id" :is="child.class.component" :tile="child" :class="{ groupChildCollapsed: props.tile.orientation == GroupTile.COLLAPSED }"></component>
             </div>
         </template>
+        <template v-slot:options>
+        </template>
     </BaseTile>
 </template>
 
