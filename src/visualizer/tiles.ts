@@ -31,10 +31,14 @@ export class Tile {
     /**ID used by Vue v-for */
     readonly id: number;
 
+    /**DOM element, only exists while mounted (set by component) */
+    element: HTMLElement | null = null;
     /**Label used to identify tile in editor */
     label: string = Tile.name;
     /**Parent tile (don't modify this manually) */
     parent: GroupTile | null = null;
+    /**Relative size compared to sibling tiles (same parent) */
+    size: number = 1;
 
     constructor() {
         this.id = Tile.idCounter++;
@@ -45,6 +49,8 @@ export class Tile {
     }
 }
 
+enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
+
 /**
  * Tile to create layouts of other tiles in lines - can be nested to create complex arrangements.
  */
@@ -54,12 +60,15 @@ export class GroupTile extends Tile {
     static readonly image: string = blankTileImg;
     readonly class: typeof GroupTile = GroupTile;
 
+    static readonly HORIZONTAL: GroupTileOrientation = GroupTileOrientation.HORIZONTAL;
+    static readonly VERTICAL: GroupTileOrientation = GroupTileOrientation.VERTICAL;
+    static readonly COLLAPSED: GroupTileOrientation = GroupTileOrientation.COLLAPSED;
+
     label: string = GroupTile.name;
     /**Tiles inside (don't modify this manually) */
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
-    isVertical: boolean = false;
-    collapseChildren: boolean = false;
+    orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
     borderColors: string = 'rgba(255, 255, 255, 1)';
 
     constructor() {
@@ -72,7 +81,6 @@ export class GroupTile extends Tile {
         tile.parent = this;
         return true;
     }
-
     insertChildBefore(tile: Tile, current: Tile | number): boolean {
         if (this.children.includes(tile)) return false;
         const index = typeof current == 'number' ? current : this.children.indexOf(current);
@@ -81,7 +89,6 @@ export class GroupTile extends Tile {
         this.children.splice(index, 0, tile);
         return true;
     }
-
     insertChildAfter(tile: Tile, current: Tile | number): boolean {
         if (this.children.includes(tile)) return false;
         const index = typeof current == 'number' ? current : this.children.indexOf(current);
@@ -90,7 +97,6 @@ export class GroupTile extends Tile {
         this.children.splice(index + 1, 0, tile);
         return true;
     }
-
     replaceChild(current: Tile | number, replace: Tile): Tile | null {
         const index = typeof current == 'number' ? current : this.children.indexOf(current);
         if (index < 0 || index >= this.children.length) return null;
@@ -99,7 +105,6 @@ export class GroupTile extends Tile {
         old.parent = null;
         return old;
     }
-
     removeChild(tile: Tile | number): Tile | null {
         const index = typeof tile == 'number' ? tile : this.children.indexOf(tile);
         if (index < 0 || index >= this.children.length) return null;
@@ -108,7 +113,6 @@ export class GroupTile extends Tile {
         this.checkObsolete();
         return old;
     }
-
     private checkObsolete(): void {
         if (this.parent === null) return;
         if (this.children.length == 0) this.destroy();
@@ -120,6 +124,12 @@ export class GroupTile extends Tile {
             if (child instanceof GroupTile) child.checkObsolete();
             parent.checkObsolete();
         }
+    }
+
+    /**Convenience function to "inherit" properties from another Group Tile */
+    copyProperties(o: GroupTile) {
+        this.orientation = o.orientation;
+        this.borderColors = o.borderColors;
     }
 
     destroy(): void {

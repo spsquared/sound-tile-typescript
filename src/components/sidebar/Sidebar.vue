@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, provide, ref } from 'vue';
 import TileEditor from '@/visualizer/editor';
-import SidebarTileEdit from './SidebarTileEdit.vue';
-import SidebarExport from './SidebarExport.vue';
+import SidebarTileEdit from './tileEdit/SidebarTileEdit.vue';
+import SidebarExport from './export/SidebarExport.vue';
+import SidebarPlaylist from './playlist/SidebarPlaylist.vue';
 import SidebarTab from './SidebarTab.vue';
 import editIcon from '@/img/edit.svg';
 import exportIcon from '@/img/export.svg';
+import playlistIcon from '@/img/playlist.svg';
 
 function keypress(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
@@ -56,12 +58,14 @@ onUnmounted(() => {
     <div id="sidebar">
         <SidebarTileEdit></SidebarTileEdit>
         <SidebarExport></SidebarExport>
+        <SidebarPlaylist></SidebarPlaylist>
         <input type="checkbox" id="dropdownShadowToggle" v-model="TileEditor.state.dropdownOpen">
         <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs">
             <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
             <div id="sidebarTabsList">
-                <SidebarTab for="edit" :image="editIcon" size="70%"></SidebarTab>
-                <SidebarTab for="export" :image="exportIcon"></SidebarTab>
+                <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
+                <SidebarTab for="export" :image="exportIcon" title="Export"></SidebarTab>
+                <SidebarTab for="playlist" :image="playlistIcon" size="90%" title="Playlist"></SidebarTab>
             </div>
         </div>
         <div id="sidebarResize" @mousedown="beginResize"></div>
@@ -95,11 +99,6 @@ onUnmounted(() => {
 
 #sidebarHeader {
     background-color: blue;
-}
-
-#sidebarBody {
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 
 #sidebarTabs {

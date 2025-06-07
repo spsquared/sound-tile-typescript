@@ -14,7 +14,7 @@ body {
     width: 100vw;
     height: 100vh;
     margin: 0px 0px;
-    overflow: hidden;
+    overflow: clip;
     scroll-behavior: smooth;
 }
 

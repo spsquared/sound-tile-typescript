@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SidebarContentWrapper from './SidebarContentWrapper.vue';
+import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 
 </script>
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { inject, ref, Ref } from 'vue';
+import { inject, Ref } from 'vue';
 
 const props = defineProps<{
     tab: string
 }>();
 
-const currentTab = inject('sidebarCurrentTab') as Ref<string> ?? ref('');
+const currentTab = inject<Ref<string>>('sidebarCurrentTab');
 </script>
 
 <template>
@@ -49,8 +49,7 @@ const currentTab = inject('sidebarCurrentTab') as Ref<string> ?? ref('');
 .sidebarContent {
     padding: 4px 4px;
     transition: 200ms ease transform;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: auto;
 }
 
 .v-enter-from>.sidebarHeader,

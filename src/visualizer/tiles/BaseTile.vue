@@ -1,55 +1,75 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
-import FullscreenModal, { ModalMode } from '@/components/util/FullscreenModal.vue';
 
 const props = defineProps<{
     tile: Tile
     hideHeader?: boolean
 }>();
 
-const destroyDisabled = computed(() => TileEditor.state.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
-const deleteConfirmModal = ref(false);
-function deleteTile() {
-    if (destroyDisabled.value) return;
-    deleteConfirmModal.value = true;
-}
-function confirmDeleteTile(success: boolean) {
-    if (success) props.tile.destroy();
+const tile = useTemplateRef('tile');
+
+function dragTile(e: MouseEvent) {
+    const rect = tile.value?.getBoundingClientRect();
+    TileEditor.startDrag(props.tile, {
+        x: e.clientX - (rect?.left ?? e.clientX),
+        y: e.clientY - (rect?.top ?? e.clientY),
+    }, {
+        w: rect?.width ?? 200,
+        h: rect?.height ?? 150
+    }, e);
 }
 
-const forceShowHeader = ref(false);
-function focusLabel() {
-    forceShowHeader.value = true;
+const destroyDisabled = computed(() => TileEditor.state.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
+function deleteTile() {
+    if (destroyDisabled.value) return;
+    TileEditor.pushLayoutHistory();
+    props.tile.destroy();
 }
-function blurLabel() {
-    forceShowHeader.value = false;
+
+const label = useTemplateRef('label');
+const labelFocused = ref(false);
+function resetLabelScroll() {
+    if (label.value !== null && !labelFocused) label.value.scrollLeft = 0;
 }
+
+// set element for other code - there should REALLY only be one of these at a time!!
+onMounted(() => {
+    if (props.tile.element !== null) console.warn(`${props.tile.label} element was not null on component mount! Perhaps the tile is in multiple places?`);
+    props.tile.element = tile.value;
+});
+onBeforeUnmount(() => {
+    props.tile.element = null;
+});
 </script>
 
 <template>
-    <div class="tile">
+    <div :class="{ tile: true, highlightTile: TileEditor.state.sidebarHoverTile === props.tile }" ref="tile">
         <slot name="content"></slot>
+        <!-- put this in a popout window -->
         <slot name="options"></slot>
         <div class="tileHeader" v-if="!props.hideHeader">
-            <input type="text" class="tileLabel" v-model="props.tile.label" :size="props.tile.label.length" @focus="focusLabel()" @blur="blurLabel()">
-            <div class="tileDrag"></div>
-            <input type="button" class="tileDeleteButton" @click="deleteTile()" :disabled="destroyDisabled">
+            <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
+            <div class="tileDrag" @mousedown="dragTile"></div>
+            <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
     </div>
-    <FullscreenModal v-model="deleteConfirmModal" :title="`Delete ${props.tile.label}?`" :mode="ModalMode.CONFIRM_WARN" color="red" @close="confirmDeleteTile">
-        Deleting is permanent!
-    </FullscreenModal>
 </template>
 
 <style scoped>
 .tile {
-    contain: size;
+    contain: strict;
     position: relative;
     background-color: black;
-    flex: 1;
+    flex: v-bind("$props.tile.size");
     flex-basis: 0px;
+    transition: 50ms linear outline-color;
+    outline: 4px dashed transparent;
+}
+
+.highlightTile {
+    outline-color: red;
 }
 
 .tileHeader {
@@ -61,8 +81,8 @@ function blurLabel() {
     width: 100%;
     height: 20px;
     background-color: #555;
-    transition: 200ms linear opacity;
-    opacity: 0;
+    transition: 100ms linear opacity;
+    opacity: v-bind("labelFocused ? 1 : 0");
 }
 
 .tileHeader:hover {
@@ -101,7 +121,7 @@ function blurLabel() {
     background-position: 50% 50%;
     background-repeat: no-repeat;
     background-size: 80% 80%;
-    background-image: url(@/img/delete.svg);
+    background-image: url(@/img/delete-dark.svg);
     transition: 50ms linear background-color;
     cursor: pointer;
 }

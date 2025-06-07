@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TileEditor from '@/visualizer/editor';
-import SidebarContentWrapper from './SidebarContentWrapper.vue';
-import TileEditItem from './tileEdit/TileEditItem.vue';
+import SidebarContentWrapper from '../SidebarContentWrapper.vue';
+import TileEditItem from './TileEditItem.vue';
 
 function resetHover() {
     TileEditor.state.sidebarHoverTile = null;
@@ -12,9 +12,7 @@ function resetHover() {
     <SidebarContentWrapper tab="edit">
         <template v-slot:header>Edit</template>
         <template v-slot:content>
-            <div @mouseleave="resetHover()">
-                <TileEditItem :tile="TileEditor.root" root></TileEditItem>
-            </div>
+            <TileEditItem :tile="TileEditor.root" root @mouseleave="resetHover"></TileEditItem>
         </template>
     </SidebarContentWrapper>
 </template>

@@ -40,7 +40,7 @@ const showCopyright = ref(false);
     <input type="checkbox" id="dropdownToggle" v-model="TileEditor.state.dropdownOpen" checked>
     <div id="dropdown">
         <div id="dropdownBody">
-            <img src="@/img/logo.png" id="dropdownLogo" :title="copyright" @click="() => showCopyright = true">
+            <img src="@/img/logo.png" id="dropdownLogo" :title="copyright" @click="showCopyright = true">
             <DropdownFileControls></DropdownFileControls>
             <DropdownMediaData></DropdownMediaData>
             <DropdownMediaControls></DropdownMediaControls>

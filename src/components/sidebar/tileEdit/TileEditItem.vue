@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import TileEditor from '@/visualizer/editor';
 import { GroupTile, Tile } from '@/visualizer/tiles';
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import arrowRightIcon from '@/img/arrow-right.svg';
 import arrowDownIcon from '@/img/arrow-down.svg';
-import FullscreenModal, { ModalMode } from '@/components/util/FullscreenModal.vue';
 
 const props = defineProps<{
     tile: Tile
@@ -15,6 +14,11 @@ function setHover() {
     TileEditor.state.sidebarHoverTile = props.tile;
 }
 
+const label = useTemplateRef('label');
+function resetLabelScroll() {
+    if (label.value !== null) label.value.scrollLeft = 0;
+}
+
 const childrenOpen = ref(true);
 function toggleChildren() {
     childrenOpen.value = !childrenOpen.value;
@@ -23,22 +27,26 @@ function openChildren() {
     childrenOpen.value = true;
 }
 
-const deleteConfirmModal = ref(false);
-function deleteTile() {
-    deleteConfirmModal.value = true;
+function dragTile(e: MouseEvent) {
+    if (TileEditor.startDrag(props.tile, { x: 100, y: 5 }, { w: 200, h: 150 }, e)) {
+        TileEditor.state.sidebarHoverTile = null;
+    }
 }
-function confirmDeleteTile(success: boolean) {
-    if (success) props.tile.destroy();
+
+function deleteTile() {
+    TileEditor.pushLayoutHistory();
+    props.tile.destroy();
 }
 </script>
 
 <template>
     <div class="editItem">
-        <div class="editItemBar" @mouseenter="setHover()">
-            <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren()"></div>
-            <input type="text" class="editItemLabel" v-model="props.tile.label" :size="props.tile.label.length - 1" @focus="openChildren()">
-            <div class="editItemSpacer" @click="toggleChildren()"></div>
-            <input type="button" class="editItemDeleteButton" @click="deleteTile()">
+        <div class="editItemBar" @mouseenter="setHover">
+            <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
+            <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length - 1" @focus="openChildren" @mouseleave="resetLabelScroll">
+            <div class="editItemSpacer" @click="toggleChildren"></div>
+            <div class="editItemDrag" @mousedown="dragTile"></div>
+            <input type="button" class="editItemDeleteButton" title="Delete Tile" @click="deleteTile">
         </div>
         <Transition>
             <div class="editItemGroupChildrenWrapper" v-if="props.tile instanceof GroupTile" v-show="childrenOpen">
@@ -49,9 +57,6 @@ function confirmDeleteTile(success: boolean) {
             </div>
         </Transition>
     </div>
-    <FullscreenModal v-model="deleteConfirmModal" :title="`Delete ${props.tile.label}?`" :mode="ModalMode.CONFIRM_WARN" color="red" @close="confirmDeleteTile">
-        Deleting is permanent!
-    </FullscreenModal>
 </template>
 
 <style scoped>
@@ -62,6 +67,8 @@ function confirmDeleteTile(success: boolean) {
 }
 
 .editItemBar {
+    /* prevents flex blowout caused by input */
+    contain: size;
     grid-row: 1;
     grid-column: 2;
     display: flex;
@@ -74,17 +81,25 @@ function confirmDeleteTile(success: boolean) {
     background-color: #555;
 }
 
+.editItemGroupIcon,
+.editItemDrag,
+.editItemDeleteButton {
+    background-position: center;
+    background-size: 90% 90%;
+    background-repeat: no-repeat;
+}
+
 .editItemGroupIcon {
     width: 18px;
     height: 18px;
     background-color: transparent;
     background-image: v-bind('childrenOpen ? `url("${arrowDownIcon}")` : `url("${arrowRightIcon}")`');
-    background-position: center;
     background-size: 80% 80%;
-    background-repeat: no-repeat;
 }
 
 .editItemLabel {
+    min-width: 0px;
+    flex-shrink: 1;
     border-radius: 0px;
     background-color: transparent;
     font-size: 14px;
@@ -101,19 +116,32 @@ function confirmDeleteTile(success: boolean) {
     flex-grow: 1;
 }
 
+.editItemDrag,
 .editItemDeleteButton {
     width: 18px;
     height: 18px;
     border-radius: 0px;
-    cursor: pointer;
     background-color: transparent;
+    opacity: 0;
+}
+
+.editItemBar:hover>.editItemDrag,
+.editItemBar:hover>.editItemDeleteButton {
+    opacity: 1;
+}
+
+.editItemDrag {
+    background-image: url(@/img/drag.svg);
+    cursor: grab;
+}
+
+.editItemDeleteButton {
     background-image: url(@/img/delete.svg);
-    background-position: center;
-    background-size: 90% 90%;
-    background-repeat: no-repeat;
+    cursor: pointer;
 }
 
 .editItemDeleteButton:hover {
+    background-image: url(@/img/delete-dark.svg);
     background-color: red;
 }
 

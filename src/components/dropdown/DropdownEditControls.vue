@@ -25,7 +25,7 @@ const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).fil
         <div id="treeModeImg"></div>
     </div>
     <div id="tileSourceContainer">
-        <TileSource v-for="tile of sourceTiles" :tile="tile" :key="tile.name"></TileSource>
+        <TileSource v-for="tile of sourceTiles" :key="tile.name" :tile="tile"></TileSource>
     </div>
 </template>
 
@@ -124,7 +124,7 @@ const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).fil
     column-gap: 8px;
     flex-grow: 1;
     overflow-x: scroll;
-    overflow-y: hidden;
+    overflow-y: clip;
     user-select: none;
     --scrollbar-size: 10px;
 }

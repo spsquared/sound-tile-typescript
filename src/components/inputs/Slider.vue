@@ -45,7 +45,7 @@ function endWheel() {
 
 <template>
     <label :class="{ slider: true, sliderVertical: props.vertical, sliderDisabled: props.disabled }">
-        <input type="range" class="sliderInput" v-model="value" @wheel="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
+        <input type="range" class="sliderInput" v-model="value" @wheel.passive="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
         <div class="sliderTrack"></div>
         <div class="sliderThumbWrapper">
             <div class="sliderThumb"></div>

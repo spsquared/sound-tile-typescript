@@ -4,11 +4,12 @@ import { inject, ref, Ref } from 'vue';
 
 const props = defineProps<{
     for: string
+    title: string
     image: string
     size?: string
 }>();
 
-const currentTab = inject('sidebarCurrentTab') as Ref<string> ?? ref('');
+const currentTab = inject<Ref<string>>('sidebarCurrentTab') ?? ref(''); // will warn if no default, intended
 
 function set() {
     currentTab.value = props.for;
@@ -17,7 +18,7 @@ function set() {
 </script>
 
 <template>
-    <button :class="{ sidebarTab: true, sidebarTabSelected: currentTab == props.for }" @click="set()"></button>
+    <button :class="{ sidebarTab: true, sidebarTabSelected: currentTab == props.for }" :title="props.title" @click="set"></button>
 </template>
 
 <style scoped>

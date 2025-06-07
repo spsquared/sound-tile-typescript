@@ -1,0 +1,64 @@
+<script setup lang="ts">
+import TileEditor from '@/visualizer/editor';
+import { GroupTile, Tile } from '@/visualizer/tiles';
+
+const props = defineProps<{
+    tile: Tile
+}>();
+</script>
+
+<template>
+    <div v-if="TileEditor.state.drag.drop.tile == props.tile && !TileEditor.state.drag.drop.createGroup && TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+    <div class="ghostDropGroup">
+        <!-- this part looks jank - handles dropping with group creation -->
+        <div v-if="TileEditor.state.drag.drop.tile == props.tile && TileEditor.state.drag.drop.createGroup && TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+        <div :class="{
+            ghostTile: true,
+            ghostTileGroup: props.tile instanceof GroupTile,
+            ghostTileCollapsed: props.tile instanceof GroupTile && props.tile.orientation == GroupTile.COLLAPSED
+        }">
+            <template v-if="props.tile instanceof GroupTile">
+                <TileDragGhostTile v-for="child of props.tile.children" :key="child.id" :tile="child"></TileDragGhostTile>
+            </template>
+        </div>
+        <div v-if="TileEditor.state.drag.drop.tile == props.tile && TileEditor.state.drag.drop.createGroup && !TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+    </div>
+    <div v-if="TileEditor.state.drag.drop.tile == props.tile && !TileEditor.state.drag.drop.createGroup && !TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+</template>
+
+<style scoped>
+.ghostDropGroup {
+    display: flex;
+    flex: v-bind("$props.tile.size");
+    flex-basis: 0px;
+    flex-direction: v-bind("TileEditor.state.drag.drop.newGroupVertical ? 'column' : 'row'");
+    gap: 4px;
+}
+
+.ghostTile {
+    margin: -2px -2px;
+    border: 2px solid white;
+    flex: v-bind("$props.tile.size");
+    flex-basis: 0px;
+}
+
+.ghostTileGroup {
+    display: flex;
+    margin: 0px 0px;
+    border: none;
+    /* ($props.tile as GroupTile) creates a syntax error on line 3 for some reason */
+    flex-direction: v-bind("$props.tile instanceof GroupTile && $props.tile.orientation == GroupTile.VERTICAL ? 'column' : 'row'");
+    gap: 4px;
+}
+
+.ghostTileCollapsed {
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
+}
+
+.ghostDropTarget {
+    flex: v-bind("TileEditor.state.drag.current?.size");
+    background-color: #FFF7;
+}
+</style>

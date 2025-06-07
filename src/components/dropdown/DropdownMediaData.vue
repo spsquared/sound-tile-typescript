@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, Ref, ref } from 'vue';
+import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 
-const coverArt: Ref<HTMLImageElement | null> = ref(null);
-const title: Ref<HTMLInputElement | null> = ref(null);
-const subtitle: Ref<HTMLInputElement | null> = ref(null);
+const title = useTemplateRef('title');
+const subtitle = useTemplateRef('subtitle');
 
 const open = ref(false);
 
@@ -45,9 +44,9 @@ function preventScrollIfNotFocus(e: WheelEvent) {
     <input type="checkbox" id="mdatTabCheckbox">
     <div id="mdatControls">
         <div id="mdatBody">
-            <img id="mdatCoverArt" ref="coverArt" :src="MediaPlayer.state.current.coverArt" @dblclick="uploadCoverArt()" title="Album cover (double-click to change)">
-            <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.state.current.title" @wheel="preventScrollIfNotFocus" placeholder="Title" autocomplete="off" spellcheck="false">
-            <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.state.current.subtitle" @wheel="preventScrollIfNotFocus" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
+            <img id="mdatCoverArt" :src="MediaPlayer.state.current.coverArt" @dblclick="uploadCoverArt" title="Album cover (double-click to change)">
+            <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.state.current.title" @wheel.passive="preventScrollIfNotFocus" placeholder="Title" autocomplete="off" spellcheck="false">
+            <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.state.current.subtitle" @wheel.passive="preventScrollIfNotFocus" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
             <div id="mdatPlaylist">
                 <div id="mdatPlaylistOptions">
                     <input id="mdatPlaylistShuffleToggle" type="checkbox" v-model="MediaPlayer.state.shuffle">
