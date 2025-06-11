@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import { TextTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
+import ColorPicker from '@/components/inputs/ColorPicker.vue';
 
 const props = defineProps<{
     tile: TextTile
@@ -13,7 +15,14 @@ const props = defineProps<{
             oof text tile
         </template>
         <template v-slot:options>
-            edit textile
+            <label>
+                Size:
+                <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+            </label>
+            <label>
+                Background:
+                <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+            </label>
         </template>
     </BaseTile>
 </template>

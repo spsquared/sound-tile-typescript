@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { useDraggable, useElementBounding } from '@vueuse/core';
-import { onMounted, onUnmounted, reactive, useTemplateRef } from 'vue';
+import { onClickOutside, useDraggable, useElementBounding } from '@vueuse/core';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue';
 
 const props = defineProps<{
     title: string
     minWidth?: number
     minHeight?: number
+    resizeable?: boolean
+    closeOnClickOut?: boolean
 }>();
 
 const winBounds = useTemplateRef('winBounds');
@@ -16,9 +18,14 @@ const { x: dragX, y: dragY, style: dragStyle } = useDraggable(winContainer, {
     handle: winBar,
     containerElement: winBounds,
     preventDefault: true,
+    onStart: () => { bringToTop(); },
     initialValue: { x: 100, y: 100 }
 });
 const size = reactive({ w: 300, h: 200 });
+watch([() => props.minWidth, () => props.minHeight], () => {
+    if (props.minWidth !== undefined && size.w < props.minWidth) size.w = props.minWidth;
+    if (props.minHeight !== undefined && size.w < props.minHeight) size.h = props.minHeight;
+}, { immediate: true });
 // spaghetti resize because VueUse doesn't have it
 const boundingRect = useElementBounding(winContainer);
 const resizeState = {
@@ -69,27 +76,81 @@ onUnmounted(() => {
     document.removeEventListener('mouseup', endResize);
     document.removeEventListener('blur', endResize);
 });
+watch(() => props.resizeable, () => {
+    if (!props.resizeable) {
+        size.w = props.minWidth ?? 300;
+        size.h = props.minHeight ?? 200;
+    }
+}, { immediate: true });
+
+// window brought to top of other windows when clicked on
+const isTop = ref(false);
+async function bringToTop() {
+    if (!open.value) return;
+    topCounter.value++;
+    await nextTick();
+    isTop.value = true;
+}
+watch(topCounter, () => isTop.value = false);
+watch(open, () => open.value && bringToTop());
+
+// optionally close on clicking outside the window
+onClickOutside(winContainer, () => {
+    if (props.closeOnClickOut) open.value = false;
+});
+
+// a bunch of stuff I'll probably never use save that one obscure feature that does
+const emit = defineEmits<{
+    (e: 'open'): any
+    (e: 'close'): any
+    (e: 'move', x: number, y: number): any
+    (e: 'resize', w: number, h: number): any
+    (e: 'focus'): any
+    (e: 'blur'): any
+}>();
+watch(open, () => emit(open.value ? 'open' : 'close' as any)); // typescript dumbness
+watch([dragX, dragY], () => emit('move', dragX.value, dragY.value));
+watch(size, () => emit('resize', size.w, size.h));
+watch(isTop, () => emit(isTop.value ? 'focus' : 'blur' as any));
+function fixDragPosition() {
+    dragX.value = Math.min(window.innerWidth - size.h, Math.max(dragX.value, 0));
+    dragY.value = Math.min(window.innerHeight - size.w, Math.max(dragY.value, 0));
+}
+defineExpose({
+    posX: computed({ get: () => dragX.value, set: (x) => { dragX.value = x; fixDragPosition() } }),
+    posY: computed({ get: () => dragY.value, set: (y) => { dragY.value = y; fixDragPosition() } }),
+    width: computed({ get: () => size.w, set: (w) => { size.w = w; fixDragPosition(); } }),
+    height: computed({ get: () => size.h, set: (h) => { size.h = h; fixDragPosition(); } }),
+    open: () => open.value = true,
+    close: () => open.value = false,
+    focus: bringToTop
+});
+</script>
+<script lang="ts">
+// janky thing for global - when counter increments all windows reset z-index
+const topCounter = ref(0);
 </script>
 
 <template>
     <Teleport to="#root">
-        <div class="windowBounds" ref="winBounds" v-if="open"></div>
-        <div class="window" ref="winContainer" v-if="open" :style="dragStyle">
+        <div class="window" ref="winContainer" v-if="open" :style="dragStyle" @mousedown="bringToTop">
             <div class="windowBar" ref="winBar">
                 <span class="windowTitle">{{ props.title }}</span>
-                <input type="button" class="windowClose" @click="open = false">
+                <input type="button" class="windowClose" v-if="!props.closeOnClickOut" @click="open = false">
             </div>
             <div class="windowBody">
                 <slot></slot>
             </div>
-            <div class="windowResize reTop" @mousedown="beginResize(0b1000, $event)"></div>
-            <div class="windowResize reBottom" @mousedown="beginResize(0b0100, $event)"></div>
-            <div class="windowResize reLeft" @mousedown="beginResize(0b0010, $event)"></div>
-            <div class="windowResize reRight" @mousedown="beginResize(0b0001, $event)"></div>
-            <div class="windowResize rcTopLeft" @mousedown="beginResize(0b1010, $event)"></div>
-            <div class="windowResize rcTopRight" @mousedown="beginResize(0b1001, $event)"></div>
-            <div class="windowResize rcBottomLeft" @mousedown="beginResize(0b0110, $event)"></div>
-            <div class="windowResize rcBottomRight" @mousedown="beginResize(0b0101, $event)"></div>
+            <div class="windowResize reTop" v-if="props.resizeable" @mousedown="beginResize(0b1000, $event)"></div>
+            <div class="windowResize reBottom" v-if="props.resizeable" @mousedown="beginResize(0b0100, $event)"></div>
+            <div class="windowResize reLeft" v-if="props.resizeable" @mousedown="beginResize(0b0010, $event)"></div>
+            <div class="windowResize reRight" v-if="props.resizeable" @mousedown="beginResize(0b0001, $event)"></div>
+            <div class="windowResize rcTopLeft" v-if="props.resizeable" @mousedown="beginResize(0b1010, $event)"></div>
+            <div class="windowResize rcTopRight" v-if="props.resizeable" @mousedown="beginResize(0b1001, $event)"></div>
+            <div class="windowResize rcBottomLeft" v-if="props.resizeable" @mousedown="beginResize(0b0110, $event)"></div>
+            <div class="windowResize rcBottomRight" v-if="props.resizeable" @mousedown="beginResize(0b0101, $event)"></div>
+            <!-- window bounds in here to preserve ability to apply stuff to component from outside - only one div -->
+            <div class="windowBounds" ref="winBounds" v-if="open"></div>
         </div>
     </Teleport>
 </template>
@@ -108,7 +169,7 @@ onUnmounted(() => {
     display: grid;
     position: fixed;
     padding-top: 20px;
-    z-index: 900;
+    z-index: v-bind("isTop ? 901 : 900");
 }
 
 .windowBar {

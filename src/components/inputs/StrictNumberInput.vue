@@ -3,7 +3,6 @@ const props = defineProps<{
     min?: number
     max?: number
     step?: number
-    strict?: boolean
 }>();
 const emit = defineEmits<{
     (e: 'input', value: number): any
@@ -20,21 +19,18 @@ defineExpose({
     value: number
 });
 function blur() {
-    if (props.strict) {
-        const clamped = Math.max(props.min ?? -Infinity, Math.min(number.value, props.max ?? Infinity));
-        if (props.step != undefined && props.step > 0) {
-            number.value = Number((Math.round(clamped / props.step) * props.step).toFixed((props.step.toString().split('.')[1] ?? '').length));
-        } else {
-            number.value = clamped;
-        }
-        input();
+    const clamped = Math.max(props.min ?? -Infinity, Math.min(number.value, props.max ?? Infinity));
+    if (props.step != undefined && props.step > 0) {
+        number.value = Number((Math.round(clamped / props.step) * props.step).toFixed((props.step.toString().split('.')[1] ?? '').length));
+    } else {
+        number.value = clamped;
     }
+    input();
 }
 </script>
 
 <template>
-    <input type="number" @input="input" @keypress="keypress" @blur="blur" v-model=number :min="props.min" :max="props.max" :step="props.step">
+    <input type="number" v-model=number @input="input" @keypress="keypress" @blur="blur" :min="props.min" :max="props.max" :step="props.step">
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

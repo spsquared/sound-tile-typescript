@@ -1,6 +1,6 @@
 import { reactive, watch } from "vue";
 import { AudioLevelsTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
-import { AsyncLock } from "@/components/window/lock";
+import { AsyncLock } from "@/components/scripts/lock";
 
 type tileEditorState = {
     dropdownOpen: boolean

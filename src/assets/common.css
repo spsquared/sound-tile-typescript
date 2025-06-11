@@ -67,6 +67,14 @@ input[type=number] {
     cursor: text;
 }
 
+select {
+    padding: 0px 1.3em 0px 0.2em;
+    background-image: url(@/img/arrow-down.svg);
+    background-position: right;
+    background-size: 1.3em 0.8em;
+    background-repeat: no-repeat;
+}
+
 input:hover,
 button:hover,
 select:hover,

@@ -2,7 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
-import DraggableWindow from '@/components/window/DraggableWindow.vue';
+import DraggableWindow from '@/components/DraggableWindow.vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import ColorPicker from '@/components/inputs/ColorPicker.vue';
+import { useElementSize } from '@vueuse/core';
 
 const props = defineProps<{
     tile: Tile
@@ -10,6 +13,7 @@ const props = defineProps<{
 }>();
 
 const tile = useTemplateRef('tile');
+const { width: tileWidth, height: tileHeight } = useElementSize(tile);
 
 // set element for other code - there should REALLY only be one of these at a time!!
 onMounted(() => {
@@ -52,8 +56,17 @@ function toggleEditTile() {
 <template>
     <div class="tile" ref="tile">
         <slot name="content"></slot>
-        <DraggableWindow :title="props.tile.label" v-model="props.tile.editPaneOpen">
-            <slot name="options"></slot>
+        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.tile.label" resizeable :min-width="300" :min-height="200">
+            <slot name="options">
+                <label>
+                    Size:
+                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+                </label>
+                <label>
+                    Background:
+                    <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+                </label>
+            </slot>
         </DraggableWindow>
         <div class="tileHeader" v-if="!props.hideHeader">
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
@@ -61,7 +74,7 @@ function toggleEditTile() {
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
-        <input type="button" class="tileEditButton" @click="toggleEditTile">
+        <input type="button" v-if="!props.hideHeader" class="tileEditButton" @click="toggleEditTile">
         <Transition>
             <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
         </Transition>
@@ -72,9 +85,10 @@ function toggleEditTile() {
 .tile {
     contain: strict;
     position: relative;
-    background-color: black;
+    background: v-bind("props.tile.backgroundColor.cssStyle");
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
+    --radial-gradient-size: v-bind("Math.max(tileWidth, tileHeight) / 2 + 'px'");
 }
 
 .tileHeader {

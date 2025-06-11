@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
+import { AsyncLock } from './scripts/lock';
+
 const props = defineProps<{
     title: string
     mode: ModalMode
@@ -6,14 +9,38 @@ const props = defineProps<{
 }>();
 
 const open = defineModel({ default: false });
+const openLock = new AsyncLock();
+const result = ref(false);
 
 const emit = defineEmits<{
     (e: 'close', res: boolean): any
 }>();
 function close(res: boolean) {
     open.value = false;
+    openLock.release();
+    result.value = res;
     emit('close', res);
 }
+
+watch(open, () => {
+    if (open.value) openLock.acquire();
+});
+
+defineExpose<{
+    open: () => void
+    openAsync: () => Promise<boolean>
+}>({
+    open: () => {
+        open.value = true;
+    },
+    openAsync: async () => {
+        open.value = true;
+        // jank as hell but works I think
+        await openLock.acquire();
+        openLock.release();
+        return result.value;
+    }
+})
 </script>
 <script lang="ts">
 export const enum ModalMode {

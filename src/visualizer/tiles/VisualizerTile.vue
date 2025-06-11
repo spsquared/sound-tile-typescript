@@ -3,6 +3,8 @@ import { throttledWatch, useElementSize } from '@vueuse/core';
 import { VisualizerTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import { useTemplateRef } from 'vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import ColorPicker from '@/components/inputs/ColorPicker.vue';
 
 const props = defineProps<{
     tile: VisualizerTile
@@ -21,7 +23,14 @@ throttledWatch([canvasWidth, canvasHeight], () => {
             <canvas class="visualizerCanvas" ref="canvas"></canvas>
         </template>
         <template v-slot:options>
-            TEST TEST TEST TEST
+            <label>
+                Size:
+                <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+            </label>
+            <label>
+                Background:
+                <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+            </label>
         </template>
     </BaseTile>
 </template>

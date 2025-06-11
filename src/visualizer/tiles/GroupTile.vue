@@ -2,6 +2,8 @@
 import { computed, ComputedRef, inject, provide } from 'vue';
 import { GroupTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import ColorPicker from '@/components/inputs/ColorPicker.vue';
 
 const props = defineProps<{
     tile: GroupTile
@@ -24,6 +26,14 @@ const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', comput
             </div>
         </template>
         <template v-slot:options>
+            <label>
+                Size:
+                <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+            </label>
+            <label>
+                Background:
+                <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+            </label>
         </template>
     </BaseTile>
 </template>

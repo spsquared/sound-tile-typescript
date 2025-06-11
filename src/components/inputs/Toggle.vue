@@ -31,6 +31,7 @@ defineExpose({
 <style scoped>
 .toggle {
     display: inline-block;
+    vertical-align: top;
     position: relative;
     width: 42px;
     height: 22px;

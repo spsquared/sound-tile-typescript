@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { copyright } from '@/constants';
-import FullscreenModal, { ModalMode } from '@/components/window/FullscreenModal.vue';
+import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
 import TileEditor from '@/visualizer/editor';
 import DropdownFileControls from './DropdownFileControls.vue';
 import DropdownMediaData from './DropdownMediaData.vue';

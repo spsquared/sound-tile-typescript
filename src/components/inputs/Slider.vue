@@ -56,6 +56,7 @@ function endWheel() {
 <style scoped>
 .slider {
     display: inline-block;
+    position: relative;
     /* fixes positioning inline & sizing issues in grids/flexboxes */
     position: relative;
     top: 6px;

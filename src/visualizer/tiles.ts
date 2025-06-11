@@ -1,4 +1,5 @@
-import { Component } from "vue";
+import { Component, reactive } from "vue";
+import ColorPicker from "@/components/inputs/colorPicker";
 import BaseTileComponent from "./tiles/BaseTile.vue";
 import GroupTileComponent from "./tiles/GroupTile.vue";
 import VisualizerTileComponent from "./tiles/VisualizerTile.vue";
@@ -41,9 +42,12 @@ export class Tile {
     parent: GroupTile | null = null;
     /**Relative size compared to sibling tiles (same parent) */
     size: number = 1;
+    /**Background color of tile */
+    backgroundColor: ColorPicker;
 
     constructor() {
         this.id = Tile.idCounter++;
+        this.backgroundColor = reactive(new ColorPicker('#000000')) as ColorPicker;
     }
 
     destroy(): void {
