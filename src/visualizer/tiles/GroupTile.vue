@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { computed, ComputedRef, inject, provide, ref } from 'vue';
+import { computed, ComputedRef, inject, provide } from 'vue';
 import { GroupTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
-import ColorInput from '@/components/inputs/ColorInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
-import Toggle from '@/components/inputs/Toggle.vue';
 
 const props = defineProps<{
     tile: GroupTile
@@ -21,24 +19,10 @@ const tileOrientation = computed<string>({
     get: () => props.tile.orientation.toString(),
     set: (val) => props.tile.orientation = Number(val)
 });
-
-// raw simply stores the color so toggling doesn't reset it (this is a bit weird but works)
-const borderColorRaw = ref(props.tile.borderColors == 'transparent' ? '#FFFFFF' : props.tile.borderColors);
-const transparentBorders = computed<boolean>({
-    get: () => props.tile.borderColors == 'transparent',
-    set: (val) => props.tile.borderColors = val ? 'transparent' : borderColorRaw.value
-});
-const borderColor = computed<string>({
-    get: () => borderColorRaw.value,
-    set: (color) => {
-        borderColorRaw.value = color;
-        props.tile.borderColors = transparentBorders.value ? 'transparent' : color;
-    }
-});
 </script>
 
 <template>
-    <BaseTile :tile="props.tile" hide-header :hide-edit="!isCollapsed" :ignore-collapsed-group="isCollapsed && !inCollapsedGroup">
+    <BaseTile :tile="props.tile" :hide-header="!isCollapsed" :hide-edit="!isCollapsed" :ignore-collapsed-group="isCollapsed && !inCollapsedGroup">
         <template v-slot:content>
             <div :class="{
                 groupChildren: true,
@@ -50,7 +34,7 @@ const borderColor = computed<string>({
         </template>
         <template v-slot:options>
             <label title="versfdsf">
-                Orientation:
+                Orientotation:
                 <select v-model="tileOrientation">
                     <option :value="GroupTile.HORIZONTAL">Horizontal</option>
                     <option :value="GroupTile.VERTICAL">Vertical</option>
@@ -61,15 +45,10 @@ const borderColor = computed<string>({
                 Size:
                 <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
             </label>
-            <!-- only usable when not in collapsed tile and non transparent borders -->
-            <label>
-                Borders:
-                <ColorInput v-model="borderColor" :disabled="transparentBorders"></ColorInput>
-            </label>
             <!-- only usable when not in collapsed tile -->
             <label>
-                Transparent:
-                <Toggle v-model="transparentBorders"></Toggle>
+                Borders:
+                <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
             </label>
             <!-- only usable when is collapsed tile -->
             <label title="Background color of tile">
@@ -88,7 +67,8 @@ const borderColor = computed<string>({
     display: flex;
     width: 100%;
     height: 100%;
-    background-color: v-bind("$props.tile.borderColors");
+    background-color: black;
+    background: v-bind("$props.tile.borderColor.cssStyle");
     flex-direction: v-bind("$props.tile.orientation == GroupTile.VERTICAL ? 'column' : 'row'");
     align-items: stretch;
     justify-content: stretch;
@@ -104,5 +84,6 @@ const borderColor = computed<string>({
 
 .groupChildrenInCollapsed {
     background-color: transparent;
+    gap: 0px;
 }
 </style>

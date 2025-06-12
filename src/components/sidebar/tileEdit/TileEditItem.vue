@@ -74,8 +74,6 @@ function deleteTile() {
 }
 
 .editItemBar {
-    /* prevents flex blowout caused by input */
-    contain: size;
     grid-row: 1;
     grid-column: 2;
     display: flex;
@@ -129,6 +127,7 @@ function deleteTile() {
 .editItemDeleteButton {
     width: 18px;
     height: 18px;
+    flex-basis: 18px;
     border-radius: 0px;
     background-color: transparent;
     opacity: 0;
@@ -179,6 +178,7 @@ function deleteTile() {
 .editItemGroupChildren {
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 .editItemGroupLine {

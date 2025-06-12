@@ -28,6 +28,7 @@ const props = defineProps<{
 
 <style scoped>
 .ghostDropGroup {
+    box-sizing: border-box;
     display: flex;
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
@@ -36,6 +37,7 @@ const props = defineProps<{
 }
 
 .ghostTile {
+    box-sizing: border-box;
     margin: -2px -2px;
     border: 2px solid white;
     flex: v-bind("$props.tile.size");

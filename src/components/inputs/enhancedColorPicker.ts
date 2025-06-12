@@ -63,7 +63,7 @@ export class EnhancedColorPicker {
     /**Get a css `background` string for the gradient (radial gradients require a `--radial-gradient-size` css variable) */
     get cssStyle(): string {
         if (this.type == 'solid') {
-            return this.solidData.color;
+            return `color-mix(in srgb, ${this.solidData.color} ${this.solidData.alpha * 100}%, transparent ${100 - this.solidData.alpha * 100}%)`;
         } else if (this.type == 'gradient') {
             const stopsStr = this.gradientData.stops.slice().sort((a, b) => a.t - b.t).reduce((acc, curr) => acc + `, color-mix(in srgb, ${curr.c} ${curr.a * 100}%, transparent ${100 - curr.a * 100}%) ${curr.t * 100}%`, '');
             switch (this.gradientData.pattern) {

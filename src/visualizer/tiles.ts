@@ -75,10 +75,11 @@ export class GroupTile extends Tile {
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
     orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
-    borderColors: string = '#FFFFFF';
+    borderColor: EnhancedColorPicker;
 
     constructor() {
         super();
+        this.borderColor = reactive(new EnhancedColorPicker('#FFFFFF')) as EnhancedColorPicker;
     }
 
     addChild(tile: Tile): boolean {
@@ -146,7 +147,7 @@ export class GroupTile extends Tile {
     /**Convenience function to "inherit" properties from another Group Tile */
     copyProperties(o: GroupTile) {
         this.orientation = o.orientation;
-        this.borderColors = o.borderColors;
+        this.borderColor.colorData = o.borderColor.colorData;
     }
 
     destroy(): void {
