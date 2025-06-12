@@ -4,15 +4,18 @@ import { GroupTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import ColorInput from '@/components/inputs/ColorInput.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
 
 const props = defineProps<{
     tile: GroupTile
 }>();
 
+const isCollapsed = computed(() => props.tile.orientation == GroupTile.COLLAPSED);
+
 // group tiles within collapsed tile can't have borders because that uses background
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
-provide('inCollapsedGroup', computed(() => props.tile.orientation == GroupTile.COLLAPSED || inCollapsedGroup.value));
+provide('inCollapsedGroup', computed(() => isCollapsed.value || inCollapsedGroup.value));
 
 const tileOrientation = computed<string>({
     get: () => props.tile.orientation.toString(),
@@ -35,11 +38,11 @@ const borderColor = computed<string>({
 </script>
 
 <template>
-    <BaseTile :tile="props.tile" hide-header>
+    <BaseTile :tile="props.tile" hide-header :hide-edit="!isCollapsed" :ignore-collapsed-group="isCollapsed && !inCollapsedGroup">
         <template v-slot:content>
             <div :class="{
                 groupChildren: true,
-                groupChildrenCollapsed: props.tile.orientation == GroupTile.COLLAPSED,
+                groupChildrenCollapsed: isCollapsed,
                 groupChildrenInCollapsed: inCollapsedGroup
             }">
                 <component v-for="child of tile.children" :key="child.id" :is="child.class.component" :tile="child"></component>
@@ -49,9 +52,9 @@ const borderColor = computed<string>({
             <label title="versfdsf">
                 Orientation:
                 <select v-model="tileOrientation">
-                    <option value="0">Horizontal</option>
-                    <option value="1">Vertical</option>
-                    <option value="2">Collapsed</option>
+                    <option :value="GroupTile.HORIZONTAL">Horizontal</option>
+                    <option :value="GroupTile.VERTICAL">Vertical</option>
+                    <option :value="GroupTile.COLLAPSED">Collapsed</option>
                 </select>
             </label>
             <label title="Relative size of tile to sibling tiles">

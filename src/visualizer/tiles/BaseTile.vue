@@ -10,12 +10,14 @@ import { useElementSize } from '@vueuse/core';
 const props = defineProps<{
     tile: Tile
     hideHeader?: boolean
+    hideEdit?: boolean
+    ignoreCollapsedGroup?: boolean
 }>();
 
 const tile = useTemplateRef('tile');
 const { width: tileWidth, height: tileHeight } = useElementSize(tile);
 
-// tiles in collapsed group can't have background
+// tiles in collapsed group can't have background, also hides header and edit buttons
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
 // set element for other code - there should REALLY only be one of these at a time!!
@@ -72,13 +74,13 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
                 </label>
             </slot>
         </DraggableWindow>
-        <div class="tileHeader" v-if="!props.hideHeader && !inCollapsedGroup">
+        <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup)">
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
-        <input type="button" v-if="!props.hideHeader && !inCollapsedGroup" class="tileEditButton" @click="toggleEditTile">
+        <input type="button" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" class="tileEditButton" @click="toggleEditTile">
         <Transition>
             <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
         </Transition>
