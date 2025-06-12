@@ -1,5 +1,5 @@
 import { Component, reactive } from "vue";
-import ColorPicker from "@/components/inputs/colorPicker";
+import EnhancedColorPicker from "@/components/inputs/enhancedColorPicker";
 import BaseTileComponent from "./tiles/BaseTile.vue";
 import GroupTileComponent from "./tiles/GroupTile.vue";
 import VisualizerTileComponent from "./tiles/VisualizerTile.vue";
@@ -43,11 +43,11 @@ export class Tile {
     /**Relative size compared to sibling tiles (same parent) */
     size: number = 1;
     /**Background color of tile */
-    backgroundColor: ColorPicker;
+    backgroundColor: EnhancedColorPicker;
 
     constructor() {
         this.id = Tile.idCounter++;
-        this.backgroundColor = reactive(new ColorPicker('#000000')) as ColorPicker;
+        this.backgroundColor = reactive(new EnhancedColorPicker('#000000')) as EnhancedColorPicker;
     }
 
     destroy(): void {
@@ -75,7 +75,7 @@ export class GroupTile extends Tile {
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
     orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
-    borderColors: string = 'rgba(255, 255, 255, 1)';
+    borderColors: string = '#FFFFFF';
 
     constructor() {
         super();

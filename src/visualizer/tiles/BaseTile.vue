@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
 import DraggableWindow from '@/components/DraggableWindow.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
-import ColorPicker from '@/components/inputs/ColorPicker.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import { useElementSize } from '@vueuse/core';
 
 const props = defineProps<{
@@ -14,6 +14,9 @@ const props = defineProps<{
 
 const tile = useTemplateRef('tile');
 const { width: tileWidth, height: tileHeight } = useElementSize(tile);
+
+// tiles in collapsed group can't have background
+const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
 // set element for other code - there should REALLY only be one of these at a time!!
 onMounted(() => {
@@ -51,30 +54,31 @@ function resetLabelScroll() {
 function toggleEditTile() {
     props.tile.editPaneOpen = !props.tile.editPaneOpen;
 }
+onBeforeUnmount(() => props.tile.editPaneOpen = false);
 </script>
 
 <template>
-    <div class="tile" ref="tile">
+    <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
         <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.tile.label" resizeable :min-width="300" :min-height="200">
             <slot name="options">
-                <label>
+                <label title="Relative size of tile to sibling tiles">
                     Size:
                     <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
                 </label>
-                <label>
+                <label title="Background color of tile">
                     Background:
-                    <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+                    <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
                 </label>
             </slot>
         </DraggableWindow>
-        <div class="tileHeader" v-if="!props.hideHeader">
+        <div class="tileHeader" v-if="!props.hideHeader && !inCollapsedGroup">
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
-        <input type="button" v-if="!props.hideHeader" class="tileEditButton" @click="toggleEditTile">
+        <input type="button" v-if="!props.hideHeader && !inCollapsedGroup" class="tileEditButton" @click="toggleEditTile">
         <Transition>
             <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
         </Transition>
@@ -89,6 +93,12 @@ function toggleEditTile() {
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
     --radial-gradient-size: v-bind("Math.max(tileWidth, tileHeight) / 2 + 'px'");
+}
+
+.tileInCollapsedGroup {
+    grid-row: 1;
+    grid-column: 1;
+    background-color: transparent;
 }
 
 .tileHeader {

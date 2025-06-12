@@ -10,6 +10,7 @@ const color = defineModel({ default: '#FFFFFF' });
 .colorInput {
     appearance: none;
     position: relative;
+    vertical-align: top;
     margin: 0px 0px;
     padding: 0px 0px;
     border: none;
@@ -30,5 +31,9 @@ const color = defineModel({ default: '#FFFFFF' });
     padding: 0px 0px;
     border: 2px solid white;
     border-radius: 0;
+}
+
+.colorInput:disabled {
+    cursor: not-allowed;
 }
 </style>

@@ -310,7 +310,7 @@ export class TileEditor {
                 insertFn.call(this.root, this.state.drag.current, newGroup);
             } else {
                 newGroup.copyProperties(parent);
-                if (this.state.drag.drop.newGroupVertical) newGroup.orientation = GroupTile.VERTICAL;
+                newGroup.orientation = this.state.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
                 parent.replaceChild(this.state.drag.drop.tile, newGroup);
                 newGroup.addChild(this.state.drag.drop.tile);
                 const insertFn = (this.state.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
@@ -329,7 +329,9 @@ export class TileEditor {
         watch(() => this.state.sidebarScreenWidth, () => localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
         // this isn't a vue composable, no lifecycle hooks
         document.addEventListener('mousemove', (e) => this.updateDrag(e), { passive: true });
+        document.addEventListener('touchmove', (e) => this.updateDrag(e), { passive: true });
         document.addEventListener('mouseup', () => this.endDrag());
+        document.addEventListener('touchend', () => this.endDrag());
         window.addEventListener('blur', () => this.endDrag());
     }
 }

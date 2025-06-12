@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { nextTick, useTemplateRef } from 'vue';
+import { useTemplateRef, watch } from 'vue';
 import DraggableWindow from '../DraggableWindow.vue';
-import { ColorPicker } from './colorPicker';
+import { EnhancedColorPicker } from './enhancedColorPicker';
 import { useEyeDropper } from '@vueuse/core';
 import StrictNumberInput from './StrictNumberInput.vue';
 import ColorInput from './ColorInput.vue';
 
 const props = defineProps<{
-    picker: ColorPicker
+    picker: EnhancedColorPicker
+    disabled?: boolean
 }>();
 
 const pickerWindow = useTemplateRef('pickerWindow');
@@ -15,12 +16,11 @@ const pickerBadge = useTemplateRef('pickerBadge');
 
 // clicking on badge to close triggers close on click off but immediately reopens due to badge click
 let recentlyClosed = false;
-async function fudgeBadgeClickClose() {
+function fudgeBadgeClickClose() {
     recentlyClosed = true;
     setTimeout(() => recentlyClosed = false, 10);
 }
-
-async function togglePicker() {
+function togglePicker() {
     if (recentlyClosed) return;
     props.picker.open = !props.picker.open;
     if (pickerWindow.value !== null && pickerBadge.value !== null && props.picker.open) {
@@ -31,6 +31,9 @@ async function togglePicker() {
         pickerWindow.value.focus();
     }
 }
+watch(() => props.disabled, () => {
+    if (props.disabled) props.picker.open = false;
+});
 
 function addStop() {
     props.picker.gradientData.stops.push({ t: 1, c: '#FFFFFF', a: 1 });
@@ -62,51 +65,58 @@ function removeStop(i: number) {
 </script>
 
 <template>
-    <div class="pickerBadge" ref="pickerBadge" @click="togglePicker">
-    </div>
+    <div :class="{ pickerBadge: true, pickerBadgeDisabled: props.disabled }" ref="pickerBadge" @click="togglePicker"></div>
     <DraggableWindow v-model="props.picker.open" ref="pickerWindow" title="Color Picker" close-on-click-out :min-width="240" :min-height="240" @close="fudgeBadgeClickClose">
         <div class="pickerContainer">
             <div class="pickerNav">
-                <input type="button" :class="{ pickerNavTab: true, pickerNavTabSelected: props.picker.type == 'solid' }" value="Solid" @click="props.picker.type = 'solid'">
-                <input type="button" :class="{ pickerNavTab: true, pickerNavTabSelected: props.picker.type == 'gradient' }" value="Gradient" @click="props.picker.type = 'gradient'">
-                <input type="button" class="pickerNavTab pickerNavCopy" @click="props.picker.copyColor()">
-                <input type="button" class="pickerNavTab pickerNavPaste" @click="props.picker.pasteColor()">
+                <input type="button" :class="{ pickerNavTab: true, pickerNavTabSelected: props.picker.type == 'solid' }" value="Solid" title="Solid color" @click="props.picker.type = 'solid'">
+                <input type="button" :class="{ pickerNavTab: true, pickerNavTabSelected: props.picker.type == 'gradient' }" value="Gradient" title="Gradient color" @click="props.picker.type = 'gradient'">
+                <input type="button" class="pickerNavTab pickerNavCopy" title="Copy color" @click="props.picker.copyColor()">
+                <input type="button" class="pickerNavTab pickerNavPaste" title="Paste color" @click="props.picker.pasteColor()">
             </div>
             <div class="pickerBody pickerSolid" v-if="props.picker.type == 'solid'">
-                <ColorInput class="pickerSolidColorSwatch" v-model="props.picker.solidData.color"></ColorInput>
-                <input type="button" class="pickerEyedropperButton" @click="runEyedropperSolid()" v-if="eyedropper.isSupported">
-                <label>
+                <ColorInput class="pickerSolidColorSwatch" v-model="props.picker.solidData.color" title="Select color"></ColorInput>
+                <input type="button" class="pickerEyedropperButton" title="Pick color using eyedropper tool" @click="runEyedropperSolid()" v-if="eyedropper.isSupported">
+                <label title="Opacity of solid color">
                     Opacity:
                     <StrictNumberInput v-model="props.picker.solidData.alpha" :min="0" :max="1" :step="0.01"></StrictNumberInput>
                 </label>
             </div>
             <div class="pickerBody pickerGradient" v-else-if="props.picker.type == 'gradient'">
-                <select class="pickerGradientPattern" v-model="props.picker.gradientData.pattern">
+                <select class="pickerGradientPattern" v-model="props.picker.gradientData.pattern" title="Pattern of gradient">
                     <option value="linear">Linear Gradient</option>
                     <option value="radial">Radial Gradient</option>
                     <option value="conic">Conical Gradient</option>
                 </select>
                 <!-- intentionally NOT strict -->
-                <span class="pickerGradientLabel">X</span>
-                <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.x" step="0.01" :disabled="props.picker.gradientData.pattern == 'linear'">
-                <span class="pickerGradientLabel">Y</span>
-                <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.y" step="0.01" :disabled="props.picker.gradientData.pattern == 'linear'">
-                <span class="pickerGradientLabel">R</span>
-                <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.radius" step="0.01" :disabled="props.picker.gradientData.pattern != 'radial'">
-                <span class="pickerGradientLabel">θ</span>
-                <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.angle" step="1" :disabled="props.picker.gradientData.pattern == 'radial'">
+                <label class="pickerGradientLabel" title="X of center (proportion of width)">
+                    X
+                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.x" step="0.01" :disabled="props.picker.gradientData.pattern == 'linear'">
+                </label>
+                <label class="pickerGradientLabel" title="Y of center (proportion of height)">
+                    Y
+                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.y" step="0.01" :disabled="props.picker.gradientData.pattern == 'linear'">
+                </label>
+                <label class="pickerGradientLabel" title="Radius (proportion of max(width, height))">
+                    R
+                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.radius" step="0.01" :disabled="props.picker.gradientData.pattern != 'radial'">
+                </label>
+                <label class="pickerGradientLabel" title="Angle (degrees)">
+                    θ
+                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.angle" step="1" :disabled="props.picker.gradientData.pattern == 'radial'">
+                </label>
                 <div class="pickerGradientStopsContainer">
                     <div v-for="(stop, i) of props.picker.gradientData.stops" :key="i" class="pickerGradientStop">
-                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.t" :min="0" :max="1" :step="0.01"></StrictNumberInput>
-                        <ColorInput class="pickerGradientStopColor" v-model="stop.c"></ColorInput>
-                        <input type="button" class="pickerGradientStopEyedropper" @click="runEyedropperStop(i)" v-if="eyedropper.isSupported">
-                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.a" :min="0" :max="1" :step="0.01"></StrictNumberInput>
-                        <input type="button" class="pickerGradientStopUp" @click="moveStopUp(i)" :disabled="i == 0">
-                        <input type="button" class="pickerGradientStopDown" @click="moveStopDown(i)" :disabled="i == props.picker.gradientData.stops.length - 1">
-                        <input type="button" class="pickerGradientStopDelete" @click="removeStop(i)">
+                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.t" :min="0" :max="1" :step="0.01" title="Position of stop (0-1)"></StrictNumberInput>
+                        <ColorInput class="pickerGradientStopColor" v-model="stop.c" title="Color of stop"></ColorInput>
+                        <input type="button" class="pickerGradientStopEyedropper" title="Pick color of stop using eyedropper tool" @click="runEyedropperStop(i)" v-if="eyedropper.isSupported">
+                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.a" :min="0" :max="1" :step="0.01" title="Opacity of stop"></StrictNumberInput>
+                        <input type="button" class="pickerGradientStopUp" title="Move stop up" @click="moveStopUp(i)" :disabled="i == 0">
+                        <input type="button" class="pickerGradientStopDown" title="Move stop down" @click="moveStopDown(i)" :disabled="i == props.picker.gradientData.stops.length - 1">
+                        <input type="button" class="pickerGradientStopDelete" title="Remove stop" @click="removeStop(i)" :disabled="props.picker.gradientData.stops.length == 1">
                     </div>
                 </div>
-                <input type="button" class="pickerGradientAddStop" value="+" @click="addStop">
+                <input type="button" class="pickerGradientAddStop" value="+" title="Add color stop" @click="addStop">
             </div>
         </div>
     </DraggableWindow>
@@ -125,6 +135,10 @@ function removeStop(i: number) {
     background: v-bind("$props.picker.cssStyle");
     cursor: pointer;
     --radial-gradient-size: 22px;
+}
+
+.pickerBadgeDisabled {
+    cursor: not-allowed;
 }
 
 .pickerContainer {
@@ -222,30 +236,33 @@ function removeStop(i: number) {
 .pickerGradient {
     display: grid;
     grid-template-rows: min-content min-content min-content 1fr min-content;
-    grid-template-columns: min-content 1fr min-content 1fr;
+    grid-template-columns: 1fr 1fr;
     padding: 8px 8px;
     gap: 4px;
 }
 
 .pickerGradientPattern {
     grid-row: 1;
-    grid-column: 1 / 5;
+    grid-column: 1 / 3;
     height: 20px;
 }
 
 .pickerGradientLabel {
+    display: flex;
     padding: 0px 4px;
+    column-gap: 6px;
 }
 
 .pickerGradientNumberInput {
     box-sizing: border-box;
+    min-width: 0px;
     width: 100%;
 }
 
 .pickerGradientStopsContainer {
     contain: size;
     grid-row: 4;
-    grid-column: 1 / 5;
+    grid-column: 1 / 3;
     display: flex;
     border: 2px solid white;
     flex-direction: column;
@@ -287,15 +304,18 @@ function removeStop(i: number) {
     background-size: 100% 100%;
     background-repeat: no-repeat;
 }
+
 .pickerGradientStopEyedropper:hover,
 .pickerGradientStopUp:hover,
 .pickerGradientStopDown:hover,
 .pickerGradientStopDelete:hover {
     background-color: #777;
 }
+
 .pickerGradientStopEyedropper:disabled,
 .pickerGradientStopUp:disabled,
-.pickerGradientStopDown:disabled {
+.pickerGradientStopDown:disabled,
+.pickerGradientStopDelete:disabled {
     background-color: #333;
 }
 
@@ -319,7 +339,7 @@ function removeStop(i: number) {
 
 .pickerGradientAddStop {
     grid-row: 5;
-    grid-column: 1 / 5;
+    grid-column: 1 / 3;
     font-size: 20px;
     padding: 0px 0px;
     line-height: 0.8em;

@@ -2,7 +2,7 @@
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import { AudioLevelsTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
-import ColorPicker from '@/components/inputs/ColorPicker.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 
 const props = defineProps<{
     tile: AudioLevelsTile
@@ -15,13 +15,13 @@ const props = defineProps<{
             oof audio levels tile
         </template>
         <template v-slot:options>
-            <label>
+            <label title="Relative size of tile to sibling tiles">
                 Size:
                 <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
             </label>
-            <label>
+            <label title="Background color of tile">
                 Background:
-                <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+                <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
             </label>
         </template>
     </BaseTile>

@@ -4,7 +4,7 @@ import { VisualizerTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import { useTemplateRef } from 'vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
-import ColorPicker from '@/components/inputs/ColorPicker.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 
 const props = defineProps<{
     tile: VisualizerTile
@@ -23,13 +23,13 @@ throttledWatch([canvasWidth, canvasHeight], () => {
             <canvas class="visualizerCanvas" ref="canvas"></canvas>
         </template>
         <template v-slot:options>
-            <label>
+            <label title="Relative size of tile to sibling tiles">
                 Size:
                 <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
             </label>
-            <label>
+            <label title="Background color of tile">
                 Background:
-                <ColorPicker :picker="props.tile.backgroundColor"></ColorPicker>
+                <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
             </label>
         </template>
     </BaseTile>
@@ -42,5 +42,6 @@ throttledWatch([canvasWidth, canvasHeight], () => {
     left: 0px;
     width: 100%;
     height: 100%;
+    background-color: transparent;
 }
 </style>

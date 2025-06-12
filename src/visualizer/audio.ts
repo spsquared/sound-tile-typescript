@@ -9,3 +9,5 @@ export const audioContext = new AudioContext();
 export const globalGain = audioContext.createGain();
 globalGain.connect(audioContext.destination);
 watch(() => MediaPlayer.state.volume, () => globalGain.gain.value = MediaPlayer.state.volume, { immediate: true });
+
+export const sampleRate = audioContext.sampleRate;

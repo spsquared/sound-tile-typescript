@@ -1,16 +1,16 @@
 import { useLocalStorage } from "@vueuse/core";
 import { reactive, toRaw } from "vue";
 
-type colorData = ({ type: 'solid' } & ColorPicker['solidData'])
-    | ({ type: 'gradient' } & ColorPicker['gradientData']);
+export type EnhancedColorData = ({ type: 'solid' } & EnhancedColorPicker['solidData'])
+    | ({ type: 'gradient' } & EnhancedColorPicker['gradientData']);
 
-const clipboard = useLocalStorage<colorData>('colorPickerClipboard', { type: 'solid', color: '#FFFFFF', alpha: 1 } satisfies colorData);
+const clipboard = useLocalStorage<EnhancedColorData>('colorPickerClipboard', { type: 'solid', color: '#FFFFFF', alpha: 1 } satisfies EnhancedColorData);
 
 /**
- * Custom color picker, for use the ColorPicker Vue component.
+ * Custom color picker, for use the EnhancedColorPicker Vue component.
  * Note that reactivity DOES NOT work by default, needs wrapping in `reactive()` call!
  */
-export class ColorPicker {
+export class EnhancedColorPicker {
     /**Color mode */
     type: 'solid' | 'gradient' = 'solid';
     solidData: {
@@ -38,7 +38,7 @@ export class ColorPicker {
         x: number,
         /**Y coordinate of radial and conic gradients in proportion of height from right */
         y: number,
-        /**Radius of radial gradients in proportion of min(width, height) */
+        /**Radius of radial gradients in proportion of max(width, height) */
         radius: number,
         /**Angle of linear and conic gradients in degrees */
         angle: number
@@ -53,7 +53,7 @@ export class ColorPicker {
 
     open: boolean = false;
 
-    constructor(initial?: colorData | string) {
+    constructor(initial?: EnhancedColorData | string) {
         if (initial !== undefined) {
             if (typeof initial == 'string') this.solidData.color = initial;
             else this.colorData = initial;
@@ -78,7 +78,7 @@ export class ColorPicker {
         return '#FFFFFF';
     }
 
-    get colorData(): colorData {
+    get colorData(): EnhancedColorData {
         if (this.type == 'solid') {
             return structuredClone({
                 type: 'solid',
@@ -97,7 +97,7 @@ export class ColorPicker {
         };
     }
 
-    set colorData(data: colorData) {
+    set colorData(data: EnhancedColorData) {
         this.type = data.type;
         if (data.type == 'solid') {
             this.solidData = structuredClone({ ...data });
@@ -115,8 +115,8 @@ export class ColorPicker {
     }
 }
 
-export default ColorPicker;
+export default EnhancedColorPicker;
 
-export function createReactiveColorPicker(initial?: colorData | string): ColorPicker {
-    return reactive(new ColorPicker(initial)) as ColorPicker;
+export function createReactiveColorPicker(initial?: EnhancedColorData | string): EnhancedColorPicker {
+    return reactive(new EnhancedColorPicker(initial)) as EnhancedColorPicker;
 }

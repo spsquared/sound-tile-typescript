@@ -32,7 +32,8 @@ provide('sidebarCurrentTab', currentTab);
 let resizing = false;
 function mouseMove(e: MouseEvent) {
     if (!resizing) return;
-    TileEditor.state.sidebarScreenWidth = 100 * (1 - e.clientX / window.innerWidth);
+    TileEditor.state.sidebarScreenWidth = 100 * (1 - Math.max(0, e.clientX / window.innerWidth));
+    e.preventDefault();
 }
 function beginResize(e: MouseEvent) {
     resizing = true;
