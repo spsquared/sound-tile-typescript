@@ -8,12 +8,14 @@ const app = createApp(App);
 app.mount("#root");
 
 // remove keybinds we dont want
-document.addEventListener('keypress', (e) => {
+document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
-    if (key == 'r' && e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) e.preventDefault();
-    else if (key == 's' && e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) e.preventDefault();
+    // disable saving, opening, printing - these get overridden
+    if (key == 's' && e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) e.preventDefault();
     else if (key == 'o' && e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) e.preventDefault();
     else if (key == 'p' && e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
+    // really annoying when pressing space triggers a button or checkbox
+    if (key == ' ' && e.target instanceof HTMLElement && e.target.matches('input[type=button],input[type=checkbox]')) e.preventDefault();
 });
 // warn leaving page
 window.addEventListener('beforeunload', (e) => {

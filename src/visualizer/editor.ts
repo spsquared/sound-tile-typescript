@@ -66,7 +66,11 @@ export class TileEditor {
         this.state.tileTypes[id] = { Tile: t, visible: visible };
     }
 
-    /**Root node in document - never changes because of reactivity issues (GroupTile type fixes Vue typing errors) */
+    /**
+     * Root node of current layout on screen, wrapped inside a `Reactive` object.
+     * Because of this `reactive()` wrapper no tiles can have refs or reactive objects inside them:
+     * Watch functions can be used in tiles even though they're not explicitly defining anything as reactive.
+     */
     static readonly root: GroupTile = reactive<GroupTile>(new GroupTile()) as GroupTile;
 
     /**
@@ -227,7 +231,7 @@ export class TileEditor {
                 console.warn(`${currTile.label} element is null! Perhaps there is a bug and the parent is set wrong?`)
                 break;
             }
-            const rect = fixBoundingRect(currTile.element!.getBoundingClientRect());
+            const rect = fixBoundingRect(currTile.element.getBoundingClientRect());
             const relX = pos.x - rect.left;
             const relY = pos.y - rect.top;
             const halfWidth = rect.width / 2;

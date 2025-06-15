@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { nextTick, ref, useTemplateRef, watch } from 'vue';
 import { AsyncLock } from './scripts/lock';
 
 const props = defineProps<{
@@ -12,18 +12,34 @@ const open = defineModel({ default: false });
 const openLock = new AsyncLock();
 const result = ref(false);
 
+const body = useTemplateRef('body');
+function keydown(e: KeyboardEvent) {
+    if (!open.value) return;
+    const key = e.key.toLowerCase();
+    // in this case we don't want enter on a button to confirm the modal since it breaks keyboard accessibility
+    if ((e.target instanceof HTMLElement && e.target.matches('input'))) return;
+    if (key == 'escape') close(false);
+    else if (key == 'enter') close(true);
+}
+
 const emit = defineEmits<{
     (e: 'close', res: boolean): any
 }>();
+
 function close(res: boolean) {
     open.value = false;
     openLock.release();
     result.value = res;
     emit('close', res);
 }
-
 watch(open, () => {
-    if (open.value) openLock.acquire();
+    if (open.value) {
+        openLock.acquire();
+        document.addEventListener('keydown', keydown);
+        nextTick().then(() => (body.value?.querySelector('.modalButton') as HTMLElement)?.focus());
+    } else {
+        document.removeEventListener('keydown', keydown);
+    }
 });
 
 defineExpose<{
@@ -56,7 +72,7 @@ export const enum ModalMode {
     <Teleport to="#root">
         <Transition>
             <div class="modalContainer" v-if="open">
-                <div class="modalBody">
+                <div class="modalBody" ref="body">
                     <h1>{{ props.title }}</h1>
                     <slot></slot>
                     <div class="modalButtons">
@@ -154,6 +170,11 @@ export const enum ModalMode {
 
 .modalButton:active {
     transform: translateY(2px);
+}
+
+.modalButton:focus-visible {
+    outline-color: black;
+    outline-offset: -3px;
 }
 
 .v-enter-from,

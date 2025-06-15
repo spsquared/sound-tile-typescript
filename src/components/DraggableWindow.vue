@@ -6,6 +6,8 @@ const props = defineProps<{
     title: string
     minWidth?: number
     minHeight?: number
+    resizeWidth?: boolean
+    resizeHeight?: boolean
     resizeable?: boolean
     closeOnClickOut?: boolean
 }>();
@@ -76,11 +78,9 @@ onUnmounted(() => {
     document.removeEventListener('mouseup', endResize);
     document.removeEventListener('blur', endResize);
 });
-watch(() => props.resizeable, () => {
-    if (!props.resizeable) {
-        size.w = props.minWidth ?? 300;
-        size.h = props.minHeight ?? 200;
-    }
+watch(() => [props.resizeable, props.resizeWidth, props.resizeHeight], () => {
+    if (!props.resizeable && !props.resizeWidth) size.w = props.minWidth ?? 300;
+    if (!props.resizeable && !props.resizeHeight) size.h = props.minHeight ?? 200;
 }, { immediate: true });
 
 // window brought to top of other windows when clicked on
@@ -90,6 +90,7 @@ async function bringToTop() {
     topCounter.value++;
     await nextTick();
     isTop.value = true;
+    (winBar.value?.querySelector('.windowClose') as HTMLElement)?.focus();
 }
 watch(topCounter, () => isTop.value = false);
 watch(open, () => open.value && bringToTop());
@@ -141,14 +142,14 @@ const topCounter = ref(0);
             <div class="windowBody">
                 <slot></slot>
             </div>
-            <div class="windowResize reTop" v-if="props.resizeable" @mousedown="beginResize(0b1000, $event)"></div>
-            <div class="windowResize reBottom" v-if="props.resizeable" @mousedown="beginResize(0b0100, $event)"></div>
-            <div class="windowResize reLeft" v-if="props.resizeable" @mousedown="beginResize(0b0010, $event)"></div>
-            <div class="windowResize reRight" v-if="props.resizeable" @mousedown="beginResize(0b0001, $event)"></div>
-            <div class="windowResize rcTopLeft" v-if="props.resizeable" @mousedown="beginResize(0b1010, $event)"></div>
-            <div class="windowResize rcTopRight" v-if="props.resizeable" @mousedown="beginResize(0b1001, $event)"></div>
-            <div class="windowResize rcBottomLeft" v-if="props.resizeable" @mousedown="beginResize(0b0110, $event)"></div>
-            <div class="windowResize rcBottomRight" v-if="props.resizeable" @mousedown="beginResize(0b0101, $event)"></div>
+            <div class="windowResize reTop" v-if="props.resizeable || props.resizeHeight" @mousedown="beginResize(0b1000, $event)"></div>
+            <div class="windowResize reBottom" v-if="props.resizeable || props.resizeHeight" @mousedown="beginResize(0b0100, $event)"></div>
+            <div class="windowResize reLeft" v-if="props.resizeable || props.resizeWidth" @mousedown="beginResize(0b0010, $event)"></div>
+            <div class="windowResize reRight" v-if="props.resizeable || props.resizeWidth" @mousedown="beginResize(0b0001, $event)"></div>
+            <div class="windowResize rcTopLeft" v-if="props.resizeable || (props.resizeWidth && props.resizeHeight)" @mousedown="beginResize(0b1010, $event)"></div>
+            <div class="windowResize rcTopRight" v-if="props.resizeable || (props.resizeWidth && props.resizeHeight)" @mousedown="beginResize(0b1001, $event)"></div>
+            <div class="windowResize rcBottomLeft" v-if="props.resizeable || (props.resizeWidth && props.resizeHeight)" @mousedown="beginResize(0b0110, $event)"></div>
+            <div class="windowResize rcBottomRight" v-if="props.resizeable || (props.resizeWidth && props.resizeHeight)" @mousedown="beginResize(0b0101, $event)"></div>
             <!-- window bounds in here to preserve ability to apply stuff to component from outside - only one div -->
             <div class="windowBounds" ref="winBounds" v-if="open"></div>
         </div>

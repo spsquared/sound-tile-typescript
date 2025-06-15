@@ -3,7 +3,7 @@
 
 <template>
     <div id="fileControls">
-        <input type="file" id="tileUpload" title="Load Tiles from computer">
+        <input type="button" id="tileUpload" title="Load Tiles from computer">
         <input type="button" id="tileDownload" title="Save Tiles to computer">
     </div>
 </template>
@@ -27,6 +27,8 @@
     background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
+    outline-offset: -1px;
+    outline-color: black;
 }
 
 #tileUpload {
@@ -39,7 +41,6 @@
 }
 
 #tileDownload {
-    height: 60px;
     border-top: 2px solid white;
     background-image: url(@/img/download.svg);
 }

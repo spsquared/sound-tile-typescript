@@ -1,4 +1,4 @@
-import { reactive, watch } from "vue";
+import { reactive, ref, Ref, watch, WatchHandle } from "vue";
 import { useThrottleFn } from "@vueuse/core";
 import { audioContext, globalGain } from "./audio";
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from "./visualizerRenderer";
@@ -25,7 +25,7 @@ export enum VisualizerMode {
  */
 export interface VisualizerData {
     /**Audio data uploaded by user - not decoded yet */
-    buffer: ArrayBuffer
+    buffer: ArrayBuffer | null
     /**Gain value, 0-1, affects visualizer gain */
     gain: number
     /**Mute the output without affecting the visualizer gain */
@@ -34,6 +34,8 @@ export interface VisualizerData {
     color: EnhancedColorData
     /**Secondary color (if available) */
     color2: EnhancedColorData
+    /**Additional alpha multiplier for secondary color */
+    color2Alpha: number
     /**Apply colors in alternate mode (if available) */
     altColorMode: boolean
     /**Visualizer style */
@@ -99,27 +101,22 @@ export interface VisualizerData {
         /**Quantize frequency values to a certain number of levels, disabled at <=1 */
         quantization: number
     }
+    /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
     rotate: boolean
+    /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
     flipX: boolean
+    /**Flip the visualizer's Y-axis - applied after rotation (top becomes bottom) */
     flipY: boolean
 }
 
-/**
- * Audio & drawing context of visualizer tile
- */
-export class Visualizer {
-    protected readonly gain: GainNode;
-    protected readonly analyzer: AnalyserNode; // very british
-    protected audioBuffer: Promise<AudioBuffer>;
-    protected playingSource: AudioBufferSourceNode | null = null;
-
-    /**Reactive state of visualizer - all settings & stuff */
-    readonly data: VisualizerData = reactive<VisualizerData>({
-        buffer: new Uint8Array(0).buffer,
+export function createDefaultVisualizerData(): VisualizerData {
+    return {
+        buffer: null,
         gain: 1,
         mute: false,
         color: { type: 'solid', color: '#FFFFFF', alpha: 1 },
         color2: { type: 'solid', color: '#FFFFFF', alpha: 1 },
+        color2Alpha: 1,
         altColorMode: false,
         mode: VisualizerMode.FREQ_BAR,
         fftSize: 256,
@@ -161,14 +158,31 @@ export class Visualizer {
         rotate: false,
         flipX: false,
         flipY: false
-    });
+    };
+}
+
+/**
+ * Audio & drawing context of visualizer tile
+ */
+export class Visualizer {
+    protected readonly gain: GainNode;
+    protected readonly analyzer: AnalyserNode; // very british
+    protected audioBuffer: AudioBuffer | null = null;
+    protected source: AudioBufferSourceNode | null = null;
+
+    /**Reactive state of visualizer - all settings & stuff */
+    readonly data: VisualizerData;
 
     readonly renderer: VisualizerRenderer;
     readonly canvas: HTMLCanvasElement;
     readonly ctx: CanvasRenderingContext2D;
+    /**Sets if the visualizer is visible/playable */
+    visible: boolean = false;
 
-    constructor(buffer: ArrayBuffer, canvas: HTMLCanvasElement) {
-        this.data.buffer = buffer;
+    private readonly watchers: WatchHandle[] = [];
+
+    constructor(data: VisualizerData, canvas: HTMLCanvasElement) {
+        this.data = reactive<VisualizerData>(data);
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
         this.gain = audioContext.createGain();
@@ -176,13 +190,73 @@ export class Visualizer {
         this.gain.connect(this.analyzer);
         this.analyzer.connect(globalGain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
+        Visualizer.instances.add(this);
         // watch functions instead of getter/setter spam
-        watch(() => this.data.buffer, useThrottleFn(() => this.audioBuffer = audioContext.decodeAudioData(this.data.buffer), 2000, true));
-        this.audioBuffer = audioContext.decodeAudioData(this.data.buffer);
+        this.watchers.push(watch(() => this.data.buffer, useThrottleFn(async () => {
+            this.audioBuffer = this.data.buffer !== null ? await audioContext.decodeAudioData(this.data.buffer) : null;
+            if (this.audioBuffer !== null && Visualizer.time.playing && this.visible) this.start();
+            else this.stop();
+            Visualizer.recalculateDuration();
+        }, 2000, true), { immediate: true }));
+        this.watchers.push(watch(() => this.data.gain, () => this.gain.gain.value = data.gain));
+        this.watchers.push(watch(() => this.data.mute, () => data.mute ? this.analyzer.disconnect() : this.analyzer.connect(globalGain)));
     }
 
-    play() {
+    private start(): void {
+        this.stop();
+        if (this.audioBuffer == null) return;
+        this.source = audioContext.createBufferSource();
+        this.source.buffer = this.audioBuffer;
+        this.source.connect(this.gain);
+        this.source.start(audioContext.currentTime, audioContext.currentTime - Visualizer.time.startTime);
+    }
+    private stop(): void {
+        this.source?.stop();
+        this.source?.disconnect();
+        this.source = null;
+    }
+    get duration(): number {
+        return this.audioBuffer?.duration ?? 0;
+    }
 
+    destroy(): void {
+        this.stop();
+        for (const handle of this.watchers) handle.stop();
+        this.analyzer.disconnect();
+        Visualizer.instances.delete(this);
+        Visualizer.recalculateDuration();
+    }
+
+    private static readonly instances: Set<Visualizer> = reactive(new Set()) as Set<Visualizer>;
+    /**Internal timekeeping to synchronize visualizer playback states */
+    private static readonly time: {
+        startTime: number
+        playing: boolean
+    } = {
+            startTime: 0,
+            playing: false
+        };
+    static start(time: number = 0): void {
+        this.time.startTime = audioContext.currentTime - time;
+        this.time.playing = true;
+        for (const vis of this.instances) {
+            if (vis.visible) vis.start();
+        }
+    }
+    static stop(): void {
+        this.time.playing = false;
+        for (const vis of this.instances) vis.stop();
+    }
+    private static readonly _duration: Ref<number> = ref(0);
+    private static recalculateDuration() {
+        let time = 0;
+        for (const vis of this.instances) {
+            if (vis.duration > time) time = vis.duration;
+        }
+        this._duration.value = time;
+    }
+    static get duration(): number {
+        return this._duration.value;
     }
 }
 

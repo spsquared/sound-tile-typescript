@@ -164,14 +164,11 @@ function removeStop(i: number) {
     flex-grow: 1;
     flex-basis: 0px;
     transition: 50ms linear background-color;
+    outline-offset: -1px;
 }
 
 .pickerNavTab:hover {
     background-color: #222;
-}
-
-.pickerNavTab:focus-visible {
-    outline: none;
 }
 
 .pickerNavTabSelected {

@@ -68,10 +68,10 @@ input[type=number] {
 }
 
 select {
-    padding: 0px 1.3em 0px 0.2em;
+    padding: 1px 1.5em 1px 0.3em;
     background-image: url(@/img/arrow-down.svg);
     background-position: right;
-    background-size: 1.3em 0.8em;
+    background-size: 1.5em 0.8em;
     background-repeat: no-repeat;
 }
 
@@ -94,7 +94,7 @@ input:focus-visible,
 button:focus-visible,
 select:focus-visible {
     outline-offset: 0px;
-    outline: 1px solid white;
+    outline: 2px solid white;
 }
 
 h1 {

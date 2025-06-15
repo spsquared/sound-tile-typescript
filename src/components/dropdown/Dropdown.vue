@@ -8,7 +8,7 @@ import DropdownMediaData from './DropdownMediaData.vue';
 import DropdownMediaControls from './DropdownMediaControls.vue';
 import DropdownEditControls from './DropdownEditControls.vue';
 
-function keypress(e: KeyboardEvent) {
+function keydown(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
     if (e.key.toLowerCase() == 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.shiftKey) {
@@ -21,8 +21,8 @@ function keypress(e: KeyboardEvent) {
         }
     }
 }
-onMounted(() => document.addEventListener('keypress', keypress));
-onUnmounted(() => document.removeEventListener('keypress', keypress));
+onMounted(() => document.addEventListener('keydown', keydown));
+onUnmounted(() => document.removeEventListener('keydown', keydown));
 
 // removes animating of sidebar spacer width when resizing
 const animateSpacer = ref(false);

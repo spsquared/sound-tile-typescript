@@ -9,7 +9,7 @@ import editIcon from '@/img/edit.svg';
 import exportIcon from '@/img/export.svg';
 import playlistIcon from '@/img/playlist.svg';
 
-function keypress(e: KeyboardEvent) {
+function keydown(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
     if (e.key.toLowerCase() == 'e' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.shiftKey) {
@@ -23,8 +23,8 @@ function keypress(e: KeyboardEvent) {
         endResize();
     }
 }
-onMounted(() => document.addEventListener('keypress', keypress));
-onUnmounted(() => document.removeEventListener('keypress', keypress));
+onMounted(() => document.addEventListener('keydown', keydown));
+onUnmounted(() => document.removeEventListener('keydown', keydown));
 
 const currentTab = ref<string>('edit');
 provide('sidebarCurrentTab', currentTab);

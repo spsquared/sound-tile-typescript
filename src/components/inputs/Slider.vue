@@ -23,19 +23,24 @@ const props = defineProps<{
 }>();
 const value = defineModel({ default: 0 });
 
+const emit = defineEmits<{
+    (e: 'input', value: number): any
+}>();
+
 // scrollValue allows snapping to step while providing smooth control using scroll wheel
 const scrollValue = ref(value.value);
 function onWheel(e: WheelEvent) {
     if (props.vertical) {
-        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaY, props.max ?? Infinity));
+        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaY * (props.step ?? 1), props.max ?? Infinity));
     } else {
-        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaX, props.max ?? Infinity));
-
+        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaX * (props.step ?? 1), props.max ?? Infinity));
     }
     if (props.step != undefined && props.step > 0) {
         value.value = Number((Math.round(scrollValue.value / props.step) * props.step).toFixed((props.step.toString().split('.')[1] ?? '').length));
+        emit('input', value.value);
     } else {
         value.value = scrollValue.value;
+        emit('input', value.value);
     }
 }
 function endWheel() {
@@ -45,7 +50,7 @@ function endWheel() {
 
 <template>
     <label :class="{ slider: true, sliderVertical: props.vertical, sliderDisabled: props.disabled }">
-        <input type="range" class="sliderInput" v-model="value" @wheel.passive="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
+        <input type="range" class="sliderInput" v-model="value" @input="emit('input', value)" @wheel.passive="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
         <div class="sliderTrack"></div>
         <div class="sliderThumbWrapper">
             <div class="sliderThumb"></div>
@@ -57,9 +62,7 @@ function endWheel() {
 .slider {
     display: inline-block;
     position: relative;
-    /* fixes positioning inline & sizing issues in grids/flexboxes */
-    position: relative;
-    top: 6px;
+    vertical-align: top;
     max-width: min-content;
     max-height: min-content;
     --length: v-bind("$props.length ?? 'unset'");

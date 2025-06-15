@@ -7,14 +7,12 @@ const mousePos = ref({ x: 0, y: 0 });
 function mouseMove(e: MouseEvent) {
     mousePos.value.x = e.clientX;
     mousePos.value.y = e.clientY;
-    e.preventDefault();
 }
 function touchMove(e: TouchEvent) {
     // no touch tracking
     const touch = e.touches[0];
     mousePos.value.x = touch?.clientX ?? 0;
     mousePos.value.y = touch?.clientY ?? 0;
-    e.preventDefault();
 }
 onMounted(() => {
     document.addEventListener('mousemove', mouseMove);

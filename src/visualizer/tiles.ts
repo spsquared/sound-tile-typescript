@@ -1,4 +1,4 @@
-import { Component, reactive } from "vue";
+import { Component, watch } from "vue";
 import EnhancedColorPicker from "@/components/inputs/enhancedColorPicker";
 import BaseTileComponent from "./tiles/BaseTile.vue";
 import GroupTileComponent from "./tiles/GroupTile.vue";
@@ -11,6 +11,7 @@ import visualizerTileImg from '@/img/visualizer-tile.png';
 import audioLevelsTileImg from '@/img/audiolevels-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
+import Visualizer, { createDefaultVisualizerData, VisualizerData } from "./visualizer";
 
 /**
  * Required props for all tile components.
@@ -47,7 +48,14 @@ export class Tile {
 
     constructor() {
         this.id = Tile.idCounter++;
-        this.backgroundColor = reactive(new EnhancedColorPicker('#000000')) as EnhancedColorPicker;
+        this.backgroundColor = new EnhancedColorPicker('#000000');
+    }
+
+    onMounted(cb: () => any): void {
+        watch(() => this.element, () => this.element !== null && cb());
+    }
+    onUnmounted(cb: () => any): void {
+        watch(() => this.element, () => this.element === null && cb());
     }
 
     destroy(): void {
@@ -79,7 +87,7 @@ export class GroupTile extends Tile {
 
     constructor() {
         super();
-        this.borderColor = reactive(new EnhancedColorPicker('#FFFFFF')) as EnhancedColorPicker;
+        this.borderColor = new EnhancedColorPicker('#FFFFFF');
     }
 
     addChild(tile: Tile): boolean {
@@ -164,8 +172,16 @@ export class VisualizerTile extends Tile {
 
     label: string = VisualizerTile.name;
 
-    resize(w: number, h: number): void {
+    /**Create canvas here for visualizer to always have one canvas, unmount/remount spam creates lots of canvases */
+    readonly canvas: HTMLCanvasElement;
+    readonly visualizer: Visualizer;
 
+    constructor(data?: VisualizerData) {
+        super();
+        this.canvas = document.createElement('canvas');
+        this.visualizer = new Visualizer(data ?? createDefaultVisualizerData(), this.canvas);
+        this.onMounted(() => this.visualizer.visible = true);
+        this.onUnmounted(() => this.visualizer.visible = false);
     }
 }
 

@@ -1,7 +1,8 @@
-import { reactive, ref, Ref, watch } from "vue";
+import { reactive, ref, Ref, toRaw } from "vue";
 import { VisualizerData } from "./visualizer";
+import { throttledWatch } from "@vueuse/core";
 
-const isInWorker = 'importScripts' in global;
+const isInWorker = 'importScripts' in globalThis;
 
 type VisualizerSettingsData = Omit<VisualizerData, 'buffer' | 'gain'>;
 
@@ -22,9 +23,11 @@ export abstract class VisualizerRenderer {
         this.canvas = document.createElement('canvas');
     }
 
-    abstract draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void>
+    abstract draw(buf: Uint8Array | Float32Array | Uint8Array[] | null): Promise<void>
 
     abstract resize(w: number, h: number): void
+
+    abstract destroy(): void
 }
 
 /**
@@ -39,17 +42,11 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
         // initialize worker with canvas immediately, this sets up communications as well
         const workerCanvas = this.canvas.transferControlToOffscreen();
         this.worker.postMessage(workerCanvas, [workerCanvas]);
-        this.worker.onmessage = (e: RendererMessageEvent) => {
-            const listeners = this.messageListeners.get(e.data.type);
-            if (listeners !== undefined) {
-                for (const cb of listeners) cb(e.data);
-            }
-        };
-        watch(this.data, () => this.updateData(), { deep: true });
+        throttledWatch(this.data, () => this.updateData, { deep: true, throttle: 20 });
     }
 
-    async draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', {});
+    async draw(buffer: Uint8Array | Float32Array | Uint8Array[] | null): Promise<void> {
+        this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', { buffer: buffer });
     }
 
     resize(w: number, h: number): void {
@@ -57,10 +54,9 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     }
 
     private updateData(): void {
-        this.postMessage('settings', { data: this.data });
+        this.postMessage('settings', { data: toRaw(this.data) });
     }
 
-    private readonly messageListeners: Map<string, Set<(data: Omit<RendererMessageData, 'type'>) => any>> = new Map();
     private postMessage<Event extends RendererMessageData['type']>(e: Event, data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>, transfers?: Transferable[]): void {
         this.worker.postMessage({ type: e, ...data }, { transfer: transfers });
     }
@@ -76,13 +72,9 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
             this.postMessage(e, data, transfers);
         });
     }
-    private onMessage<Event extends RendererMessageData['type']>(e: Event, cb: (data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>) => any): void {
-        if (!this.messageListeners.has(e)) this.messageListeners.set(e, new Set());
-        this.messageListeners.get(e)?.add(cb as any); // dont care, code is private anyway
-    }
-    private offMessage<Event extends RendererMessageData['type']>(e: Event, cb: (data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>) => any): void {
-        if (!this.messageListeners.has(e)) return;
-        this.messageListeners.get(e)?.delete(cb as any); // dont care, code is private anyway
+
+    destroy() {
+        this.worker.terminate();
     }
 }
 
@@ -97,12 +89,16 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
         this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen());
     }
 
-    async draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        
+    async draw(buf: Uint8Array | Float32Array | Uint8Array[] | null): Promise<void> {
+
     }
 
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
+    }
+
+    destroy(): void {
+        // nothing?
     }
 }
 
@@ -122,7 +118,7 @@ class VisualizerRenderInstance {
         this.ctx = this.canvas.getContext('2d')!;
     }
 
-    draw(buf: Uint8Array | Float32Array | Uint8Array[]): void {
+    draw(buf: Uint8Array | Float32Array | Uint8Array[] | null): void {
     }
 
     resize(w: number, h: number): void {
@@ -133,6 +129,7 @@ class VisualizerRenderInstance {
 
 type RendererMessageData = {
     type: 'draw'
+    buffer: Uint8Array | Float32Array | Uint8Array[] | null
 } | ({
     type: 'drawResponse'
 } & VisualizerRendererFrameResults) | {
@@ -154,6 +151,8 @@ if (isInWorker) {
         onmessage = (e: RendererMessageEvent) => {
             switch (e.data.type) {
                 case 'draw':
+                    renderer.draw(e.data.buffer);
+                    break;
             }
         };
     }

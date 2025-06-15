@@ -6,14 +6,14 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (e: 'input', value: number): any
-    (e: 'keypress', ev: KeyboardEvent): any
+    (e: 'keydown', ev: KeyboardEvent): any
 }>();
 const number = defineModel({ default: 0 });
 function input() {
     emit('input', number.value);
 }
-function keypress(e: KeyboardEvent) {
-    emit('keypress', e);
+function keydown(e: KeyboardEvent) {
+    emit('keydown', e);
 }
 defineExpose({
     value: number
@@ -30,7 +30,7 @@ function blur() {
 </script>
 
 <template>
-    <input type="number" v-model=number @input="input" @keypress="keypress" @blur="blur" :min="props.min" :max="props.max" :step="props.step">
+    <input type="number" v-model=number @input="input" @keydown="keydown" @blur="blur" :min="props.min" :max="props.max" :step="props.step">
 </template>
 
 <style scoped></style>

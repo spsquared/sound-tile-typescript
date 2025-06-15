@@ -3,14 +3,14 @@ import { computed, onMounted, onUnmounted } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import TileSource from './TileSource.vue';
 
-function keypress(e: KeyboardEvent) {
+function keydown(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
     if (e.key.toLowerCase() == 't' && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
         TileEditor.state.treeMode = !TileEditor.state.treeMode;
     }
 }
-onMounted(() => document.addEventListener('keypress', keypress));
-onUnmounted(() => document.removeEventListener('keypress', keypress));
+onMounted(() => document.addEventListener('keydown', keydown));
+onUnmounted(() => document.removeEventListener('keydown', keydown));
 
 const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).filter((t) => t.visible).map((t) => t.Tile));
 </script>

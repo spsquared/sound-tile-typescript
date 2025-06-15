@@ -6,12 +6,14 @@ import DraggableWindow from '@/components/DraggableWindow.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import { useElementSize } from '@vueuse/core';
+import TileOptionsSection from './options/TileOptionsSection.vue';
 
 const props = defineProps<{
     tile: Tile
     hideHeader?: boolean
     hideEdit?: boolean
     ignoreCollapsedGroup?: boolean
+    optionsWindow?: Partial<Omit<InstanceType<typeof DraggableWindow>['$props'], 'modelValue' | `on${string}` | 'key' | `ref${string}` | 'style' | 'class'>>
 }>();
 
 const tile = useTemplateRef('tile');
@@ -62,16 +64,18 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
 <template>
     <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
-        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.tile.label" resizeable :min-width="300" :min-height="200">
+        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
             <slot name="options">
-                <label title="Relative size of tile to sibling tiles">
-                    Size:
-                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
-                </label>
-                <label title="Background color of tile">
-                    Background:
-                    <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
-                </label>
+                <TileOptionsSection title="General">
+                    <label class="sectionItem" title="Relative size of tile to sibling tiles">
+                        Size:
+                        <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+                    </label>
+                    <label class="sectionItem" title="Background color of tile">
+                        Background:
+                        <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                    </label>
+                </TileOptionsSection>
             </slot>
         </DraggableWindow>
         <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup)">
@@ -116,7 +120,8 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
     opacity: v-bind("labelFocused ? 1 : 0");
 }
 
-.tileHeader:hover {
+.tileHeader:hover,
+.tileHeader:focus-within {
     opacity: 1;
 }
 
@@ -186,7 +191,8 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
     transition: 100ms linear opacity;
 }
 
-.tileEditButton:hover {
+.tileEditButton:hover,
+.tileEditButton:focus {
     opacity: 1;
 }
 

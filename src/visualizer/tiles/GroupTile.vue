@@ -4,6 +4,7 @@ import { GroupTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
+import TileOptionsSection from './options/TileOptionsSection.vue';
 
 const props = defineProps<{
     tile: GroupTile
@@ -33,30 +34,28 @@ const tileOrientation = computed<string>({
             </div>
         </template>
         <template v-slot:options>
-            <label title="versfdsf">
-                Orientotation:
-                <select v-model="tileOrientation">
-                    <option :value="GroupTile.HORIZONTAL">Horizontal</option>
-                    <option :value="GroupTile.VERTICAL">Vertical</option>
-                    <option :value="GroupTile.COLLAPSED">Collapsed</option>
-                </select>
-            </label>
-            <label title="Relative size of tile to sibling tiles">
-                Size:
-                <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
-            </label>
-            <!-- only usable when not in collapsed tile -->
-            <label>
-                Borders:
-                <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
-            </label>
-            <!-- only usable when is collapsed tile -->
-            <label title="Background color of tile">
-                Background:
-                <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
-            </label>
-            <br>
-            dont worry this will get cleaned up
+            <TileOptionsSection title="General">
+                <label title="Layout of child tiles within the group - collapsed groups come with a few caveats">
+                    Layout:
+                    <select v-model="tileOrientation">
+                        <option :value="GroupTile.HORIZONTAL">Horizontal</option>
+                        <option :value="GroupTile.VERTICAL">Vertical</option>
+                        <option :value="GroupTile.COLLAPSED">Collapsed</option>
+                    </select>
+                </label>
+                <label title="Relative size of tile to sibling tiles">
+                    Size:
+                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+                </label>
+                <label v-if="!inCollapsedGroup && !isCollapsed" title="Border style of tiles within the group">
+                    Borders:
+                    <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
+                </label>
+                <label v-if="isCollapsed" title="Background style of tile">
+                    Background:
+                    <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                </label>
+            </TileOptionsSection>
         </template>
     </BaseTile>
 </template>

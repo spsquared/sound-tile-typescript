@@ -1,14 +1,28 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
+import { openFilePicker } from '../inputs/fileAccess';
 
 const title = useTemplateRef('title');
 const subtitle = useTemplateRef('subtitle');
 
 const open = ref(false);
 
-function uploadCoverArt() {
-
+async function uploadCoverArt() {
+    const coverArt = await openFilePicker({
+        id: 'soundtileUploadCover',
+        types: [{
+            accept: {
+                'image/*': ['.png', '.svg', '.jpeg', '.jpg', '.webp', '.bmp']
+            }
+        }]
+    });
+    if (coverArt.length == 0) return;
+    const reader = new FileReader();
+    reader.onloadend = (e) => {
+        MediaPlayer.state.current.coverArt = reader.result as string;
+    };
+    reader.readAsDataURL(coverArt[0]);
 }
 
 // scrolling text for stuff
