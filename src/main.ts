@@ -18,6 +18,6 @@ document.addEventListener('keydown', (e) => {
     if (key == ' ' && e.target instanceof HTMLElement && e.target.matches('input[type=button],input[type=checkbox]')) e.preventDefault();
 });
 // warn leaving page
-window.addEventListener('beforeunload', (e) => {
-    e.preventDefault();
-});
+// window.addEventListener('beforeunload', (e) => {
+//     e.preventDefault();
+// });

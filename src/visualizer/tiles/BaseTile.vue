@@ -79,7 +79,7 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
             </slot>
         </DraggableWindow>
         <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup)">
-            <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
+            <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
@@ -117,7 +117,7 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
     height: 20px;
     background-color: #555;
     transition: 100ms linear opacity;
-    opacity: v-bind("labelFocused ? 1 : 0");
+    opacity: 0;
 }
 
 .tileHeader:hover,
@@ -133,8 +133,8 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
 }
 
 .tileLabel:focus-visible {
-    outline: 1px solid white;
-    outline-offset: -1px;
+    outline: 2px solid white;
+    outline-offset: -2px;
 }
 
 .tileDrag {

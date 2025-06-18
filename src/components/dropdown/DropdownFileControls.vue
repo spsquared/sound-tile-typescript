@@ -11,7 +11,9 @@
 <style scoped>
 #fileControls {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: 58px;
+    grid-template-rows: 58px 4px 48px;
     flex-direction: column;
     border-left: 4px solid white;
 }
@@ -20,19 +22,19 @@
     box-sizing: content-box;
     appearance: none;
     width: 58px;
-    height: 60px;
+    height: 58px;
     margin: 0px;
     padding: 0px;
     border-radius: 0px;
     background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
-    outline-offset: -1px;
+    outline-offset: -2px;
     outline-color: black;
 }
 
 #tileUpload {
-    border-bottom: 2px solid white;
+    grid-row: 1;
     background-image: url(@/img/upload.svg);
 }
 
@@ -41,15 +43,13 @@
 }
 
 #tileDownload {
-    border-top: 2px solid white;
+    grid-row: 3;
     background-image: url(@/img/download.svg);
 }
 
 #fileControls::after {
     content: '';
-    position: absolute;
-    top: 58px;
-    width: 58px;
+    grid-row: 2;
     height: 4px;
     background-color: white;
     pointer-events: none;

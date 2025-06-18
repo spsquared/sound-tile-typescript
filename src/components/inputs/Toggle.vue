@@ -59,16 +59,14 @@ defineExpose({
 
 .toggleSlider::before {
     content: '';
-    box-sizing: border-box;
     position: absolute;
     top: -5px;
     left: 0px;
     width: 22px;
     height: 22px;
     background-color: v-bind("$props.color3 ?? 'var(--input-color)'");
-    border: var(--border-width) solid white;
     border-radius: 4px;
-    transition: 0.1s linear transform, 50ms linear background-color;
+    transition: 0.1s linear transform;
     transform: translateX(-4px);
     background-image: v-bind('`url("${$props.icon}")`');
     background-position: center;
@@ -85,6 +83,10 @@ defineExpose({
 
 .toggle:hover .toggleSlider::before {
     background-color: v-bind("$props.color4 ?? 'var(--input-hover-color)'");
+}
+
+.toggleInput:focus-visible+.toggleSlider::before {
+    outline: 2px solid white;
 }
 
 .toggleDisabled {

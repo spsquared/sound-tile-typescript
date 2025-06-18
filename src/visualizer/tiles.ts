@@ -1,5 +1,5 @@
 import { Component, watch } from "vue";
-import EnhancedColorPicker from "@/components/inputs/enhancedColorPicker";
+import ColorPicker from "@/components/inputs/colorPicker";
 import BaseTileComponent from "./tiles/BaseTile.vue";
 import GroupTileComponent from "./tiles/GroupTile.vue";
 import VisualizerTileComponent from "./tiles/VisualizerTile.vue";
@@ -11,7 +11,8 @@ import visualizerTileImg from '@/img/visualizer-tile.png';
 import audioLevelsTileImg from '@/img/audiolevels-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
-import Visualizer, { createDefaultVisualizerData, VisualizerData } from "./visualizer";
+import Visualizer from "./visualizer";
+import { createDefaultVisualizerData, VisualizerData } from "./visualizerData";
 
 /**
  * Required props for all tile components.
@@ -44,11 +45,11 @@ export class Tile {
     /**Relative size compared to sibling tiles (same parent) */
     size: number = 1;
     /**Background color of tile */
-    backgroundColor: EnhancedColorPicker;
+    backgroundColor: ColorPicker;
 
     constructor() {
         this.id = Tile.idCounter++;
-        this.backgroundColor = new EnhancedColorPicker('#000000');
+        this.backgroundColor = new ColorPicker('#000000');
     }
 
     onMounted(cb: () => any): void {
@@ -83,11 +84,11 @@ export class GroupTile extends Tile {
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
     orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
-    borderColor: EnhancedColorPicker;
+    borderColor: ColorPicker;
 
     constructor() {
         super();
-        this.borderColor = new EnhancedColorPicker('#FFFFFF');
+        this.borderColor = new ColorPicker('#FFFFFF');
     }
 
     addChild(tile: Tile): boolean {

@@ -1,205 +1,155 @@
-import { reactive, ref, Ref, watch, WatchHandle } from "vue";
-import { useThrottleFn } from "@vueuse/core";
+import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from "vue";
 import { audioContext, globalGain } from "./audio";
+import { VisualizerData, VisualizerMode } from "./visualizerData";
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from "./visualizerRenderer";
-import { EnhancedColorData } from "@/components/inputs/enhancedColorPicker";
 
 export const webWorkerSupported = 'Worker' in window;
 
 /**
- * Possible settings for visualizers - channel levels tile is its own class due to needing multiple analyzer nodes
- */
-export enum VisualizerMode {
-    FREQ_BAR,
-    FREQ_LINE,
-    FREQ_FILL,
-    FREQ_LUMINANCE,
-    WAVE_DIRECT,
-    WAVE_CORRELATED,
-    SPECTROGRAM,
-    CHANNEL_LEVELS
-}
-
-/**
- * Visualizer options, audio data, and any attached images/text for a visualizer tile.
- */
-export interface VisualizerData {
-    /**Audio data uploaded by user - not decoded yet */
-    buffer: ArrayBuffer | null
-    /**Gain value, 0-1, affects visualizer gain */
-    gain: number
-    /**Mute the output without affecting the visualizer gain */
-    mute: boolean
-    /**Primary color */
-    color: EnhancedColorData
-    /**Secondary color (if available) */
-    color2: EnhancedColorData
-    /**Additional alpha multiplier for secondary color */
-    color2Alpha: number
-    /**Apply colors in alternate mode (if available) */
-    altColorMode: boolean
-    /**Visualizer style */
-    mode: VisualizerMode
-    /**The size of the underlying FFT - power of 2 from 32 to 32768 */
-    fftSize: number
-    /**Inline padding on edges of visualizer - left/right for horizontal */
-    paddingInline: number
-    /**Block padding on edges of visualizer - top/bottom for horizontal */
-    paddingBlock: number
-    /**Settings for frequency modes */
-    freqOptions: {
-        /**Settings for frequency bar modes */
-        bar: {
-            ledEffect: boolean
-            ledCount: number
-            ledSize: number
-        }
-        /**Settings for frequency line and fill modes */
-        line: {
-            /**Width of lines drawn */
-            thickness: number
-            /**Use miter joins instead of rounded joins at corners in lines */
-            sharpEdges: boolean
-        }
-        /**Sets factor for blending the previous frame's data with the current data, 0-1 (technical terms: a Blackman window) */
-        smoothing: number
-        /**Cutoff threshold for frequency scale, controls highest frequency drawn, 0-1 */
-        freqCutoff: number
-        /**Minimum decibels required for show up on the visualizer, in decibels below the maximum energy of the output */
-        minDbCutoff: number
-        /**Scale of drawn frequences */
-        scale: number
-        /**Use a logarithmic frequency scale */
-        useLogScale: boolean
-        /**Draw the current frequency scale below the visualizer */
-        showFreqScale: boolean
-        /**Symmetry - `low`/`high` mirrors with low/high frequencies in center */
-        symmetry: 'none' | 'low' | 'high'
-    }
-    /**Settings for waveform modes */
-    waveOptions: {
-        /**Amplitude scale of drawn waveform */
-        scale: number
-        /**Width of lines drawn */
-        thickness: number
-        /**Use miter joins instead of rounded joins at corners in lines */
-        sharpEdges: boolean
-        /**Reduce the number of points drawn - every 2 points, every 3 points, etc. */
-        resolution: number
-        /**Settings for correlated waveform mode */
-        correlation: {
-            /** */
-            samples: number
-            gradientDescentGain: number
-            frameSmoothing: number
-        }
-    }
-    /**Settings for spectrogram mode */
-    spectOptions: {
-        /**Number of previous frames to keep in view */
-        historyLength: number
-        /**Quantize frequency values to a certain number of levels, disabled at <=1 */
-        quantization: number
-    }
-    /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
-    rotate: boolean
-    /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
-    flipX: boolean
-    /**Flip the visualizer's Y-axis - applied after rotation (top becomes bottom) */
-    flipY: boolean
-}
-
-export function createDefaultVisualizerData(): VisualizerData {
-    return {
-        buffer: null,
-        gain: 1,
-        mute: false,
-        color: { type: 'solid', color: '#FFFFFF', alpha: 1 },
-        color2: { type: 'solid', color: '#FFFFFF', alpha: 1 },
-        color2Alpha: 1,
-        altColorMode: false,
-        mode: VisualizerMode.FREQ_BAR,
-        fftSize: 256,
-        paddingInline: 8,
-        paddingBlock: 8,
-        freqOptions: {
-            bar: {
-                ledEffect: false,
-                ledCount: 16,
-                ledSize: 0.8
-            },
-            line: {
-                thickness: 2,
-                sharpEdges: false
-            },
-            smoothing: 0.8,
-            freqCutoff: 1,
-            minDbCutoff: -100,
-            scale: 1,
-            useLogScale: false,
-            showFreqScale: false,
-            symmetry: 'none'
-        },
-        waveOptions: {
-            scale: 1,
-            thickness: 2,
-            sharpEdges: false,
-            resolution: 1,
-            correlation: {
-                samples: 32,
-                gradientDescentGain: 0.5,
-                frameSmoothing: 0.9
-            }
-        },
-        spectOptions: {
-            historyLength: 360,
-            quantization: 0
-        },
-        rotate: false,
-        flipX: false,
-        flipY: false
-    };
-}
-
-/**
- * Audio & drawing context of visualizer tile
+ * Audio and drawing context of visualizer tiles.
  */
 export class Visualizer {
-    protected readonly gain: GainNode;
-    protected readonly analyzer: AnalyserNode; // very british
-    protected audioBuffer: AudioBuffer | null = null;
-    protected source: AudioBufferSourceNode | null = null;
+    private readonly gain: GainNode;
+    private readonly analyzers: AnalyserNode[]; // very british
+    private audioBuffer: AudioBuffer | null = null;
+    private source: AudioBufferSourceNode | null = null;
+    private splitter: ChannelSplitterNode | null = null;
 
     /**Reactive state of visualizer - all settings & stuff */
     readonly data: VisualizerData;
 
+    /**Renderer renders to its own canvas so we can add extra stuff onto the visualizer */
     readonly renderer: VisualizerRenderer;
     readonly canvas: HTMLCanvasElement;
     readonly ctx: CanvasRenderingContext2D;
     /**Sets if the visualizer is visible/playable */
     visible: boolean = false;
 
-    private readonly watchers: WatchHandle[] = [];
+    private readonly effectScope: EffectScope;
 
-    constructor(data: VisualizerData, canvas: HTMLCanvasElement) {
-        this.data = reactive<VisualizerData>(data);
+    constructor(initData: VisualizerData, canvas: HTMLCanvasElement) {
+        this.data = reactive<VisualizerData>(initData);
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
         this.gain = audioContext.createGain();
-        this.analyzer = audioContext.createAnalyser();
-        this.gain.connect(this.analyzer);
-        this.analyzer.connect(globalGain);
+        this.analyzers = [audioContext.createAnalyser()];
+        this.gain.connect(this.analyzers[0]);
+        this.gain.connect(globalGain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
         Visualizer.instances.add(this);
         // watch functions instead of getter/setter spam
-        this.watchers.push(watch(() => this.data.buffer, useThrottleFn(async () => {
-            this.audioBuffer = this.data.buffer !== null ? await audioContext.decodeAudioData(this.data.buffer) : null;
-            if (this.audioBuffer !== null && Visualizer.time.playing && this.visible) this.start();
-            else this.stop();
-            Visualizer.recalculateDuration();
-        }, 2000, true), { immediate: true }));
-        this.watchers.push(watch(() => this.data.gain, () => this.gain.gain.value = data.gain));
-        this.watchers.push(watch(() => this.data.mute, () => data.mute ? this.analyzer.disconnect() : this.analyzer.connect(globalGain)));
+        this.effectScope = effectScope();
+        this.effectScope.run(() => {
+            watch(() => this.data.buffer, async () => {
+                this.audioBuffer = null;
+                if (this.data.buffer !== null) {
+                    Visualizer.recalculateDuration();
+                    this.audioBuffer = this.data.buffer !== null ? await audioContext.decodeAudioData(this.data.buffer) : null;
+                }
+                Visualizer.recalculateDuration();
+                if (this.audioBuffer !== null && Visualizer.time.playing && this.visible) this.start();
+                else this.stop();
+            }, { immediate: true });
+            watchEffect(() => this.gain.gain.value = this.data.gain);
+            watchEffect(() => this.data.mute ? this.gain.disconnect(globalGain) : this.gain.connect(globalGain));
+            watch([() => this.data.mode, () => this.data.levelOptions.channels], ([], [lastMode, lastChannels]) => {
+                // this could blow up very easily!!
+                if (this.data.mode == VisualizerMode.CHANNEL_LEVELS && (lastMode != VisualizerMode.CHANNEL_LEVELS || this.data.levelOptions.channels != lastChannels)) {
+                    for (const a of this.analyzers) this.gain.disconnect(a);
+                    const channels = Math.max(1, this.data.levelOptions.channels);
+                    this.splitter = audioContext.createChannelSplitter(channels);
+                    this.gain.connect(this.splitter);
+                    this.analyzers.length = 0;
+                    for (let i = 0; i < channels; i++) {
+                        const analyzer = audioContext.createAnalyser();
+                        analyzer.fftSize = 1024;
+                        this.splitter.connect(analyzer, i);
+                        this.analyzers.push(analyzer);
+                    }
+                } else if (this.data.mode != VisualizerMode.CHANNEL_LEVELS && lastMode == VisualizerMode.CHANNEL_LEVELS) {
+                    if (this.splitter !== null) this.gain.disconnect(this.splitter);
+                    this.splitter?.disconnect();
+                    this.analyzers.length = 0;
+                    this.analyzers.push(audioContext.createAnalyser());
+                    this.gain.connect(this.analyzers[0]);
+                }
+            });
+            watchEffect(() => {
+                if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
+                    for (const a of this.analyzers) a.fftSize = this.data.fftSize;
+                }
+            });
+            watchEffect(() => {
+                if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
+                    for (const a of this.analyzers) a.minDecibels = Math.min(0, this.data.freqOptions.minDbCutoff);
+                }
+            });
+            watchEffect(() => {
+                if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
+                    for (const a of this.analyzers) a.smoothingTimeConstant = Math.max(0, Math.min(this.data.freqOptions.smoothing, 1));
+                }
+            });
+        });
+    }
+
+    private drawing: boolean = false;
+    private async draw(): Promise<void> {
+        if (this.drawing || this.data.buffer === null) return;
+        this.drawing = true;
+        this.ctx.reset();
+        if (this.audioBuffer === null) {
+            const boxSize = Math.min(this.canvas.width, this.canvas.height);
+            const spinnerRadius = Math.min(boxSize * 0.4, Math.max(50, boxSize * 0.1));
+            this.ctx.fillStyle = 'white';
+            this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+            this.ctx.rotate(performance.now() / 100);
+            this.ctx.beginPath();
+            this.ctx.moveTo(spinnerRadius, 0);
+            this.ctx.arc(0, 0, spinnerRadius, 0, 4 / 3 * Math.PI);
+            this.ctx.arc(0, 0, spinnerRadius * 0.8, 4 / 3 * Math.PI, 0, true);
+            this.ctx.fill();
+        } else if ([VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM].includes(this.data.mode)) {
+            if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
+            else {
+                const data = new Uint8Array(this.analyzers[0].frequencyBinCount);
+                this.analyzers[0].getByteFrequencyData(data);
+                await this.renderer.draw(data);
+                this.ctx.drawImage(this.renderer.canvas, 0, 0);
+            }
+        } else if ([VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED].includes(this.data.mode)) {
+            if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
+            else {
+                const data = new Float32Array(this.analyzers[0].fftSize);
+                this.analyzers[0].getFloatTimeDomainData(data);
+                await this.renderer.draw(data);
+                this.ctx.drawImage(this.renderer.canvas, 0, 0);
+            }
+        } else if (this.data.mode == VisualizerMode.CHANNEL_LEVELS) {
+            const data: Uint8Array[] = [];
+            for (const a of this.analyzers) {
+                const buf = new Uint8Array(a.frequencyBinCount);
+                a.getByteTimeDomainData(buf);
+                data.push(buf);
+            }
+            await this.renderer.draw(data);
+            this.ctx.drawImage(this.renderer.canvas, 0, 0);
+        } else {
+            this.drawErrorText('Invalid mode');
+        }
+        this.drawing = false;
+    }
+    private drawErrorText(text: string): void {
+        this.ctx.resetTransform();
+        this.ctx.fillStyle = 'red';
+        this.ctx.font = '18px monospace'
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(text, this.canvas.width / 2, this.canvas.height / 2);
+    }
+    resize(w: number, h: number): void {
+        this.canvas.width = w;
+        this.canvas.height = h;
+        this.renderer.resize(w, h);
     }
 
     private start(): void {
@@ -221,8 +171,8 @@ export class Visualizer {
 
     destroy(): void {
         this.stop();
-        for (const handle of this.watchers) handle.stop();
-        this.analyzer.disconnect();
+        this.effectScope.stop();
+        this.gain.disconnect();
         Visualizer.instances.delete(this);
         Visualizer.recalculateDuration();
     }
@@ -248,7 +198,7 @@ export class Visualizer {
         for (const vis of this.instances) vis.stop();
     }
     private static readonly _duration: Ref<number> = ref(0);
-    private static recalculateDuration() {
+    private static recalculateDuration(): void {
         let time = 0;
         for (const vis of this.instances) {
             if (vis.duration > time) time = vis.duration;
@@ -257,6 +207,24 @@ export class Visualizer {
     }
     static get duration(): number {
         return this._duration.value;
+    }
+
+    private static async draw(): Promise<void> {
+        await Promise.all(Array.from(this.instances.values()).filter((v) => v.visible).map((v) => v.draw()));
+    }
+
+    static {
+        (async () => {
+            while (true) {
+                await new Promise<void>((resolve) => {
+                    if (!document.hidden) requestAnimationFrame(async () => {
+                        await this.draw();
+                        resolve();
+                    });
+                    else setTimeout(() => resolve(), 200);
+                });
+            }
+        })();
     }
 }
 

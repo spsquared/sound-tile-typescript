@@ -94,6 +94,10 @@ function endWheel() {
     margin: var(--end-borders) 0px;
 }
 
+.sliderInput:active {
+    cursor: grabbing;
+}
+
 .sliderTrack {
     position: absolute;
     top: 50%;
@@ -184,8 +188,9 @@ function endWheel() {
     height: 1000000vw;
 }
 
-.sliderInput:active {
-    cursor: grabbing;
+.sliderInput:focus-visible+.sliderTrack+.sliderThumbWrapper>.sliderThumb {
+    outline: 2px solid white;
+    outline-offset: -2px;
 }
 
 .sliderDisabled>.sliderTrack {

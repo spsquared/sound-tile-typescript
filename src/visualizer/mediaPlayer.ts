@@ -91,7 +91,8 @@ export class MediaPlayer {
         watch(() => this.internalTimer.now, () => this.updateTime());
         throttledWatch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
             if (this.playing.value && Visualizer.duration > 0) {
-                Visualizer.start(this.internalTimer.currentTime);
+                if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
+                else Visualizer.start(this.internalTimer.currentTime); // reactivity will run this if above runs
             } else if (wasPlaying) {
                 Visualizer.stop();
             }

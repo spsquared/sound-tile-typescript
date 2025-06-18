@@ -1,11 +1,13 @@
-import { reactive, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 import { AudioLevelsTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
 import { AsyncLock } from "@/components/scripts/lock";
+import { useIdle } from "@vueuse/core";
 
-type tileEditorState = {
+type TileEditorState = {
     dropdownOpen: boolean
     sidebarOpen: boolean
     hideTabs: boolean
+    idleHideTabs: boolean
     sidebarScreenWidth: number
     readonly minSidebarWidthPx: number
     readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } }
@@ -30,19 +32,22 @@ type tileEditorState = {
  * Tiles only are garbage collected after being evicted from history, so data is preserved.
  * Group tiles are copied to preserve their settings and emulate them not being part of the layout system.
  */
-type layoutHistoryEntry = Exclude<Tile, GroupTile> | {
+type LayoutHistoryEntry = Exclude<Tile, GroupTile> | {
     tile: GroupTile,
-    children: layoutHistoryEntry[]
+    children: LayoutHistoryEntry[]
 }
+
 
 /**
  * Tile editing system.
  */
 export class TileEditor {
-    static readonly state = reactive<tileEditorState>({
+    private static readonly idleTracker = useIdle(5000);
+    static readonly state = reactive<TileEditorState>({
         dropdownOpen: true,
         sidebarOpen: false,
         hideTabs: false,
+        idleHideTabs: computed(() => this.idleTracker.idle.value && !this.state.dropdownOpen && !this.state.sidebarOpen) as any, // vue ref unwrapping conflicts with need to preserve private properties
         sidebarScreenWidth: Number(localStorage.getItem('sidebarScreenWidth') ?? 25),
         minSidebarWidthPx: 200,
         tileTypes: {},
@@ -60,7 +65,7 @@ export class TileEditor {
         },
         sidebarHoverTile: null,
         lock: new AsyncLock()
-    }) as tileEditorState; // fixes Vue typing errors
+    }) as TileEditorState; // fixes Vue typing errors
 
     static registerTile(t: typeof Tile, id: string, visible: boolean): void {
         this.state.tileTypes[id] = { Tile: t, visible: visible };
@@ -108,15 +113,15 @@ export class TileEditor {
     }
 
     /**Stores layout history separate from tile data - root of history can never be group tile */
-    static readonly layoutHistory: Exclude<layoutHistoryEntry, Tile>[] = [];
+    static readonly layoutHistory: Exclude<LayoutHistoryEntry, Tile>[] = [];
     static readonly maxLayoutHistory: 32;
     static pushLayoutHistory(): void {
         // root of history isn't root group tile, always starts as children of root
-        const entry: Exclude<layoutHistoryEntry, Tile> = {
+        const entry: Exclude<LayoutHistoryEntry, Tile> = {
             tile: new GroupTile(),
             children: []
         };
-        const stack: [GroupTile, Exclude<layoutHistoryEntry, Tile>][] = [[this.root, entry]];
+        const stack: [GroupTile, Exclude<LayoutHistoryEntry, Tile>][] = [[this.root, entry]];
         while (stack.length > 0) {
             const [tile, entry] = stack.pop()!;
             entry.tile.copyProperties(tile);
@@ -138,9 +143,9 @@ export class TileEditor {
     }
     static popLayoutHistory(): boolean {
         if (this.layoutHistory.length == 0) return false;
-        const entry: Exclude<layoutHistoryEntry, Tile> = this.layoutHistory.pop()!;
+        const entry: Exclude<LayoutHistoryEntry, Tile> = this.layoutHistory.pop()!;
         const loadedRoot = new GroupTile();
-        const stack: [GroupTile, Exclude<layoutHistoryEntry, Tile>][] = [[loadedRoot, entry]];
+        const stack: [GroupTile, Exclude<LayoutHistoryEntry, Tile>][] = [[loadedRoot, entry]];
         while (stack.length > 0) {
             const [tile, entry] = stack.pop()!;
             tile.copyProperties(entry.tile);
@@ -163,7 +168,7 @@ export class TileEditor {
         return true;
     }
 
-    static startDrag(tile: Tile, offset?: tileEditorState['drag']['offset'], size?: tileEditorState['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
+    static startDrag(tile: Tile, offset?: TileEditorState['drag']['offset'], size?: TileEditorState['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
         if (this.state.lock.locked) return false;
         if (this.state.drag.current !== null) return false;
         this.pushLayoutHistory();

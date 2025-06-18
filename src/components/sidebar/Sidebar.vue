@@ -61,7 +61,7 @@ onUnmounted(() => {
         <SidebarExport></SidebarExport>
         <SidebarPlaylist></SidebarPlaylist>
         <input type="checkbox" id="dropdownShadowToggle" v-model="TileEditor.state.dropdownOpen">
-        <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs">
+        <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs">
             <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
             <div id="sidebarTabsList">
                 <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>

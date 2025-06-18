@@ -11,6 +11,8 @@ function keydown(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
     const key = e.key.toLowerCase();
     if (key == ' ' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) MediaPlayer.playing.value = !MediaPlayer.playing.value;
+    else if (key == 'arrowleft' && !e.ctrlKey && !e.metaKey && !e.altKey) MediaPlayer.currentTime.value -= e.shiftKey ? 10 : 5;
+    else if (key == 'arrowright' && !e.ctrlKey && !e.metaKey && !e.altKey) MediaPlayer.currentTime.value += e.shiftKey ? 10 : 5;
 }
 onMounted(() => document.addEventListener('keydown', keydown));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
@@ -21,7 +23,7 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime
 <template>
     <div id="mediaControls">
         <Slider id="volumeSlider" v-model="MediaPlayer.state.volume" :title="`Volume: ${MediaPlayer.state.volume * 100}%`" :min="0" :max="1.5" :step="0.01" vertical length="120px" track-width="10px" thumb-length="15px" thumb-width="30px" side-border-width="2px" end-border-width="0px" :icon="volumeIcon"></Slider>
-        <Slider id="seekSlider" v-model="MediaPlayer.currentTime.value" :title="timeStr" :min="0" :max="MediaPlayer.currentDuration.value" :step="0.1" track-width="58px" thumb-length="20px" thumb-width="58px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
+        <Slider id="seekSlider" v-model="MediaPlayer.currentTime.value" :title="timeStr" :min="0" :max="MediaPlayer.currentDuration.value" :step="0.01" track-width="58px" thumb-length="20px" thumb-width="58px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
         <div id="mediaControlsBorder1"></div>
         <div id="mediaControlsBorder2"></div>
         <input type="checkbox" id="playCheckbox" v-model="MediaPlayer.playing.value">

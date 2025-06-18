@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useTemplateRef, watch } from 'vue';
 import DraggableWindow from '../DraggableWindow.vue';
-import { EnhancedColorPicker } from './enhancedColorPicker';
+import ColorPicker from './colorPicker';
 import { useEyeDropper } from '@vueuse/core';
 import StrictNumberInput from './StrictNumberInput.vue';
 import ColorInput from './ColorInput.vue';
 
 const props = defineProps<{
-    picker: EnhancedColorPicker
+    picker: ColorPicker
     disabled?: boolean
 }>();
 

@@ -1,16 +1,16 @@
 import { useLocalStorage } from "@vueuse/core";
-import { reactive, toRaw } from "vue";
+import { reactive } from "vue";
 
-export type EnhancedColorData = ({ type: 'solid' } & EnhancedColorPicker['solidData'])
-    | ({ type: 'gradient' } & EnhancedColorPicker['gradientData']);
+export type ColorData = ({ type: 'solid' } & ColorPicker['solidData'])
+    | ({ type: 'gradient' } & ColorPicker['gradientData']);
 
-const clipboard = useLocalStorage<EnhancedColorData>('colorPickerClipboard', { type: 'solid', color: '#FFFFFF', alpha: 1 } satisfies EnhancedColorData);
+const clipboard = useLocalStorage<ColorData>('colorPickerClipboard', { type: 'solid', color: '#FFFFFF', alpha: 1 } satisfies ColorData);
 
 /**
  * Custom color picker, for use the EnhancedColorPicker Vue component.
  * Note that reactivity DOES NOT work by default, needs wrapping in `reactive()` call!
  */
-export class EnhancedColorPicker {
+export class ColorPicker {
     /**Color mode */
     type: 'solid' | 'gradient' = 'solid';
     solidData: {
@@ -53,11 +53,15 @@ export class EnhancedColorPicker {
 
     open: boolean = false;
 
-    constructor(initial?: EnhancedColorData | string) {
+    constructor(initial?: ColorData | string) {
         if (initial !== undefined) {
             if (typeof initial == 'string') this.solidData.color = initial;
             else this.colorData = initial;
         }
+    }
+
+    static createReactive(initial?: ColorData | string): ColorPicker {
+        return reactive(new ColorPicker(initial));
     }
 
     /**Get a css `background` string for the gradient (radial gradients require a `--radial-gradient-size` css variable) */
@@ -78,17 +82,18 @@ export class EnhancedColorPicker {
         return '#FFFFFF';
     }
 
-    get colorData(): EnhancedColorData {
+    get colorData(): ColorData {
+        // sort of need these extra "_" (lol face) properties to trigger reactivity when color data changes
         if (this.type == 'solid') {
-            return structuredClone({
-                type: 'solid',
-                ...toRaw(this.solidData)
-            });
+            return {
+                ...this.solidData,
+                type: 'solid'
+            };
         } else if (this.type == 'gradient') {
-            return structuredClone({
-                type: 'gradient',
-                ...toRaw(this.gradientData)
-            });
+            return {
+                ...this.gradientData,
+                type: 'gradient'
+            };
         }
         return {
             type: 'solid',
@@ -97,12 +102,12 @@ export class EnhancedColorPicker {
         };
     }
 
-    set colorData(data: EnhancedColorData) {
+    set colorData(data: ColorData) {
         this.type = data.type;
         if (data.type == 'solid') {
-            this.solidData = structuredClone({ ...data });
+            this.solidData = { ...data, type: undefined } as any;
         } else if (data.type == 'gradient') {
-            this.gradientData = structuredClone({ ...data });
+            this.gradientData = { ...data, type: undefined } as any;
         }
     }
 
@@ -115,8 +120,4 @@ export class EnhancedColorPicker {
     }
 }
 
-export default EnhancedColorPicker;
-
-export function createReactiveColorPicker(initial?: EnhancedColorData | string): EnhancedColorPicker {
-    return reactive(new EnhancedColorPicker(initial)) as EnhancedColorPicker;
-}
+export default ColorPicker;

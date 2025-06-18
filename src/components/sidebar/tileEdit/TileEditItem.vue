@@ -49,7 +49,7 @@ function deleteTile() {
     <div class="editItem">
         <div class="editItemBar" @mouseenter="setHover">
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
-            <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="props.tile.label.length" @focus="openChildren" @mouseleave="resetLabelScroll">
+            <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
             <div class="editItemDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
             <input type="button" class="editItemEditButton" @click="toggleEditTile">
@@ -114,8 +114,8 @@ function deleteTile() {
 }
 
 .editItemLabel:focus-visible {
-    outline: 1px solid white;
-    outline-offset: -1px;
+    outline: 2px solid white;
+    outline-offset: -2px;
 }
 
 .editItemSpacer {

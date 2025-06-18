@@ -48,7 +48,7 @@ const showCopyright = ref(false);
             <input type="checkbox" id="sidebarShadowToggle" v-model="TileEditor.state.sidebarOpen">
             <div id="sidebarSpacer"></div>
         </div>
-        <label id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" v-show="!TileEditor.state.hideTabs"></label>
+        <label id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs"></label>
     </div>
     <FullscreenModal title="Sound Tile" :mode="ModalMode.NOTIFY" v-model="showCopyright">
         <b>{{ copyright }} under GNU GPL 3.0</b>
