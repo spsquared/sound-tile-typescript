@@ -10,6 +10,7 @@ const props = defineProps<{
     resizeHeight?: boolean
     resizeable?: boolean
     closeOnClickOut?: boolean
+    borderColor?: string
 }>();
 
 const winBounds = useTemplateRef('winBounds');
@@ -220,7 +221,7 @@ const topCounter = ref(0);
 
 .windowBody {
     contain: strict;
-    border: 4px solid white;
+    border: 4px solid v-bind("$props.borderColor ?? 'white'");
     border-radius: 0px 0px 8px 8px;
     background-color: black;
     width: v-bind("size.w + 'px'");

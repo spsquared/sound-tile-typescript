@@ -10,9 +10,16 @@ import { computed, onMounted, onUnmounted } from 'vue';
 function keydown(e: KeyboardEvent) {
     if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
     const key = e.key.toLowerCase();
-    if (key == ' ' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) MediaPlayer.playing.value = !MediaPlayer.playing.value;
-    else if (key == 'arrowleft' && !e.ctrlKey && !e.metaKey && !e.altKey) MediaPlayer.currentTime.value -= e.shiftKey ? 10 : 5;
-    else if (key == 'arrowright' && !e.ctrlKey && !e.metaKey && !e.altKey) MediaPlayer.currentTime.value += e.shiftKey ? 10 : 5;
+    if (key == ' ' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        MediaPlayer.playing.value = !MediaPlayer.playing.value;
+        e.preventDefault();
+    } else if (key == 'arrowleft' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        MediaPlayer.currentTime.value -= e.shiftKey ? 10 : 5;
+        e.preventDefault();
+    } else if (key == 'arrowright' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        MediaPlayer.currentTime.value += e.shiftKey ? 10 : 5;
+        e.preventDefault();
+    }
 }
 onMounted(() => document.addEventListener('keydown', keydown));
 onUnmounted(() => document.removeEventListener('keydown', keydown));

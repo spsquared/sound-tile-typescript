@@ -1,6 +1,5 @@
 import { computed, ComputedRef, reactive, ref, Ref, watch, WritableComputedRef } from 'vue';
 import { Media, defaultCoverArt } from './media';
-import { globalGain } from './audio';
 import Visualizer from './visualizer';
 import { throttledWatch } from '@vueuse/core';
 
@@ -85,7 +84,7 @@ export class MediaPlayer {
         watch(() => this.state.shuffle, () => localStorage.setItem('shuffle', this.state.shuffle + ''));
         watch(() => this.state.loop, () => localStorage.setItem('loop', this.state.loop + ''));
         watch(() => this.state.volume, () => {
-            globalGain.gain.value = this.state.volume;
+            Visualizer.gain.gain.value = this.state.volume;
             localStorage.setItem('volume', this.state.volume.toString());
         }, { immediate: true });
         watch(() => this.internalTimer.now, () => this.updateTime());

@@ -64,7 +64,7 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
 <template>
     <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
-        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
+        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarHoverTile === props.tile ? 'cyan' : 'white'" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
             <slot name="options">
                 <TileOptionsSection title="General">
                     <label class="sectionItem" title="Relative size of tile to sibling tiles">

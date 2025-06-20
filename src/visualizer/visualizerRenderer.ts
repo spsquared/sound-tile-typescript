@@ -52,7 +52,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     }
 
     async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', { buffer: buffer });
+        this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', { buffer: buffer }, Array.isArray(buffer) ? buffer.map((b) => b.buffer) : [buffer.buffer]);
     }
     resize(w: number, h: number): void {
         this.postMessage('resize', { w: w, h: h });
@@ -99,7 +99,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
     }
 
     async draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        await this.renderer.draw(buf);
+        this.renderer.draw(buf);
     }
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
@@ -134,25 +134,20 @@ class VisualizerRenderInstance {
         this.data = data;
     }
 
-    async draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        this.ctx.resetTransform();
+    draw(buf: Uint8Array | Float32Array | Uint8Array[]): void {
         if (this.dataUpdated) {
             this.color = this.createGradient(this.data.color);
             this.color2 = this.createGradient(this.data.color2);
         }
         const width = this.data.rotate ? this.canvas.height : this.canvas.width;
         const height = this.data.rotate ? this.canvas.width : this.canvas.height;
+        // origin is bottom left in sound tile
         this.ctx.reset();
-        // like actually wtf is this transform code
-        const flipX = this.data.flipX ? -1 : 1;
-        const flipY = this.data.flipY ? -1 : 1;
-        this.ctx.scale(flipX, flipY);
-        this.ctx.translate(flipX * this.canvas.width, flipY * this.canvas.height);
-        if (this.data.rotate) {
-            this.ctx.rotate(Math.PI / 2);
-            this.ctx.scale(-1, 1);
-            this.ctx.translate(-width, -height);
-        }
+        this.ctx.translate(0, this.canvas.height);
+        this.ctx.scale(1, -1);
+        if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
+        this.ctx.scale(this.data.flipX ? -1 : 1, this.data.flipY ? -1 : 1);
+        this.ctx.translate(this.data.flipX ? -width : 0, this.data.flipY ? -height : 0);
         // spaghetti v2
         switch (this.data.mode) {
             case VisualizerMode.FREQ_BAR: {
@@ -218,7 +213,7 @@ class VisualizerRenderInstance {
         const height = this.data.rotate ? this.canvas.width : this.canvas.height;
         const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
         const dataScale = this.data.freqOptions.scale;
-        const xStep = (width / (freqRange * (this.data.freqOptions.symmetry != 'low' ? 2 : 1)));
+        const xStep = width / freqRange;
         const barWidth = Math.max(1, xStep * this.data.freqOptions.bar.size);
         const xShift = (xStep - barWidth) / 2;
         const yQuantization = 256 / (this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 256);
@@ -267,7 +262,6 @@ class VisualizerRenderInstance {
         this.canvas.width = w;
         this.canvas.height = h;
         this.dataUpdated = true;
-        console.log('reszize')
     }
 
     updateData(data: VisualizerSettingsData): void {
@@ -301,7 +295,9 @@ if (isInWorker) {
             switch (e.data.type) {
                 case 'draw':
                     renderer.draw(e.data.buffer);
-                    postMessage({ type: 'drawResponse' } satisfies RendererMessageData);
+                    postMessage({
+                        type: 'drawResponse'
+                    } satisfies RendererMessageData);
                     break;
                 case 'resize':
                     renderer.resize(e.data.w, e.data.h);
