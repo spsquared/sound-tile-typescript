@@ -235,12 +235,10 @@ export class Visualizer {
         (async () => {
             while (true) {
                 await new Promise<void>((resolve) => {
-                    if (!document.hidden) requestAnimationFrame(async () => {
-                        await this.draw();
-                        resolve();
-                    });
+                    if (!document.hidden) requestAnimationFrame(() => resolve());
                     else setTimeout(() => resolve(), 200);
                 });
+                await this.draw();
             }
         })();
     }

@@ -26,7 +26,7 @@ onUnmounted(() => document.removeEventListener('keydown', keydown));
 
 // removes animating of sidebar spacer width when resizing
 const animateSpacer = ref(false);
-let timeout: NodeJS.Timeout = setTimeout(() => {});
+let timeout: NodeJS.Timeout = setTimeout(() => { });
 watch(() => TileEditor.state.sidebarOpen, () => {
     clearTimeout(timeout);
     timeout = setTimeout(() => animateSpacer.value = false, 200);
@@ -48,7 +48,9 @@ const showCopyright = ref(false);
             <input type="checkbox" id="sidebarShadowToggle" v-model="TileEditor.state.sidebarOpen">
             <div id="sidebarSpacer"></div>
         </div>
-        <label id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs"></label>
+        <Transition>
+            <label id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs"></label>
+        </Transition>
     </div>
     <FullscreenModal title="Sound Tile" :mode="ModalMode.NOTIFY" v-model="showCopyright">
         <b>{{ copyright }} under GNU GPL 3.0</b>
@@ -107,6 +109,7 @@ const showCopyright = ref(false);
     background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
+    transition: 200ms linear opacity;
 }
 
 #dropdownToggle:checked+#dropdown>#dropdownTab {
@@ -125,5 +128,15 @@ const showCopyright = ref(false);
 
 #sidebarShadowToggle:checked+#sidebarSpacer {
     min-width: max(v-bind("TileEditor.state.sidebarScreenWidth + 'vw'"), v-bind("TileEditor.state.minSidebarWidthPx + 'px'"));
+}
+
+.v-enter-from,
+.v-leave-to {
+    opacity: 0;
+}
+
+.v-enter-to,
+.v-leave-from {
+    opacity: 1;
 }
 </style>

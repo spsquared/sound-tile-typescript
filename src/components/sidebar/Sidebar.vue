@@ -61,14 +61,16 @@ onUnmounted(() => {
         <SidebarExport></SidebarExport>
         <SidebarPlaylist></SidebarPlaylist>
         <input type="checkbox" id="dropdownShadowToggle" v-model="TileEditor.state.dropdownOpen">
-        <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs">
-            <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
-            <div id="sidebarTabsList">
-                <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
-                <SidebarTab for="export" :image="exportIcon" title="Export"></SidebarTab>
-                <SidebarTab for="playlist" :image="playlistIcon" size="90%" title="Playlist"></SidebarTab>
+        <Transition>
+            <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs">
+                <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
+                <div id="sidebarTabsList">
+                    <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
+                    <SidebarTab for="export" :image="exportIcon" title="Export"></SidebarTab>
+                    <SidebarTab for="playlist" :image="playlistIcon" size="90%" title="Playlist"></SidebarTab>
+                </div>
             </div>
-        </div>
+        </Transition>
         <div id="sidebarResize" @mousedown="beginResize"></div>
     </div>
 </template>
@@ -106,7 +108,7 @@ onUnmounted(() => {
     position: absolute;
     left: -40px;
     top: 24px;
-    transition: 200ms ease transform;
+    transition: 200ms ease transform, 200ms linear opacity;
     transform: translateY(0px);
 }
 
@@ -148,5 +150,15 @@ onUnmounted(() => {
     cursor: ew-resize;
     /* fixes random selecting when resizing */
     user-select: none;
+}
+
+.v-enter-from,
+.v-leave-to {
+    opacity: 0;
+}
+
+.v-enter-to,
+.v-leave-from {
+    opacity: 1;
 }
 </style>

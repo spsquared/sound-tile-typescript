@@ -95,7 +95,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
 
     constructor(data: VisualizerSettingsData) {
         super(data);
-        this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), this.data);
+        this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), deepToRaw(this.data));
     }
 
     async draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
@@ -105,7 +105,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
         this.renderer.resize(w, h);
     }
     updateData(): void {
-        this.renderer.updateData(this.data);
+        this.renderer.updateData(deepToRaw(this.data));
     }
 
     destroy(): void {
@@ -135,20 +135,22 @@ class VisualizerRenderInstance {
     }
 
     draw(buf: Uint8Array | Float32Array | Uint8Array[]): void {
+        this.ctx.reset();
         if (this.dataUpdated) {
             this.color = this.createGradient(this.data.color);
             this.color2 = this.createGradient(this.data.color2);
         }
-        const width = this.data.rotate ? this.canvas.height : this.canvas.width;
-        const height = this.data.rotate ? this.canvas.width : this.canvas.height;
-        // origin is bottom left in sound tile
-        this.ctx.reset();
+        // move origin to bottom left and apply transforms
         this.ctx.translate(0, this.canvas.height);
         this.ctx.scale(1, -1);
-        if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
         this.ctx.scale(this.data.flipX ? -1 : 1, this.data.flipY ? -1 : 1);
-        this.ctx.translate(this.data.flipX ? -width : 0, this.data.flipY ? -height : 0);
+        this.ctx.translate(this.data.flipX ? -this.canvas.width : 0, this.data.flipY ? -this.canvas.height : 0);
+        if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
+        // padding thing
+        this.ctx.translate(this.data.paddingInline, this.data.paddingBlock);
         // spaghetti v2
+        const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2;
+        const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2;
         switch (this.data.mode) {
             case VisualizerMode.FREQ_BAR: {
                 if (!(buf instanceof Uint8Array)) break;
@@ -209,8 +211,8 @@ class VisualizerRenderInstance {
     }
 
     private drawBars(buf: Uint8Array): void {
-        const width = this.data.rotate ? this.canvas.height : this.canvas.width;
-        const height = this.data.rotate ? this.canvas.width : this.canvas.height;
+        const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2;
+        const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2;
         const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
         const dataScale = this.data.freqOptions.scale;
         const xStep = width / freqRange;
