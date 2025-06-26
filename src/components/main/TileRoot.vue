@@ -7,6 +7,7 @@ import TileEditor from '@/visualizer/editor';
     <div class="tileRoot">
         <GroupTile :tile="TileEditor.root"></GroupTile>
     </div>
+    <div class="tileIdleCover" v-if="TileEditor.state.idleHideTabs"></div>
 </template>
 
 <style scoped>
@@ -22,5 +23,14 @@ import TileEditor from '@/visualizer/editor';
     align-items: stretch;
     justify-content: stretch;
     user-select: none;
+}
+
+.tileIdleCover {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    cursor: none;
 }
 </style>

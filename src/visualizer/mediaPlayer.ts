@@ -1,7 +1,7 @@
 import { computed, ComputedRef, reactive, ref, Ref, watch, WritableComputedRef } from 'vue';
 import { Media, defaultCoverArt } from './media';
 import Visualizer from './visualizer';
-import { throttledWatch } from '@vueuse/core';
+import { throttledWatch, useWakeLock } from '@vueuse/core';
 
 /**
  * Global media controls, coordinates visualizer & controls.
@@ -40,6 +40,7 @@ export class MediaPlayer {
         set: (t) => this.setTime(t)
     });
     static readonly currentDuration: ComputedRef<number> = computed(() => Visualizer.duration);
+    private static readonly wakeLock = useWakeLock();
 
     static play(t?: number): void {
         if (t !== undefined) this.setTime(t);
@@ -92,8 +93,10 @@ export class MediaPlayer {
             if (this.playing.value && Visualizer.duration > 0) {
                 if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
                 else Visualizer.start(this.internalTimer.currentTime); // reactivity will run this if above runs
+                this.wakeLock.request('screen');
             } else if (wasPlaying) {
                 Visualizer.stop();
+                this.wakeLock.release();
             }
         }, { throttle: 20, leading: true, trailing: true });
         watch(() => Visualizer.duration, () => {
