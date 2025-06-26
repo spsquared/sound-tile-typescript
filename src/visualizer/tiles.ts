@@ -184,6 +184,11 @@ export class VisualizerTile extends Tile {
         this.onMounted(() => this.visualizer.visible = true);
         this.onUnmounted(() => this.visualizer.visible = false);
     }
+
+    destroy(): void {
+        super.destroy();
+        this.visualizer.destroy();
+    }
 }
 
 export class AudioLevelsTile extends Tile {

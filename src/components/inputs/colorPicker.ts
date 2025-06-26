@@ -1,5 +1,7 @@
 import { useLocalStorage } from "@vueuse/core";
 import { reactive } from "vue";
+import { deepToRaw } from "../scripts/deepToRaw";
+import chroma from "chroma-js";
 
 export type ColorData = ({ type: 'solid' } & ColorPicker['solidData'])
     | ({ type: 'gradient' } & ColorPicker['gradientData']);
@@ -67,9 +69,9 @@ export class ColorPicker {
     /**Get a css `background` string for the gradient (radial gradients require a `--radial-gradient-size` css variable) */
     get cssStyle(): string {
         if (this.type == 'solid') {
-            return `color-mix(in srgb, ${this.solidData.color} ${this.solidData.alpha * 100}%, transparent ${100 - this.solidData.alpha * 100}%)`;
+            return chroma(this.solidData.color).alpha(this.solidData.alpha).hex();
         } else if (this.type == 'gradient') {
-            const stopsStr = this.gradientData.stops.slice().sort((a, b) => a.t - b.t).reduce((acc, curr) => acc + `, color-mix(in srgb, ${curr.c} ${curr.a * 100}%, transparent ${100 - curr.a * 100}%) ${curr.t * 100}%`, '');
+            const stopsStr = this.gradientData.stops.slice().sort((a, b) => a.t - b.t).reduce((acc, curr) => acc + `, ${chroma(curr.c).alpha(curr.a).hex()} ${curr.t * 100}%`, '');
             switch (this.gradientData.pattern) {
                 case 'linear':
                     return `linear-gradient(${180 - this.gradientData.angle}deg${stopsStr})`;
@@ -112,11 +114,11 @@ export class ColorPicker {
     }
 
     copyColor(): void {
-        clipboard.value = this.colorData;
+        clipboard.value = structuredClone(deepToRaw(this.colorData));
     }
 
     pasteColor(): void {
-        this.colorData = clipboard.value;
+        this.colorData = structuredClone(deepToRaw(clipboard.value));
     }
 }
 

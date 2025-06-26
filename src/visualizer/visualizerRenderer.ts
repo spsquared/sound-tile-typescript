@@ -3,6 +3,7 @@ import { throttledWatch } from "@vueuse/core";
 import { deepToRaw } from "@/components/scripts/deepToRaw";
 import { VisualizerData, VisualizerMode } from "./visualizerData";
 import { ColorData } from "@/components/inputs/colorPicker";
+import chroma from 'chroma-js';
 
 const isInWorker = 'importScripts' in globalThis;
 
@@ -125,8 +126,10 @@ class VisualizerRenderInstance {
     readonly ctx: OffscreenCanvasRenderingContext2D;
     private data: VisualizerSettingsData;
     private dataUpdated: boolean = false;
-    private color: CanvasGradient | string = '#FFFFFF';
-    private color2: CanvasGradient | string = '#FFFFFF';
+    private fillStyle: CanvasGradient | string = '#FFFFFF';
+    private fillStyle2: CanvasGradient | string = '#FFFFFF';
+    private chromaScale: chroma.Scale = chroma.scale(['#FFFFFF']);
+    private chromaScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
 
     constructor(canvas: OffscreenCanvas, data: VisualizerSettingsData) {
         this.canvas = canvas;
@@ -137,8 +140,10 @@ class VisualizerRenderInstance {
     draw(buf: Uint8Array | Float32Array | Uint8Array[]): void {
         this.ctx.reset();
         if (this.dataUpdated) {
-            this.color = this.createGradient(this.data.color);
-            this.color2 = this.createGradient(this.data.color2);
+            this.fillStyle = this.createGradient(this.data.color);
+            this.fillStyle2 = this.createGradient(this.data.color2);
+            this.chromaScale = this.createChromaScale(this.data.color);
+            this.chromaScale2 = this.createChromaScale(this.data.color2);
         }
         // move origin to bottom left and apply transforms
         this.ctx.translate(0, this.canvas.height);
@@ -156,25 +161,25 @@ class VisualizerRenderInstance {
                 if (!(buf instanceof Uint8Array)) break;
                 switch (this.data.freqOptions.symmetry) {
                     case 'none':
-                        this.drawBars(buf);
+                        this.drawFreqBars(buf);
                         break;
                     case 'high':
                         this.ctx.save();
                         this.ctx.scale(0.5, 1);
-                        this.drawBars(buf);
+                        this.drawFreqBars(buf);
                         this.ctx.translate(width, 0);
                         this.ctx.scale(-1, 1);
-                        this.drawBars(buf);
+                        this.drawFreqBars(buf);
                         this.ctx.restore();
                         break;
                     case 'low':
                         this.ctx.save();
                         this.ctx.scale(0.5, 1);
                         this.ctx.translate(width / 2, 0);
-                        this.drawBars(buf);
+                        this.drawFreqBars(buf);
                         this.ctx.scale(-1, 1);
                         this.ctx.translate(-width, 0);
-                        this.drawBars(buf);
+                        this.drawFreqBars(buf);
                         this.ctx.restore();
                         break;
                 }
@@ -210,7 +215,7 @@ class VisualizerRenderInstance {
         }
     }
 
-    private drawBars(buf: Uint8Array): void {
+    private drawFreqBars(buf: Uint8Array): void {
         const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2;
         const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2;
         const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
@@ -223,12 +228,16 @@ class VisualizerRenderInstance {
         const yReflect = this.data.freqOptions.reflect;
         const yCenter = yReflect * height;
         if (this.data.altColorMode && this.data.color.type == 'gradient') {
+            // batching by color probably pointless since bars/steps ratio is quite low
+            const colorScale = yQuantization / 256;
             for (let i = 0; i < freqRange; i++) {
-
+                const t = Math.ceil((buf[i] * dataScale + 1) / yQuantization);
+                const barHeight = Math.max(1, t * yScale);
+                this.ctx.fillStyle = this.chromaScale(t * colorScale).hex();
+                this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
             }
         } else {
-            this.ctx.fillStyle = this.color2;
-            this.ctx.fillStyle = this.color;
+            this.ctx.fillStyle = this.fillStyle;
             for (let i = 0; i < freqRange; i++) {
                 const barHeight = Math.max(1, Math.ceil((buf[i] * dataScale + 1) / yQuantization) * yScale);
                 this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
@@ -238,10 +247,10 @@ class VisualizerRenderInstance {
 
     private createGradient(color: ColorData): CanvasGradient | string {
         if (color.type == 'solid') {
-            return `color-mix(in srgb, ${color.color} ${color.alpha * 100}%, transparent ${100 - color.alpha * 100}%)`;
+            return chroma(color.color).alpha(color.alpha).hex();
         } else if (color.type == 'gradient') {
-            const width = this.data.rotate ? this.canvas.height : this.canvas.width;
-            const height = this.data.rotate ? this.canvas.width : this.canvas.height;
+            const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline;
+            const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock;
             const angle = color.angle * Math.PI / 180;
             const halfWidth = width / 2;
             const halfHeight = height / 2;
@@ -253,7 +262,7 @@ class VisualizerRenderInstance {
                     ? this.ctx.createRadialGradient(color.x * width, color.y * height, 0, color.x * width, color.y * height, color.radius * Math.min(width, height))
                     : this.ctx.createConicGradient(angle, color.x * width, color.y * height));
             for (const stop of color.stops) {
-                gradient.addColorStop(stop.t, `color-mix(in srgb, ${stop.c} ${stop.a * 100}%, transparent ${100 - stop.a * 100}%)`);
+                gradient.addColorStop(stop.t, chroma(stop.c).alpha(stop.a).hex());
             }
             return gradient;
         }
@@ -269,6 +278,16 @@ class VisualizerRenderInstance {
     updateData(data: VisualizerSettingsData): void {
         this.data = data;
         this.dataUpdated = true;
+    }
+
+    private createChromaScale(color: ColorData): chroma.Scale {
+        if (color.type == 'solid') {
+            return chroma.scale([chroma(color.color).alpha(color.alpha)]);
+        } else if (color.type == 'gradient') {
+            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a))).domain(color.stops.map((c) => c.t));
+        }
+        // idk
+        return chroma.scale(['#FFFFFF']);
     }
 }
 
