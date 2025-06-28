@@ -3,6 +3,9 @@ const props = defineProps<{
     min?: number
     max?: number
     step?: number
+    strictMin?: number
+    strictMax?: number
+    strictStep?: number
 }>();
 const emit = defineEmits<{
     (e: 'input', value: number): any
@@ -19,9 +22,10 @@ defineExpose({
     value: number
 });
 function blur() {
-    const clamped = Math.max(props.min ?? -Infinity, Math.min(number.value, props.max ?? Infinity));
-    if (props.step != undefined && props.step > 0) {
-        number.value = Number((Math.round(clamped / props.step) * props.step).toFixed((props.step.toString().split('.')[1] ?? '').length));
+    const step = props.strictStep ?? props.step;
+    const clamped = Math.max(props.strictMin ?? props.min ?? -Infinity, Math.min(number.value, props.strictMax ?? props.max ?? Infinity));
+    if (step != undefined && step > 0) {
+        number.value = Number((Math.round(clamped / step) * step).toFixed((step.toString().split('.')[1] ?? '').length));
     } else {
         number.value = clamped;
     }

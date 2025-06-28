@@ -36,7 +36,7 @@ const tileOrientation = computed<string>({
         <template v-slot:options>
             <TileOptionsSection title="General">
                 <label title="Layout of child tiles within the group - collapsed groups come with a few caveats">
-                    Layout:
+                    Layout
                     <select v-model="tileOrientation">
                         <option :value="GroupTile.HORIZONTAL">Horizontal</option>
                         <option :value="GroupTile.VERTICAL">Vertical</option>
@@ -44,15 +44,15 @@ const tileOrientation = computed<string>({
                     </select>
                 </label>
                 <label title="Relative size of tile to sibling tiles">
-                    Size:
-                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+                    Size
+                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
                 </label>
                 <label v-if="!inCollapsedGroup && !isCollapsed" title="Border style of tiles within the group">
-                    Borders:
+                    Borders
                     <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
                 </label>
                 <label v-if="isCollapsed" title="Background style of tile">
-                    Background:
+                    Background
                     <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
                 </label>
             </TileOptionsSection>

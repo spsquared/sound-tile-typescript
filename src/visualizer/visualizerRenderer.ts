@@ -24,7 +24,7 @@ export abstract class VisualizerRenderer {
     constructor(data: VisualizerSettingsData) {
         this.data = reactive(data);
         this.canvas = document.createElement('canvas');
-        throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
+        throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50 });
     }
 
     abstract draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void>
@@ -163,22 +163,21 @@ class VisualizerRenderInstance {
                     case 'none':
                         this.drawFreqBars(buf);
                         break;
-                    case 'high':
+                    case 'low':
                         this.ctx.save();
                         this.ctx.scale(0.5, 1);
-                        this.drawFreqBars(buf);
                         this.ctx.translate(width, 0);
+                        this.drawFreqBars(buf);
                         this.ctx.scale(-1, 1);
                         this.drawFreqBars(buf);
                         this.ctx.restore();
                         break;
-                    case 'low':
+                    case 'high':
                         this.ctx.save();
                         this.ctx.scale(0.5, 1);
-                        this.ctx.translate(width / 2, 0);
                         this.drawFreqBars(buf);
+                        this.ctx.translate(width * 2, 0);
                         this.ctx.scale(-1, 1);
-                        this.ctx.translate(-width, 0);
                         this.drawFreqBars(buf);
                         this.ctx.restore();
                         break;
@@ -205,7 +204,7 @@ class VisualizerRenderInstance {
             }
                 break;
             case VisualizerMode.SPECTROGRAM: {
-
+                // spectrogram can quantize without losing the smoothness of gradients and it does help performance
             }
                 break;
             case VisualizerMode.CHANNEL_LEVELS: {
@@ -219,27 +218,28 @@ class VisualizerRenderInstance {
         const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2;
         const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2;
         const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
-        const dataScale = this.data.freqOptions.scale;
         const xStep = width / freqRange;
         const barWidth = Math.max(1, xStep * this.data.freqOptions.bar.size);
         const xShift = (xStep - barWidth) / 2;
-        const yQuantization = 256 / (this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 256);
-        const yScale = height / 256 * yQuantization;
+        const dataQuantize = this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 256;
+        const dataScale = this.data.freqOptions.scale * dataQuantize / 256;
+        const drawScale = height / dataQuantize;
+        const min = this.data.freqOptions.bar.minLength;
         const yReflect = this.data.freqOptions.reflect;
         const yCenter = yReflect * height;
         if (this.data.altColorMode && this.data.color.type == 'gradient') {
             // batching by color probably pointless since bars/steps ratio is quite low
-            const colorScale = yQuantization / 256;
+            const colorScale = 1 / dataQuantize;
             for (let i = 0; i < freqRange; i++) {
-                const t = Math.ceil((buf[i] * dataScale + 1) / yQuantization);
-                const barHeight = Math.max(1, t * yScale);
+                const t = Math.ceil(buf[i] * dataScale);
+                const barHeight = Math.max(min, t * drawScale);
                 this.ctx.fillStyle = this.chromaScale(t * colorScale).hex();
                 this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
             }
         } else {
             this.ctx.fillStyle = this.fillStyle;
             for (let i = 0; i < freqRange; i++) {
-                const barHeight = Math.max(1, Math.ceil((buf[i] * dataScale + 1) / yQuantization) * yScale);
+                const barHeight = Math.max(min, Math.ceil(buf[i] * dataScale) * drawScale);
                 this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
             }
         }

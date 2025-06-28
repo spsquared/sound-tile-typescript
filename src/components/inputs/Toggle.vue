@@ -6,6 +6,7 @@ const props = defineProps<{
     color3?: string
     color4?: string
     icon?: string
+    iconSize?: string
     borderWidth?: string
     disabled?: boolean
 }>();
@@ -70,7 +71,8 @@ defineExpose({
     transform: translateX(-4px);
     background-image: v-bind('`url("${$props.icon}")`');
     background-position: center;
-    background-size: 80% 80%;
+    background-size: v-bind("iconSize ?? '80% 80%'");
+    background-repeat: no-repeat;
 }
 
 .toggleInput:checked+.toggleSlider {

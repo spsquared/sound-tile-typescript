@@ -27,7 +27,7 @@ const { x: dragX, y: dragY, style: dragStyle } = useDraggable(winContainer, {
 const size = reactive({ w: 300, h: 200 });
 watch([() => props.minWidth, () => props.minHeight], () => {
     if (props.minWidth !== undefined && size.w < props.minWidth) size.w = props.minWidth;
-    if (props.minHeight !== undefined && size.w < props.minHeight) size.h = props.minHeight;
+    if (props.minHeight !== undefined && size.h < props.minHeight) size.h = props.minHeight;
 }, { immediate: true });
 // spaghetti resize because VueUse doesn't have it
 const boundingRect = useElementBounding(winContainer);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTemplateRef, watch } from 'vue';
+import { computed, useTemplateRef, watch } from 'vue';
 import DraggableWindow from '../DraggableWindow.vue';
 import ColorPicker from './colorPicker';
 import { useEyeDropper } from '@vueuse/core';
@@ -8,6 +8,8 @@ import ColorInput from './ColorInput.vue';
 
 const props = defineProps<{
     picker: ColorPicker
+    badgeWidth?: string
+    badgeHeight?: string
     disabled?: boolean
 }>();
 
@@ -51,6 +53,7 @@ async function runEyedropperStop(i: number) {
         if (stop !== undefined) stop.c = res.sRGBHex;
     }
 }
+
 function moveStopUp(i: number) {
     if (i == 0) return;
     props.picker.gradientData.stops.splice(i - 1, 0, ...props.picker.gradientData.stops.splice(i, 1));
@@ -88,29 +91,29 @@ function removeStop(i: number) {
                     <option value="radial">Radial Gradient</option>
                     <option value="conic">Conical Gradient</option>
                 </select>
-                <!-- intentionally NOT strict -->
+                <!-- cheesing strict number input to get input validation without actually being strict -->
                 <label class="pickerGradientLabel" title="X of center (proportion of width)">
                     X
-                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.x" step="0.01" :disabled="props.picker.gradientData.pattern == 'linear'">
+                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.x" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'linear'"></StrictNumberInput>
                 </label>
                 <label class="pickerGradientLabel" title="Y of center (proportion of height)">
                     Y
-                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.y" step="0.01" :disabled="props.picker.gradientData.pattern == 'linear'">
+                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.y" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'linear'"></StrictNumberInput>
                 </label>
                 <label class="pickerGradientLabel" title="Radius (proportion of max(width, height))">
                     R
-                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.radius" step="0.01" :disabled="props.picker.gradientData.pattern != 'radial'">
+                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.radius" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern != 'radial'"></StrictNumberInput>
                 </label>
                 <label class="pickerGradientLabel" title="Angle (degrees)">
                     θ
-                    <input type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.angle" step="1" :disabled="props.picker.gradientData.pattern == 'radial'">
+                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.angle" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="1" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'radial'"></StrictNumberInput>
                 </label>
                 <div class="pickerGradientStopsContainer">
                     <div v-for="(stop, i) of props.picker.gradientData.stops" :key="i" class="pickerGradientStop">
-                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.t" :min="0" :max="1" :step="0.01" title="Position of stop (0-1)"></StrictNumberInput>
+                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.t" :min="0" :max="1" :step="0.1" :strict-step="0.01" title="Position of stop (0-1)"></StrictNumberInput>
                         <ColorInput class="pickerGradientStopColor" v-model="stop.c" title="Color of stop"></ColorInput>
                         <input type="button" class="pickerGradientStopEyedropper" title="Pick color of stop using eyedropper tool" @click="runEyedropperStop(i)" v-if="eyedropper.isSupported">
-                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.a" :min="0" :max="1" :step="0.01" title="Opacity of stop"></StrictNumberInput>
+                        <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.a" :min="0" :max="1" :step="0.1" :strict-step="0.01" title="Opacity of stop"></StrictNumberInput>
                         <input type="button" class="pickerGradientStopUp" title="Move stop up" @click="moveStopUp(i)" :disabled="i == 0">
                         <input type="button" class="pickerGradientStopDown" title="Move stop down" @click="moveStopDown(i)" :disabled="i == props.picker.gradientData.stops.length - 1">
                         <input type="button" class="pickerGradientStopDelete" title="Remove stop" @click="removeStop(i)" :disabled="props.picker.gradientData.stops.length == 1">
@@ -128,8 +131,8 @@ function removeStop(i: number) {
     box-sizing: border-box;
     vertical-align: top;
     position: relative;
-    width: 44px;
-    height: 20px;
+    width: v-bind("$props.badgeWidth ?? '44px'");
+    height: v-bind("$props.badgeHeight ?? '20px'");
     border: 2px solid white;
     background-color: black;
     background: v-bind("$props.picker.cssStyle");

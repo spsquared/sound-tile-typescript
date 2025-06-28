@@ -64,20 +64,6 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
 <template>
     <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
-        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarHoverTile === props.tile ? 'cyan' : 'white'" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
-            <slot name="options">
-                <TileOptionsSection title="General">
-                    <label class="sectionItem" title="Relative size of tile to sibling tiles">
-                        Size:
-                        <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
-                    </label>
-                    <label class="sectionItem" title="Background color of tile">
-                        Background:
-                        <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
-                    </label>
-                </TileOptionsSection>
-            </slot>
-        </DraggableWindow>
         <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup)">
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
@@ -85,9 +71,25 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
         <input type="button" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" class="tileEditButton" @click="toggleEditTile">
-        <Transition>
+        <Transition name="outline">
             <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
         </Transition>
+        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarHoverTile === props.tile ? 'cyan' : 'white'" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
+            <div class="optionsWrapper">
+                <slot name="options">
+                    <TileOptionsSection title="General">
+                        <label class="sectionItem" title="Relative size of tile to sibling tiles">
+                            Size
+                            <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
+                        </label>
+                        <label class="sectionItem" title="Background color of tile">
+                            Background
+                            <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                        </label>
+                    </TileOptionsSection>
+                </slot>
+            </div>
+        </DraggableWindow>
     </div>
 </template>
 
@@ -209,13 +211,17 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
     z-index: 100;
 }
 
-.v-enter-from,
-.v-leave-to {
+.outline-enter-from,
+.outline-leave-to {
     opacity: 0;
 }
 
-.v-enter-to,
-.v-leave-from {
+.outline-enter-to,
+.outline-leave-from {
     opacity: 1;
+}
+
+.optionsWrapper {
+    user-select: none;
 }
 </style>

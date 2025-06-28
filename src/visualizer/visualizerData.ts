@@ -51,10 +51,12 @@ export interface VisualizerData {
             size: number
             /**Toggles discrete LED-bar effects */
             ledEffect: boolean
-            /**Number of LEDs per bar */
+            /**Number of LEDs per bar, per side of reflection (reflection doubles LED count) */
             ledCount: number
             /**Relative height of LEDs to the height available */
             ledSize: number
+            /**Minimum "height" of bars in pixels */
+            minLength: number
         }
         /**Settings for frequency line and fill modes */
         line: {
@@ -71,7 +73,7 @@ export interface VisualizerData {
         minDbCutoff: number
         /**Scale of drawn frequences */
         scale: number
-        /**Proportion along the amplitude-axis to reflect across, 0-1 */
+        /**Proportion along the amplitude-axis to reflect across, 0-0.5 */
         reflect: number
         /**Use a logarithmic frequency scale */
         useLogScale: boolean
@@ -104,7 +106,7 @@ export interface VisualizerData {
     spectOptions: {
         /**Number of previous frames to keep in view */
         historyLength: number
-        /**Quantize frequency values to a certain number of levels, disabled at <=1 */
+        /**Quantize frequency data to a certain number of levels, mostly unnoticeable in spectrograms, disabled at <2 */
         quantization: number
     }
     /**Settings for channel levels mode */
@@ -140,7 +142,8 @@ export function createDefaultVisualizerData(): VisualizerData {
                 size: 0.8,
                 ledEffect: false,
                 ledCount: 16,
-                ledSize: 0.8
+                ledSize: 0.8,
+                minLength: 1
             },
             line: {
                 thickness: 2,

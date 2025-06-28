@@ -22,7 +22,7 @@ export class Visualizer {
     }
 
     private readonly gain: GainNode;
-    private readonly analyzers: AnalyserNode[]; // very british
+    private readonly analyzers: AnalyserNode[] = []; // very british
     private audioBuffer: AudioBuffer | null = null;
     private source: AudioBufferSourceNode | null = null;
     private splitter: ChannelSplitterNode | null = null;
@@ -44,7 +44,8 @@ export class Visualizer {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
         this.gain = Visualizer.audioContext.createGain();
-        this.analyzers = [Visualizer.audioContext.createAnalyser()];
+        this.analyzers.push(Visualizer.audioContext.createAnalyser());
+        this.analyzers[0].maxDecibels = 0;
         this.gain.connect(this.analyzers[0]);
         this.gain.connect(Visualizer.gain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
@@ -64,9 +65,10 @@ export class Visualizer {
             }, { immediate: true });
             watchEffect(() => this.gain.gain.value = this.data.gain);
             watchEffect(() => this.data.mute ? this.gain.disconnect(Visualizer.gain) : this.gain.connect(Visualizer.gain));
-            watch([() => this.data.mode, () => this.data.levelOptions.channels], ([], [lastMode, lastChannels]) => {
+            watch([() => this.data.mode, () => this.data.levelOptions.channels, () => this.data.buffer], ([], [lastMode, lastChannels, lastBuffer]) => {
                 // this could blow up very easily!!
                 if (this.data.mode == VisualizerMode.CHANNEL_LEVELS && (lastMode != VisualizerMode.CHANNEL_LEVELS || this.data.levelOptions.channels != lastChannels)) {
+                    // yeetus analyzers-us
                     for (const a of this.analyzers) this.gain.disconnect(a);
                     const channels = Math.max(1, this.data.levelOptions.channels);
                     this.splitter = Visualizer.audioContext.createChannelSplitter(channels);
@@ -75,14 +77,17 @@ export class Visualizer {
                     for (let i = 0; i < channels; i++) {
                         const analyzer = Visualizer.audioContext.createAnalyser();
                         analyzer.fftSize = 1024;
+                        analyzer.maxDecibels = 0;
                         this.splitter.connect(analyzer, i);
                         this.analyzers.push(analyzer);
                     }
-                } else if (this.data.mode != VisualizerMode.CHANNEL_LEVELS && lastMode == VisualizerMode.CHANNEL_LEVELS) {
+                } else if (this.data.mode != VisualizerMode.CHANNEL_LEVELS && (lastMode == VisualizerMode.CHANNEL_LEVELS || this.data.buffer != lastBuffer)) {
+                    // reset analyzer when audio source changed
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     this.splitter?.disconnect();
                     this.analyzers.length = 0;
                     this.analyzers.push(Visualizer.audioContext.createAnalyser());
+                    this.analyzers[0].maxDecibels = 0;
                     this.gain.connect(this.analyzers[0]);
                 }
             });

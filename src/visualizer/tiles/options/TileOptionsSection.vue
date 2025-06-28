@@ -77,7 +77,7 @@ const { height } = useElementSize(bodyEl);
 .optSectionBodyWrapper {
     position: relative;
     min-height: v-bind("height + 'px'");
-    padding-top: 4px;
+    padding: 4px 0px;
     overflow: hidden;
 }
 
@@ -86,8 +86,8 @@ const { height } = useElementSize(bodyEl);
     display: flex;
     flex-wrap: wrap;
     position: absolute;
-    row-gap: 8px;
-    column-gap: 8px;
+    row-gap: 4px;
+    column-gap: 12px;
     width: 100%;
     padding: 0px 4px;
 }

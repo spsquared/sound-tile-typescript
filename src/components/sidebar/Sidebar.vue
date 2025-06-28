@@ -66,6 +66,7 @@ onUnmounted(() => {
                 <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
                 <div id="sidebarTabsList">
                     <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
+                    <!-- TODO - audio sources tab, assigning multiple tiles the same audio -->
                     <SidebarTab for="export" :image="exportIcon" title="Export"></SidebarTab>
                     <SidebarTab for="playlist" :image="playlistIcon" size="90%" title="Playlist"></SidebarTab>
                 </div>

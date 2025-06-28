@@ -18,11 +18,11 @@ const props = defineProps<{
         <template v-slot:options>
             <TileOptionsSection title="General">
                 <label title="Relative size of tile to sibling tiles">
-                    Size:
-                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100"></StrictNumberInput>
+                    Size
+                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
                 </label>
                 <label title="Background style of tile">
-                    Background:
+                    Background
                     <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
                 </label>
             </TileOptionsSection>
