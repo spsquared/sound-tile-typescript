@@ -19,7 +19,7 @@ async function uploadCoverArt() {
     });
     if (coverArt.length == 0) return;
     const reader = new FileReader();
-    reader.onloadend = (e) => {
+    reader.onloadend = () => {
         MediaPlayer.state.current.coverArt = reader.result as string;
     };
     reader.readAsDataURL(coverArt[0]);

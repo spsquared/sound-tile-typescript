@@ -15,7 +15,7 @@ export async function openFilePicker(options?: OpenFilePickerOptions): Promise<F
             input.type = 'file';
             input.accept = options?.types?.map((item) => Object.keys(item.accept as any).join(',')).join(',') ?? '';
             input.name = options?.id ?? 'soundtileUpload';
-            input.onchange = (e) => {
+            input.onchange = () => {
                 if (input.files !== null) resolve(Array.from(input.files));
                 else resolve([]); // shouldn't happen
             };

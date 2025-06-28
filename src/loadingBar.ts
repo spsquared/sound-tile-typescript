@@ -1,5 +1,5 @@
 let loaded = true;
-window.addEventListener('load', (e) => {
+window.addEventListener('load', () => {
     if (AudioContext == undefined) {
         document.getElementById('notSupported')!.style.display = 'block';
         return;
@@ -12,7 +12,7 @@ window.addEventListener('load', (e) => {
     }, 200);
 });
 
-window.onerror = (e, filename, lineno, colno, err) => {
+window.onerror = (_e, filename, lineno, colno, err) => {
     document.getElementById('loadingError')!.innerText += `\n${err?.message ?? 'Unexpected error'} (at ${filename} ${lineno}:${colno})`;
     loaded = false;
 };
