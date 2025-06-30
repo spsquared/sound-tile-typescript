@@ -25,6 +25,7 @@
         /* Linting */
         "strict": true,
         "noUnusedParameters": true,
+        "noUnusedLocals": true
     },
     "include": [
         "src/**/*.ts",

@@ -129,7 +129,7 @@ class VisualizerRenderInstance {
     private canvasStyle: CanvasGradient | string = '#FFFFFF';
     private canvasStyle2: CanvasGradient | string = '#FFFFFF';
     private chromaScale: chroma.Scale = chroma.scale(['#FFFFFF']);
-    private chromaScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
+    // private chromaScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
 
     constructor(canvas: OffscreenCanvas, data: VisualizerSettingsData) {
         this.canvas = canvas;
@@ -143,7 +143,7 @@ class VisualizerRenderInstance {
             this.canvasStyle = this.createCanvasStyle(this.data.color);
             this.canvasStyle2 = this.createCanvasStyle(this.data.color2, this.data.color2Alpha);
             this.chromaScale = this.createChromaScale(this.data.color);
-            this.chromaScale2 = this.createChromaScale(this.data.color2, this.data.color2Alpha);
+            // this.chromaScale2 = this.createChromaScale(this.data.color2, this.data.color2Alpha);
         }
         // move origin to bottom left and apply transforms
         this.ctx.translate(0, this.canvas.height);
@@ -154,7 +154,6 @@ class VisualizerRenderInstance {
         // padding thing
         this.ctx.translate(this.data.paddingInline, this.data.paddingBlock);
         // spaghetti v2
-        const { width, height } = this.calcViewportSize();
         switch (this.data.mode) {
             case VisualizerMode.FREQ_BAR:
                 if (!(buf instanceof Uint8Array)) break;
