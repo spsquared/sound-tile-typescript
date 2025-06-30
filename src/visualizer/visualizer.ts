@@ -44,9 +44,6 @@ export class Visualizer {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
         this.gain = Visualizer.audioContext.createGain();
-        this.analyzers.push(Visualizer.audioContext.createAnalyser());
-        this.analyzers[0].maxDecibels = 0;
-        this.gain.connect(this.analyzers[0]);
         this.gain.connect(Visualizer.gain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
         Visualizer.instances.add(this);
@@ -82,15 +79,19 @@ export class Visualizer {
                         this.analyzers.push(analyzer);
                     }
                 } else if (this.data.mode != VisualizerMode.CHANNEL_LEVELS && (lastMode == VisualizerMode.CHANNEL_LEVELS || this.data.buffer != lastBuffer)) {
-                    // reset analyzer when audio source changed
+                    // reset analyzer when audio source changed too
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     this.splitter?.disconnect();
                     this.analyzers.length = 0;
-                    this.analyzers.push(Visualizer.audioContext.createAnalyser());
-                    this.analyzers[0].maxDecibels = 0;
-                    this.gain.connect(this.analyzers[0]);
+                    const analyzer = Visualizer.audioContext.createAnalyser();
+                    this.analyzers.push(analyzer);
+                    analyzer.fftSize = this.data.fftSize;
+                    analyzer.maxDecibels = 0;
+                    analyzer.minDecibels = this.data.freqOptions.minDbCutoff;
+                    analyzer.smoothingTimeConstant = this.data.freqOptions.smoothing;
+                    this.gain.connect(analyzer);
                 }
-            });
+            }, { immediate: true });
             watchEffect(() => {
                 if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
                     for (const a of this.analyzers) a.fftSize = this.data.fftSize;
@@ -98,12 +99,12 @@ export class Visualizer {
             });
             watchEffect(() => {
                 if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
-                    for (const a of this.analyzers) a.minDecibels = Math.min(0, this.data.freqOptions.minDbCutoff);
+                    for (const a of this.analyzers) a.minDecibels = this.data.freqOptions.minDbCutoff;
                 }
             });
             watchEffect(() => {
                 if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
-                    for (const a of this.analyzers) a.smoothingTimeConstant = Math.max(0, Math.min(this.data.freqOptions.smoothing, 1));
+                    for (const a of this.analyzers) a.smoothingTimeConstant = this.data.freqOptions.smoothing;
                 }
             });
         });

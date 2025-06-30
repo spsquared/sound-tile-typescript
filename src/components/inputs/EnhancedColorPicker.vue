@@ -37,10 +37,6 @@ watch(() => props.disabled, () => {
     if (props.disabled) props.picker.open = false;
 });
 
-function addStop() {
-    props.picker.gradientData.stops.push({ t: 1, c: '#FFFFFF', a: 1 });
-}
-
 const eyedropper = useEyeDropper();
 async function runEyedropperSolid() {
     const res = await eyedropper.open();
@@ -54,6 +50,9 @@ async function runEyedropperStop(i: number) {
     }
 }
 
+function addStop() {
+    props.picker.gradientData.stops.push({ t: 0, c: '#FFFFFF', a: 1 });
+}
 function moveStopUp(i: number) {
     if (i == 0) return;
     props.picker.gradientData.stops.splice(i - 1, 0, ...props.picker.gradientData.stops.splice(i, 1));

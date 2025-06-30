@@ -84,6 +84,9 @@ const lineModes = [VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL];
 const corrwaveModes = [VisualizerMode.WAVE_CORRELATED];
 const secondaryColorSupportedModes = [VisualizerMode.FREQ_FILL];
 const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM, VisualizerMode.CHANNEL_LEVELS];
+
+const reflectionDisabled = computed(() => props.tile.visualizer.data.mode == VisualizerMode.SPECTROGRAM || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
+const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptions.bar.ledEffect || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
 </script>
 
 <template>
@@ -203,7 +206,7 @@ const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUM
                             <Slider length="100px" v-model="options.freqOptions.smoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.freqOptions.smoothing * 100)}%`"></Slider>
                         </label>
                         <label title="Cutoff proportion of maximum frequency - dependent on device audio sample rate">
-                            Freq Cut<br>({{ options.freqOptions.freqCutoff * Visualizer.audioContext.sampleRate / 2 }}Hz)
+                            Freq Cut<br>({{ Math.round(options.freqOptions.freqCutoff * Visualizer.audioContext.sampleRate / 2) }}Hz)
                             <StrictNumberInput v-model="options.freqOptions.freqCutoff" :min="0" :max="1" :step="0.05" :strict-step="0"></StrictNumberInput>
                         </label>
                         <label title="Cutoff threshold for minimum decibels to show on the visualizer">
@@ -224,9 +227,9 @@ const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUM
                                 <option value="high">High</option>
                             </select>
                         </label>
-                        <label title="&quot;Reflect&quot; the visualizer across an axis parallel to the frequency axis " v-if="options.mode != VisualizerMode.SPECTROGRAM">
-                            Reflect<br>({{ Math.round(options.freqOptions.reflect * 100) }}%)
-                            <Slider length="100px" v-model="options.freqOptions.reflect" :min="0" :max="0.5" :step="0.01" :title="`Symmetry: ${Math.round(options.freqOptions.reflect * 100)}%`"></Slider>
+                        <label title="&quot;Reflect&quot; the visualizer across an axis parallel to the frequency axis">
+                            Reflect<br>({{ reflectionDisabled ? 0 : Math.round(options.freqOptions.reflect * 100) }}%)
+                            <Slider length="100px" v-model="options.freqOptions.reflect" :min="0" :max="0.5" :step="0.01" :title="`Symmetry: ${Math.round(options.freqOptions.reflect * 100)}%`" :disabled="reflectionDisabled"></Slider>
                         </label>
                         <label title="Use a logarithmic frequency scale">
                             Log Scale
@@ -248,7 +251,7 @@ const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUM
                         </label>
                         <label title="Minimum length of bars when data is zero">
                             Min Length
-                            <StrictNumberInput v-model="options.freqOptions.bar.minLength" :min="0" :max="128" :strict-max="Infinity" :step="1"></StrictNumberInput>
+                            <StrictNumberInput v-model="options.freqOptions.bar.minLength" :min="0" :max="128" :strict-max="Infinity" :step="1" :disabled="barMinLengthDisabled"></StrictNumberInput>
                         </label>
                         <label title="Enable an LED bar-like effect">
                             LED Bar
@@ -258,7 +261,7 @@ const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUM
                     <div class="optionsGrid" v-if="options.freqOptions.bar.ledEffect">
                         <label title="Number of LEDs per bar of visualizer (on each side of reflection)">
                             LED Count
-                            <StrictNumberInput v-model="options.freqOptions.bar.ledCount" :min="1" :max="64" :strict-max="Infinity" :step="1"></StrictNumberInput>
+                            <StrictNumberInput v-model="options.freqOptions.bar.ledCount" :min="4" :strict-min="1" :max="128" :strict-max="Infinity" :step="4"></StrictNumberInput>
                         </label>
                         <label title="Size of LEDs in proportion to available size per LED">
                             LED Size
@@ -332,7 +335,7 @@ const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUM
                         Secondary
                         <EnhancedColorPicker :picker="colorPicker2" badge-width="60px"></EnhancedColorPicker>
                     </label>
-                    <label title="Apply additional opacity to secondary color" v-if="secondaryColorSupportedModes.includes(options.mode)">
+                    <label title="Apply additional opacity to secondary color - setting to below 1 triggers special translucency handling for Freq. Fill mode" v-if="secondaryColorSupportedModes.includes(options.mode)">
                         Alpha
                         <StrictNumberInput v-model="options.color2Alpha" :min="0" :max="1" :step="0.01"></StrictNumberInput>
                     </label>

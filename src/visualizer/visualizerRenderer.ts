@@ -126,8 +126,8 @@ class VisualizerRenderInstance {
     readonly ctx: OffscreenCanvasRenderingContext2D;
     private data: VisualizerSettingsData;
     private dataUpdated: boolean = false;
-    private fillStyle: CanvasGradient | string = '#FFFFFF';
-    private fillStyle2: CanvasGradient | string = '#FFFFFF';
+    private canvasStyle: CanvasGradient | string = '#FFFFFF';
+    private canvasStyle2: CanvasGradient | string = '#FFFFFF';
     private chromaScale: chroma.Scale = chroma.scale(['#FFFFFF']);
     private chromaScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
 
@@ -140,10 +140,10 @@ class VisualizerRenderInstance {
     draw(buf: Uint8Array | Float32Array | Uint8Array[]): void {
         this.ctx.reset();
         if (this.dataUpdated) {
-            this.fillStyle = this.createGradient(this.data.color);
-            this.fillStyle2 = this.createGradient(this.data.color2);
+            this.canvasStyle = this.createCanvasStyle(this.data.color);
+            this.canvasStyle2 = this.createCanvasStyle(this.data.color2, this.data.color2Alpha);
             this.chromaScale = this.createChromaScale(this.data.color);
-            this.chromaScale2 = this.createChromaScale(this.data.color2);
+            this.chromaScale2 = this.createChromaScale(this.data.color2, this.data.color2Alpha);
         }
         // move origin to bottom left and apply transforms
         this.ctx.translate(0, this.canvas.height);
@@ -154,100 +154,254 @@ class VisualizerRenderInstance {
         // padding thing
         this.ctx.translate(this.data.paddingInline, this.data.paddingBlock);
         // spaghetti v2
-        const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2;
-        const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2;
+        const { width, height } = this.calcViewportSize();
         switch (this.data.mode) {
-            case VisualizerMode.FREQ_BAR: {
+            case VisualizerMode.FREQ_BAR:
                 if (!(buf instanceof Uint8Array)) break;
-                switch (this.data.freqOptions.symmetry) {
-                    case 'none':
-                        this.drawFreqBars(buf);
-                        break;
-                    case 'low':
-                        this.ctx.save();
-                        this.ctx.scale(0.5, 1);
-                        this.ctx.translate(width, 0);
-                        this.drawFreqBars(buf);
-                        this.ctx.scale(-1, 1);
-                        this.drawFreqBars(buf);
-                        this.ctx.restore();
-                        break;
-                    case 'high':
-                        this.ctx.save();
-                        this.ctx.scale(0.5, 1);
-                        this.drawFreqBars(buf);
-                        this.ctx.translate(width * 2, 0);
-                        this.ctx.scale(-1, 1);
-                        this.drawFreqBars(buf);
-                        this.ctx.restore();
-                        break;
-                }
-            }
+                this.drawFreqBars(buf);
                 break;
-            case VisualizerMode.FREQ_LINE: {
-
-            }
+            case VisualizerMode.FREQ_LINE:
+                if (!(buf instanceof Uint8Array)) break;
+                this.drawFreqLines(buf);
                 break;
-            case VisualizerMode.FREQ_FILL: {
-
-            }
+            case VisualizerMode.FREQ_FILL:
+                if (!(buf instanceof Uint8Array)) break;
+                this.drawFreqLines(buf, true);
                 break;
-            case VisualizerMode.FREQ_LUMINANCE: {
-
-            }
+            case VisualizerMode.FREQ_LUMINANCE:
+                if (!(buf instanceof Uint8Array)) break;
+                this.drawFreqBars(buf, true);
                 break;
-            case VisualizerMode.WAVE_DIRECT: {
-
-            }
-            case VisualizerMode.WAVE_CORRELATED: {
-
-            }
+            case VisualizerMode.WAVE_DIRECT:
                 break;
-            case VisualizerMode.SPECTROGRAM: {
+            case VisualizerMode.WAVE_CORRELATED:
+                break;
+            case VisualizerMode.SPECTROGRAM:
                 // spectrogram can quantize without losing the smoothness of gradients and it does help performance
-            }
                 break;
-            case VisualizerMode.CHANNEL_LEVELS: {
-
-            }
+            case VisualizerMode.CHANNEL_LEVELS:
                 break;
         }
     }
 
-    private drawFreqBars(buf: Uint8Array): void {
-        const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2;
-        const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2;
+    private drawFreqBars(buf: Uint8Array, lumi?: boolean): void {
+        const { width, height } = this.calcViewportSize();
         const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
         const xStep = width / freqRange;
         const barWidth = Math.max(1, xStep * this.data.freqOptions.bar.size);
         const xShift = (xStep - barWidth) / 2;
-        const dataQuantize = this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 256;
-        const dataScale = this.data.freqOptions.scale * dataQuantize / 256;
-        const drawScale = height / dataQuantize;
-        const min = this.data.freqOptions.bar.minLength;
-        const yReflect = this.data.freqOptions.reflect;
-        const yCenter = yReflect * height;
-        if (this.data.altColorMode && this.data.color.type == 'gradient') {
-            // batching by color probably pointless since bars/steps ratio is quite low
-            const colorScale = 1 / dataQuantize;
-            for (let i = 0; i < freqRange; i++) {
-                const t = Math.ceil(buf[i] * dataScale);
-                const barHeight = Math.max(min, t * drawScale);
-                this.ctx.fillStyle = this.chromaScale(t * colorScale).hex();
-                this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
+        const draw = lumi ? () => {
+            // luminance bars
+            const lumiScale = this.data.freqOptions.scale / 256;
+            if (this.data.altColorMode && this.data.color.type == 'gradient') {
+                for (let i = 0; i < freqRange; i++) {
+                    this.ctx.fillStyle = this.chromaScale(buf[i] * lumiScale).hex();
+                    this.ctx.fillRect(i * xStep + xShift, 0, barWidth, height);
+                }
+            } else {
+                this.ctx.fillStyle = this.canvasStyle;
+                for (let i = 0; i < freqRange; i++) {
+                    this.ctx.globalAlpha = Math.min(1, buf[i] * lumiScale);
+                    this.ctx.fillRect(i * xStep + xShift, 0, barWidth, height);
+                }
             }
-        } else {
-            this.ctx.fillStyle = this.fillStyle;
-            for (let i = 0; i < freqRange; i++) {
-                const barHeight = Math.max(min, Math.ceil(buf[i] * dataScale) * drawScale);
-                this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
+        } : () => {
+            // height bars
+            const dataQuantize = this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 256;
+            const dataScale = this.data.freqOptions.scale * dataQuantize / 256;
+            const drawScale = height / dataQuantize;
+            const minHeight = this.data.freqOptions.bar.ledEffect ? height / this.data.freqOptions.bar.ledCount : this.data.freqOptions.bar.minLength;
+            const yReflect = this.data.freqOptions.reflect;
+            const yCenter = yReflect * height;
+            if (this.data.altColorMode && this.data.color.type == 'gradient') {
+                const colorScale = 1 / dataQuantize;
+                // batching by color probably pointless since bars/colors ratio is quite low
+                for (let i = 0; i < freqRange; i++) {
+                    const t = Math.ceil(buf[i] * dataScale);
+                    const barHeight = Math.max(minHeight, t * drawScale);
+                    this.ctx.fillStyle = this.chromaScale(t * colorScale).hex();
+                    this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
+                }
+            } else {
+                this.ctx.fillStyle = this.canvasStyle;
+                for (let i = 0; i < freqRange; i++) {
+                    const barHeight = Math.max(minHeight, Math.ceil(buf[i] * dataScale) * drawScale);
+                    this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
+                }
+            }
+        };
+        this.ctx.save();
+        switch (this.data.freqOptions.symmetry) {
+            case 'none':
+                draw();
+                break;
+            case 'low':
+                this.ctx.scale(0.5, 1);
+                this.ctx.translate(width, 0);
+                draw();
+                this.ctx.scale(-1, 1);
+                draw();
+                break;
+            case 'high':
+                this.ctx.scale(0.5, 1);
+                draw();
+                this.ctx.translate(width * 2, 0);
+                this.ctx.scale(-1, 1);
+                draw();
+                break;
+        }
+        this.ctx.restore();
+        this.ctx.save();
+        if (this.data.freqOptions.bar.ledEffect) {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.fillStyle = '#000000';
+            const blockStep = height / this.data.freqOptions.bar.ledCount;
+            const blockHeight = blockStep * (1 - this.data.freqOptions.bar.ledSize);
+            // LED bar deletes chunks of canvas because faster
+            if (!lumi && this.data.freqOptions.reflect > 0) {
+                const yReflect = this.data.freqOptions.reflect;
+                const yCenter = yReflect * height;
+                this.ctx.save();
+                this.ctx.scale(1, yReflect);
+                for (let i = -blockHeight / 2; i < height; i += blockStep) {
+                    this.ctx.fillRect(0, i, width, blockHeight);
+                }
+                this.ctx.restore();
+                this.ctx.translate(0, yCenter);
+                this.ctx.scale(1, 1 - yReflect);
+                for (let i = -blockHeight / 2; i < height; i += blockStep) {
+                    this.ctx.fillRect(0, i, width, blockHeight);
+                }
+            } else {
+                // reflection < 1% check to stop artifacting
+                for (let i = -blockHeight / 2; i < height; i += blockStep) {
+                    this.ctx.fillRect(0, i, width, blockHeight);
+                }
             }
         }
+        this.ctx.restore();
+    }
+    private drawFreqLines(buf: Uint8Array, fill?: boolean): void {
+        const { width, height } = this.calcViewportSize();
+        const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
+        const xStep = width / (freqRange - 1);
+        const drawScale = height * this.data.freqOptions.scale / 256;
+        const tracePath = (reverse?: boolean) => {
+            if (reverse) {
+                for (let i = freqRange - 1; i >= 0; i--) this.ctx.lineTo(i * xStep, buf[i] * drawScale);
+            } else {
+                for (let i = 0; i < freqRange; i++) this.ctx.lineTo(i * xStep, buf[i] * drawScale);
+            }
+        };
+        // every measurement accounts for line thickness!!
+        const thickness = this.data.freqOptions.line.thickness;
+        const halfThickness = thickness / 2;
+        const yReflect = this.data.freqOptions.reflect;
+        const yCenter = yReflect * (height - halfThickness);
+        // path must be traced clockwise since moveTo will create a new line and cause visual
+        // artifacting with sharpEdges, path ends on centerline to avoid that too
+        this.ctx.beginPath();
+        if (fill) this.ctx.moveTo(0 + halfThickness, yCenter + halfThickness);
+        // EDGE CASES EVERYWHERE SPAGHETTI!!! lots of tiny offsets due to line width
+        this.ctx.save();
+        this.ctx.translate(halfThickness, halfThickness);
+        switch (this.data.freqOptions.symmetry) {
+            case 'none':
+                this.ctx.scale(1 - thickness / width, 1);
+                if (yReflect > 0) {
+                    this.ctx.translate(0, yCenter);
+                    this.ctx.save();
+                    this.ctx.scale(1, 1 - yReflect);
+                    tracePath();
+                    this.ctx.restore();
+                    this.ctx.lineTo(width, 0);
+                    this.ctx.scale(1, -yReflect);
+                    tracePath(true);
+                } else {
+                    tracePath();
+                    if (fill) this.ctx.lineTo(width, 0);
+                }
+                break;
+            case 'low':
+                this.ctx.scale(0.5 - halfThickness / width, 1);
+                this.ctx.translate(width, 0);
+                if (yReflect > 0) {
+                    this.ctx.translate(0, yCenter);
+                    this.ctx.save();
+                    this.ctx.scale(-1, 1 - yReflect);
+                    tracePath(true);
+                    this.ctx.scale(-1, 1);
+                    tracePath();
+                    this.ctx.restore();
+                    this.ctx.scale(1, -yReflect);
+                    tracePath(true);
+                    this.ctx.scale(-1, 1);
+                    tracePath();
+                } else {
+                    this.ctx.scale(-1, 1);
+                    tracePath(true);
+                    this.ctx.scale(-1, 1);
+                    tracePath();
+                    if (fill) this.ctx.lineTo(width, 0);
+                }
+                break;
+            case 'high':
+                this.ctx.scale(0.5 - halfThickness / width, 1);
+                if (yReflect > 0) {
+                    this.ctx.translate(0, yCenter);
+                    this.ctx.save();
+                    this.ctx.scale(1, 1 - yReflect);
+                    tracePath();
+                    this.ctx.translate(width * 2, 0);
+                    this.ctx.scale(-1, 1);
+                    tracePath(true);
+                    this.ctx.restore();
+                    this.ctx.scale(1, -yReflect);
+                    this.ctx.save();
+                    this.ctx.translate(width * 2, 0);
+                    this.ctx.scale(-1, 1);
+                    tracePath();
+                    this.ctx.restore();
+                    tracePath(true);
+                } else {
+                    tracePath();
+                    this.ctx.translate(width * 2, 0);
+                    this.ctx.scale(-1, 1);
+                    tracePath(true);
+                    if (fill) this.ctx.lineTo(width, 0);
+                }
+                break;
+        }
+        this.ctx.restore();
+        if (fill) this.ctx.lineTo(0 + halfThickness, yCenter + halfThickness);
+        this.ctx.lineCap = this.data.freqOptions.line.sharpEdges ? 'square' : 'round';
+        this.ctx.lineJoin = this.data.freqOptions.line.sharpEdges ? 'miter' : 'round';
+        this.ctx.lineWidth = thickness;
+        if (fill) {
+            this.ctx.fillStyle = this.canvasStyle2;
+            this.ctx.fill();
+            // fix visible overlapping of stroke and fill with translucency by cutting away fill
+            // alpha check isn't perfect since colors can have translucency themselves without this
+            if (this.data.color2Alpha < 1) {
+                this.ctx.globalCompositeOperation = 'destination-out';
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.stroke();
+                this.ctx.globalCompositeOperation = 'source-over';
+            }
+        }
+        this.ctx.strokeStyle = this.canvasStyle;
+        this.ctx.stroke();
     }
 
-    private createGradient(color: ColorData): CanvasGradient | string {
+    private calcViewportSize(): { readonly width: number, readonly height: number } {
+        return {
+            width: (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2,
+            height: (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2
+        };
+    }
+    private createCanvasStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {
         if (color.type == 'solid') {
-            return chroma(color.color).alpha(color.alpha).hex();
+            return chroma(color.color).alpha(color.alpha * alpha).hex();
         } else if (color.type == 'gradient') {
             const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline;
             const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock;
@@ -262,11 +416,20 @@ class VisualizerRenderInstance {
                     ? this.ctx.createRadialGradient(color.x * width, color.y * height, 0, color.x * width, color.y * height, color.radius * Math.min(width, height))
                     : this.ctx.createConicGradient(angle, color.x * width, color.y * height));
             for (const stop of color.stops) {
-                gradient.addColorStop(stop.t, chroma(stop.c).alpha(stop.a).hex());
+                gradient.addColorStop(stop.t, chroma(stop.c).alpha(stop.a * alpha).hex());
             }
             return gradient;
         }
         return 'white';
+    }
+    private createChromaScale(color: ColorData, alpha: number = 1): chroma.Scale {
+        if (color.type == 'solid') {
+            return chroma.scale([chroma(color.color).alpha(color.alpha * alpha)]);
+        } else if (color.type == 'gradient') {
+            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a * alpha))).domain(color.stops.map((c) => c.t));
+        }
+        // idk
+        return chroma.scale(['#FFFFFF']);
     }
 
     resize(w: number, h: number): void {
@@ -274,20 +437,9 @@ class VisualizerRenderInstance {
         this.canvas.height = h;
         this.dataUpdated = true;
     }
-
     updateData(data: VisualizerSettingsData): void {
         this.data = data;
         this.dataUpdated = true;
-    }
-
-    private createChromaScale(color: ColorData): chroma.Scale {
-        if (color.type == 'solid') {
-            return chroma.scale([chroma(color.color).alpha(color.alpha)]);
-        } else if (color.type == 'gradient') {
-            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a))).domain(color.stops.map((c) => c.t));
-        }
-        // idk
-        return chroma.scale(['#FFFFFF']);
     }
 }
 

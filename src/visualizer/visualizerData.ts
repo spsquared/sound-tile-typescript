@@ -31,7 +31,7 @@ export interface VisualizerData {
     color: ColorData
     /**Secondary color (if available) */
     color2: ColorData
-    /**Additional alpha multiplier for secondary color */
+    /**Additional alpha multiplier for secondary color - setting to below 1 triggers translucency fix for freq. fill mode */
     color2Alpha: number
     /**Apply colors in alternate mode (if available) */
     altColorMode: boolean
@@ -106,7 +106,7 @@ export interface VisualizerData {
     spectOptions: {
         /**Number of previous frames to keep in view */
         historyLength: number
-        /**Quantize frequency data to a certain number of levels, mostly unnoticeable in spectrograms, disabled at <2 */
+        /**Quantize frequency data to a certain number of levels, mostly unnoticeable in spectrograms - disabled at <2 */
         quantization: number
     }
     /**Settings for channel levels mode */
@@ -141,9 +141,9 @@ export function createDefaultVisualizerData(): VisualizerData {
             bar: {
                 size: 0.8,
                 ledEffect: false,
-                ledCount: 16,
+                ledCount: 64,
                 ledSize: 0.8,
-                minLength: 1
+                minLength: 2
             },
             line: {
                 thickness: 2,
