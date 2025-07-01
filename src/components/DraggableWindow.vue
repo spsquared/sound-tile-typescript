@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onClickOutside, useDraggable, useElementBounding } from '@vueuse/core';
+import { onClickOutside, useDraggable, useElementBounding, useThrottleFn } from '@vueuse/core';
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue';
 
 const props = defineProps<{
@@ -115,8 +115,8 @@ watch([dragX, dragY], () => emit('move', dragX.value, dragY.value));
 watch(size, () => emit('resize', size.w, size.h));
 watch(isTop, () => emit(isTop.value ? 'focus' : 'blur' as any));
 function fixDragPosition() {
-    dragX.value = Math.min(window.innerWidth - size.h, Math.max(dragX.value, 0));
-    dragY.value = Math.min(window.innerHeight - size.w, Math.max(dragY.value, 0));
+    dragX.value = Math.min(window.innerWidth - size.w - 8, Math.max(dragX.value, 0));
+    dragY.value = Math.min(window.innerHeight - size.h - 28, Math.max(dragY.value, 0));
 }
 defineExpose({
     posX: computed({ get: () => dragX.value, set: (x) => { dragX.value = x; fixDragPosition() } }),
@@ -127,6 +127,9 @@ defineExpose({
     close: () => open.value = false,
     focus: bringToTop
 });
+const fixPosOnResize = useThrottleFn(fixDragPosition, 20, true, true);
+onMounted(() => window.addEventListener('resize', fixPosOnResize));
+onUnmounted(() => window.removeEventListener('resize', fixPosOnResize));
 </script>
 <script lang="ts">
 // janky thing for global - when counter increments all windows reset z-index
