@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef, watch } from 'vue';
+import { useTemplateRef, watch } from 'vue';
 import DraggableWindow from '../DraggableWindow.vue';
 import ColorPicker from './colorPicker';
 import { useEyeDropper } from '@vueuse/core';
