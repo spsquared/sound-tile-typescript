@@ -1,5 +1,5 @@
 import { reactive, ref, Ref } from "vue";
-import { throttledWatch } from "@vueuse/core";
+import { throttledWatch, useThrottleFn } from "@vueuse/core";
 import { deepToRaw } from "@/components/scripts/deepToRaw";
 import { VisualizerData, VisualizerMode } from "./visualizerData";
 import { ColorData } from "@/components/inputs/colorPicker";
@@ -24,14 +24,17 @@ export abstract class VisualizerRenderer {
     constructor(data: VisualizerSettingsData) {
         this.data = reactive(data);
         this.canvas = document.createElement('canvas');
-        throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50 });
+        throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
-    abstract draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void>
+    abstract draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void>
     abstract resize(w: number, h: number): void
-    abstract updateData(): void
+    protected abstract updateData(): void
 
     abstract destroy(): void
+
+    static playing: boolean = false;
+    static debugInfo: boolean = false;
 }
 
 /**
@@ -53,12 +56,16 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     }
 
     async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', { buffer: buffer }, Array.isArray(buffer) ? buffer.map((b) => b.buffer) : [buffer.buffer]);
+        this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', {
+            buffer: buffer,
+            playing: VisualizerRenderer.playing,
+            debug: VisualizerRenderer.debugInfo
+        }, Array.isArray(buffer) ? buffer.map((b) => b.buffer) : [buffer.buffer]);
     }
     resize(w: number, h: number): void {
         this.postMessage('resize', { w: w, h: h });
     }
-    updateData(): void {
+    protected updateData(): void {
         // even though typing is fine, object is passed in from outside and could have buffer properties
         const clean = {
             ...deepToRaw(this.data),
@@ -99,13 +106,15 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
         this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), deepToRaw(this.data));
     }
 
-    async draw(buf: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        this.renderer.draw(buf);
+    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
+        this.renderer.playing = VisualizerRenderer.playing;
+        this.renderer.debugInfo = VisualizerRenderer.debugInfo;
+        this.renderer.draw(buffer);
     }
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
     }
-    updateData(): void {
+    protected updateData(): void {
         this.renderer.updateData(deepToRaw(this.data));
     }
 
@@ -130,6 +139,17 @@ class VisualizerRenderInstance {
     private canvasStyle2: CanvasGradient | string = '#FFFFFF';
     private chromaScale: chroma.Scale = chroma.scale(['#FFFFFF']);
     // private chromaScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
+    private corrwaveData: {
+        buffer: Float32Array,
+        shift: number
+    } | null = null;
+
+    playing: boolean = false;
+    debugInfo: boolean = false;
+    private readonly frames: number[] = [];
+    private readonly fpsHistory: number[] = [];
+    private readonly timingsHistory: number[] = [];
+    private readonly debugText: string[] = [];
 
     constructor(canvas: OffscreenCanvas, data: VisualizerSettingsData) {
         this.canvas = canvas;
@@ -137,7 +157,9 @@ class VisualizerRenderInstance {
         this.data = data;
     }
 
-    draw(buf: Uint8Array | Float32Array | Uint8Array[]): void {
+    draw(buffer: Uint8Array | Float32Array | Uint8Array[]): void {
+        const startTime = performance.now();
+        this.debugText.length = 0;
         this.ctx.reset();
         if (this.dataUpdated) {
             this.canvasStyle = this.createCanvasStyle(this.data.color);
@@ -156,24 +178,28 @@ class VisualizerRenderInstance {
         // spaghetti v2
         switch (this.data.mode) {
             case VisualizerMode.FREQ_BAR:
-                if (!(buf instanceof Uint8Array)) break;
-                this.drawFreqBars(buf);
+                if (!(buffer instanceof Uint8Array)) break;
+                this.drawFreqBars(buffer);
                 break;
             case VisualizerMode.FREQ_LINE:
-                if (!(buf instanceof Uint8Array)) break;
-                this.drawFreqLines(buf);
+                if (!(buffer instanceof Uint8Array)) break;
+                this.drawFreqLines(buffer);
                 break;
             case VisualizerMode.FREQ_FILL:
-                if (!(buf instanceof Uint8Array)) break;
-                this.drawFreqLines(buf, true);
+                if (!(buffer instanceof Uint8Array)) break;
+                this.drawFreqLines(buffer, true);
                 break;
             case VisualizerMode.FREQ_LUMINANCE:
-                if (!(buf instanceof Uint8Array)) break;
-                this.drawFreqBars(buf, true);
+                if (!(buffer instanceof Uint8Array)) break;
+                this.drawFreqBars(buffer, true);
                 break;
             case VisualizerMode.WAVE_DIRECT:
+                if (!(buffer instanceof Float32Array)) break;
+                this.drawWave(buffer);
                 break;
             case VisualizerMode.WAVE_CORRELATED:
+                if (!(buffer instanceof Float32Array)) break;
+                this.drawCorrWave(buffer);
                 break;
             case VisualizerMode.SPECTROGRAM:
                 // spectrogram can quantize without losing the smoothness of gradients and it does help performance
@@ -181,11 +207,48 @@ class VisualizerRenderInstance {
             case VisualizerMode.CHANNEL_LEVELS:
                 break;
         }
+        // free up some memory by removing unused history data
+        if (this.data.mode != VisualizerMode.WAVE_CORRELATED) {
+            this.corrwaveData = null;
+        }
+        // track performance metrics
+        const endTime = performance.now();
+        this.frames.push(endTime);
+        this.timingsHistory.push(endTime - startTime);
+        while (this.frames[0] + 1000 <= endTime) {
+            this.frames.shift();
+            this.timingsHistory.shift();
+            this.fpsHistory.shift();
+        }
+        this.fpsHistory.push(this.frames.length);
+        if (this.debugInfo) {
+            if (this.playing) this.printDebugInfo(buffer);
+            // some metrics
+            this.ctx.resetTransform();
+            this.ctx.font = '14px monospace';
+            const minArr = (a: number[]): number => a.reduce((p, c) => Math.min(p, c), 0);
+            const maxArr = (a: number[]): number => a.reduce((p, c) => Math.max(p, c), 0);
+            const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
+            const text = [
+                `PLAYING: ${this.playing}`,
+                `FPS: ${this.frames.length} (${minArr(this.fpsHistory)} / ${maxArr(this.fpsHistory)} / ${avgArr(this.fpsHistory).toFixed(1)})`,
+                `Timings: ${(endTime - startTime).toFixed(1)}ms (${minArr(this.timingsHistory).toFixed(1)}ms / ${maxArr(this.timingsHistory).toFixed(1)}ms / ${avgArr(this.timingsHistory).toFixed(1)}ms)`,
+                ...this.debugText
+            ];
+            this.ctx.fillStyle = '#333333AA';
+            this.ctx.fillRect(8, 8, maxArr(text.map((t) => this.ctx.measureText(t).width + 8)), text.length * 16 + 6);
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'top';
+            for (let i = 0; i < text.length; i++) {
+                this.ctx.fillText(text[i], 12, 12 + i * 16);
+            }
+        }
     }
 
-    private drawFreqBars(buf: Uint8Array, lumi?: boolean): void {
+    private drawFreqBars(buffer: Uint8Array, lumi?: boolean): void {
         const { width, height } = this.calcViewportSize();
-        const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
+        const freqRange = Math.ceil(buffer.length * this.data.freqOptions.freqCutoff);
         const xStep = width / freqRange;
         const barWidth = Math.max(1, xStep * this.data.freqOptions.bar.size);
         const xShift = (xStep - barWidth) / 2;
@@ -194,13 +257,13 @@ class VisualizerRenderInstance {
             const lumiScale = this.data.freqOptions.scale / 256;
             if (this.data.altColorMode && this.data.color.type == 'gradient') {
                 for (let i = 0; i < freqRange; i++) {
-                    this.ctx.fillStyle = this.chromaScale(buf[i] * lumiScale).hex();
+                    this.ctx.fillStyle = this.chromaScale(buffer[i] * lumiScale).hex();
                     this.ctx.fillRect(i * xStep + xShift, 0, barWidth, height);
                 }
             } else {
                 this.ctx.fillStyle = this.canvasStyle;
                 for (let i = 0; i < freqRange; i++) {
-                    this.ctx.globalAlpha = Math.min(1, buf[i] * lumiScale);
+                    this.ctx.globalAlpha = Math.min(1, buffer[i] * lumiScale);
                     this.ctx.fillRect(i * xStep + xShift, 0, barWidth, height);
                 }
             }
@@ -216,7 +279,7 @@ class VisualizerRenderInstance {
                 const colorScale = 1 / dataQuantize;
                 // batching by color probably pointless since bars/colors ratio is quite low
                 for (let i = 0; i < freqRange; i++) {
-                    const t = Math.ceil(buf[i] * dataScale);
+                    const t = Math.ceil(buffer[i] * dataScale);
                     const barHeight = Math.max(minHeight, t * drawScale);
                     this.ctx.fillStyle = this.chromaScale(t * colorScale).hex();
                     this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
@@ -224,7 +287,7 @@ class VisualizerRenderInstance {
             } else {
                 this.ctx.fillStyle = this.canvasStyle;
                 for (let i = 0; i < freqRange; i++) {
-                    const barHeight = Math.max(minHeight, Math.ceil(buf[i] * dataScale) * drawScale);
+                    const barHeight = Math.max(minHeight, Math.ceil(buffer[i] * dataScale) * drawScale);
                     this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
                 }
             }
@@ -280,17 +343,20 @@ class VisualizerRenderInstance {
         }
         this.ctx.restore();
     }
-    private drawFreqLines(buf: Uint8Array, fill?: boolean): void {
+    private drawFreqLines(buffer: Uint8Array, fill?: boolean): void {
         const { width, height } = this.calcViewportSize();
-        const freqRange = Math.ceil(buf.length * this.data.freqOptions.freqCutoff);
+        const freqRange = Math.ceil(buffer.length * this.data.freqOptions.freqCutoff);
         const xStep = width / (freqRange - 1);
         const drawScale = height * this.data.freqOptions.scale / 256;
         const tracePath = (reverse?: boolean) => {
+            this.ctx.save();
+            this.ctx.scale(xStep, drawScale);
             if (reverse) {
-                for (let i = freqRange - 1; i >= 0; i--) this.ctx.lineTo(i * xStep, buf[i] * drawScale);
+                for (let i = freqRange - 1; i >= 0; i--) this.ctx.lineTo(i, buffer[i]);
             } else {
-                for (let i = 0; i < freqRange; i++) this.ctx.lineTo(i * xStep, buf[i] * drawScale);
+                for (let i = 0; i < freqRange; i++) this.ctx.lineTo(i, buffer[i]);
             }
+            this.ctx.restore();
         };
         // every measurement accounts for line thickness!!
         const thickness = this.data.freqOptions.line.thickness;
@@ -373,8 +439,8 @@ class VisualizerRenderInstance {
         }
         this.ctx.restore();
         if (fill) this.ctx.lineTo(0 + halfThickness, yCenter + halfThickness);
-        this.ctx.lineCap = this.data.freqOptions.line.sharpEdges ? 'square' : 'round';
         this.ctx.lineJoin = this.data.freqOptions.line.sharpEdges ? 'miter' : 'round';
+        this.ctx.lineCap = this.data.freqOptions.line.sharpEdges ? 'square' : 'round';
         this.ctx.lineWidth = thickness;
         if (fill) {
             this.ctx.fillStyle = this.canvasStyle2;
@@ -390,6 +456,118 @@ class VisualizerRenderInstance {
         }
         this.ctx.strokeStyle = this.canvasStyle;
         this.ctx.stroke();
+    }
+    private drawWave(buffer: Float32Array, offset = 0, length = buffer.length): void {
+        const { width, height } = this.calcViewportSize();
+        const thickness = this.data.waveOptions.thickness;
+        const xStep = (width - thickness) / (length - 1);
+        this.ctx.lineJoin = this.data.waveOptions.sharpEdges ? 'miter' : 'round';
+        this.ctx.lineCap = this.data.waveOptions.sharpEdges ? 'square' : 'round';
+        this.ctx.lineWidth = thickness;
+        this.ctx.strokeStyle = this.canvasStyle;
+        this.ctx.beginPath();
+        this.ctx.save();
+        this.ctx.translate(thickness / 2, height / 2);
+        this.ctx.scale(xStep, this.data.waveOptions.scale * height / 4);
+        const step = this.data.waveOptions.resolution;
+        for (let i = 0; i < length; i += step) {
+            this.ctx.lineTo(i, buffer[i + offset]);
+        }
+        this.ctx.restore();
+        this.ctx.stroke();
+    }
+    private drawCorrWave(buffer: Float32Array): void {
+        const windowSize = buffer.length / 2;
+        if (this.corrwaveData === null) {
+            this.corrwaveData = {
+                buffer: buffer.slice(0, windowSize),
+                shift: 0
+            };
+            if (this.debugInfo) this.debugText.push(`Reset null: ${windowSize}`);
+        }
+        if (this.corrwaveData.buffer.length != windowSize) {
+            this.corrwaveData.buffer = buffer.slice(0, windowSize);
+            this.corrwaveData.shift = 0;
+            if (this.debugInfo) this.debugText.push(`Reset: ${windowSize}`);
+        }
+        if (this.debugInfo) this.debugText.push(`Previous shift: ${this.corrwaveData.shift}`);
+        // only correlate when playing, otherwise retain shift
+        let bestShift = this.corrwaveData.shift;
+        if (this.playing) {
+            // approximate lowest error by subtracting shifted window of buffer from smoothed temporal data
+            const samples = Math.min(windowSize, this.data.waveOptions.correlation.samples);
+            if (this.debugInfo) this.debugText.push(`Samples: ${samples} / ${this.data.waveOptions.correlation.samples}`);
+            const debugText: string[] = [];
+            let bestError = Infinity;
+            let lastShift = Infinity; // prevents calculating the same shift multiple times on edge cases
+            for (let i = 0; i < samples; i++) {
+                const shift = Math.round(windowSize * i / (samples - 1));
+                if (shift == lastShift) continue;
+                lastShift = shift;
+                let error = 0;
+                // TODO - stochastic sampling or similar to reduce performance hit of large buffers
+                for (let j = 0; j < windowSize; j++) {
+                    error += Math.abs(this.corrwaveData.buffer[j] - buffer[shift + j]);
+                }
+                if (this.debugInfo) debugText.push(`${i}/${shift}/${Math.round(error)}`);
+                if (error < bestError) {
+                    bestError = error;
+                    bestShift = shift;
+                }
+            }
+            if (this.debugInfo) {
+                this.debugText.push('Samples: ' + debugText.join(' '));
+                this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
+            }
+            // gradient descent on lowest sample to minimize error
+            let gain = this.data.waveOptions.correlation.gradientDescentGain;
+            debugText.length = 0;
+            debugText.push(`gain=${gain}`);
+            for (let i = 0; i < 16; i++) { // arbitrary maximum iterations
+                let adjError = 0;
+                // again stochastic sampling
+                if (bestShift == windowSize) {
+                    const adjShift = bestShift - 1;
+                    for (let j = 0; j < windowSize; j++) {
+                        adjError -= Math.abs(this.corrwaveData.buffer[j] - buffer[adjShift + j]);
+                    }
+                } else {
+                    const adjShift = bestShift + 1;
+                    for (let j = 0; j < windowSize; j++) {
+                        adjError += Math.abs(this.corrwaveData.buffer[j] - buffer[adjShift + j]);
+                    }
+                }
+                // get error for new shift
+                const newShift = Math.min(windowSize, Math.max(0, bestShift + Math.ceil(Math.abs((bestError - adjError) * gain)) * Math.sign(bestError - adjError)));
+                if (this.debugInfo) debugText.push(`${(bestError - adjError).toFixed(2)}/${bestShift}->${newShift}`);
+                if (bestShift == newShift) break;
+                let newError = 0;
+                // STOCHASTIC SAMPLING
+                for (let j = 0; j < windowSize; j++) {
+                    newError += Math.abs(this.corrwaveData.buffer[j] - buffer[newShift + j]);
+                }
+                if (newError < bestError) {
+                    bestError = newError;
+                    bestShift = newShift;
+                } else {
+                    // if it's worse then the gradient descent could be overtuned, automatically reduce gain
+                    gain *= 0.8; // again arbitrary
+                    debugText.push(`gain=${gain.toFixed(3)}`);
+                }
+            }
+            if (this.debugInfo) {
+                this.debugText.push('Gradient Descent: ' + debugText.join(' '));
+                this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
+            }
+            this.corrwaveData.shift = bestShift;
+            // average the shifted buffer with previous buffer
+            const smoothing = this.data.waveOptions.correlation.frameSmoothing;
+            const invSmoothing = 1 - smoothing;
+            for (let i = 0; i < windowSize; i++) {
+                this.corrwaveData.buffer[i] = smoothing * this.corrwaveData.buffer[i] + invSmoothing * buffer[this.corrwaveData.shift + i];
+            }
+        }
+        this.drawWave(buffer, bestShift, windowSize);
     }
 
     private calcViewportSize(): { readonly width: number, readonly height: number } {
@@ -440,11 +618,24 @@ class VisualizerRenderInstance {
         this.data = data;
         this.dataUpdated = true;
     }
+
+    private printDebugInfo = useThrottleFn((buffer: Uint8Array | Float32Array | Uint8Array[]) => {
+        const data = {
+            width: this.canvas.width,
+            height: this.canvas.height,
+            timings: this.timingsHistory,
+            data: this.data,
+            buffer: buffer
+        };
+        console.table(data, Object.keys(data));
+    }, 250);
 }
 
 type RendererMessageData = {
     type: 'draw'
     buffer: Uint8Array | Float32Array | Uint8Array[]
+    playing: boolean
+    debug: boolean
 } | ({
     type: 'drawResponse'
 } & VisualizerRendererFrameResults) | {
@@ -466,6 +657,8 @@ if (isInWorker) {
         onmessage = (e: RendererMessageEvent) => {
             switch (e.data.type) {
                 case 'draw':
+                    renderer.playing = e.data.playing;
+                    renderer.debugInfo = e.data.debug;
                     renderer.draw(e.data.buffer);
                     postMessage({
                         type: 'drawResponse'

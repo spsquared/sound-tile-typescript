@@ -98,7 +98,7 @@ export class MediaPlayer {
                 Visualizer.stop();
                 this.wakeLock.release();
             }
-        }, { throttle: 20 });
+        }, { throttle: 10, leading: true, trailing: true });
         watch(() => Visualizer.duration, () => {
             if (this.internalTimer.currentTime >= Visualizer.duration) this.setTime(Visualizer.duration);
         });

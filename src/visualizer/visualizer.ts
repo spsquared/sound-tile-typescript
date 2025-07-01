@@ -14,7 +14,7 @@ export const webWorkerSupported = 'Worker' in window;
  * Audio and drawing context of visualizer tiles.
  */
 export class Visualizer {
-    static readonly audioContext: AudioContext = new AudioContext();
+    static readonly audioContext: AudioContext = new AudioContext({ sampleRate: 48000 });
     static readonly gain: GainNode = Visualizer.audioContext.createGain();
 
     static {
@@ -40,7 +40,7 @@ export class Visualizer {
     private readonly effectScope: EffectScope;
 
     constructor(initData: VisualizerData, canvas: HTMLCanvasElement) {
-        this.data = reactive<VisualizerData>(initData);
+        this.data = reactive(initData);
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
         this.gain = Visualizer.audioContext.createGain();
@@ -147,9 +147,9 @@ export class Visualizer {
         } else if (this.data.mode == VisualizerMode.CHANNEL_LEVELS) {
             const data: Uint8Array[] = [];
             for (const a of this.analyzers) {
-                const buf = new Uint8Array(a.frequencyBinCount);
-                a.getByteTimeDomainData(buf);
-                data.push(buf);
+                const buffer = new Uint8Array(a.frequencyBinCount);
+                a.getByteTimeDomainData(buffer);
+                data.push(buffer);
             }
             await this.renderer.draw(data);
             this.ctx.reset();
@@ -211,6 +211,7 @@ export class Visualizer {
     static start(time: number = 0): void {
         this.time.startTime = Visualizer.audioContext.currentTime - time;
         this.time.playing = true;
+        VisualizerRenderer.playing = true;
         for (const vis of this.instances) {
             if (vis.visible) vis.start();
         }
@@ -218,6 +219,7 @@ export class Visualizer {
     }
     static stop(): void {
         this.time.playing = false;
+        VisualizerRenderer.playing = false;
         for (const vis of this.instances) vis.stop();
         Visualizer.audioContext.suspend();
     }
@@ -247,6 +249,9 @@ export class Visualizer {
                 await this.draw();
             }
         })();
+        document.addEventListener('keydown', (e) => {
+            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.debugInfo = !VisualizerRenderer.debugInfo;
+        });
     }
 }
 

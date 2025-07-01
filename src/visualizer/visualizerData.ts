@@ -96,7 +96,7 @@ export interface VisualizerData {
         correlation: {
             /**Number of initial samples used in visualizer */
             samples: number
-            /**Gain used by gradient descent after best sample is picked */
+            /**Gain used by gradient descent after best sample is picked, algorithm attempts to reduce gain if overtuned */
             gradientDescentGain: number
             /**Sets factor for blending the previous frame's data with the current data, 0-1 */
             frameSmoothing: number

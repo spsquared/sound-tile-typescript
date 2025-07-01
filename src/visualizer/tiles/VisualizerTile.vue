@@ -312,11 +312,11 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                     </label>
                     <label title="Number of samples in initial sampling of frame, higher is better but slower">
                         Samples
-                        <StrictNumberInput v-model="options.waveOptions.correlation.samples" :min="2" :max="64" :step="2"></StrictNumberInput>
+                        <StrictNumberInput v-model="options.waveOptions.correlation.samples" :min="2" :max="64" :strict-max="128" :step="2"></StrictNumberInput>
                     </label>
                     <label title="Gain of gradient descent error minimization of frame">
                         GD<br>Gain
-                        <StrictNumberInput v-model="options.waveOptions.correlation.gradientDescentGain" :min="0" :max="1" :step="0.1" :strict-step="0.01"></StrictNumberInput>
+                        <StrictNumberInput v-model="options.waveOptions.correlation.gradientDescentGain" :min="0" :max="1" :strict-max="4" :step="0.1" :strict-step="0.01"></StrictNumberInput>
                     </label>
                 </div>
             </TileOptionsSection>
