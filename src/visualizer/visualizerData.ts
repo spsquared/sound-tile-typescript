@@ -65,6 +65,13 @@ export interface VisualizerData {
             /**Use miter joins instead of rounded joins at corners in lines */
             sharpEdges: boolean
         }
+        /**Settings for spectrogram mode */
+        spectrogram: {
+            /**Number of previous frames to keep in view */
+            historyLength: number
+            /**Quantize frequency data to a certain number of levels, mostly unnoticeable in spectrograms - disabled at <2 */
+            quantization: number
+        }
         /**Sets factor for blending the previous frame's data with the current data, 0-1 (technical terms: a Blackman window) */
         smoothing: number
         /**Cutoff threshold for frequency scale, controls highest frequency drawn, 0-1 */
@@ -101,13 +108,6 @@ export interface VisualizerData {
             /**Sets factor for blending the previous frame's data with the current data, 0-1 */
             frameSmoothing: number
         }
-    }
-    /**Settings for spectrogram mode */
-    spectOptions: {
-        /**Number of previous frames to keep in view */
-        historyLength: number
-        /**Quantize frequency data to a certain number of levels, mostly unnoticeable in spectrograms - disabled at <2 */
-        quantization: number
     }
     /**Settings for channel levels mode */
     levelOptions: {
@@ -149,6 +149,10 @@ export function createDefaultVisualizerData(): VisualizerData {
                 thickness: 2,
                 sharpEdges: false
             },
+            spectrogram: {
+                historyLength: 360,
+                quantization: 0
+            },
             smoothing: 0.8,
             freqCutoff: 1,
             minDbCutoff: -100,
@@ -168,10 +172,6 @@ export function createDefaultVisualizerData(): VisualizerData {
                 gradientDescentGain: 0.5,
                 frameSmoothing: 0.9
             }
-        },
-        spectOptions: {
-            historyLength: 360,
-            quantization: 0
         },
         levelOptions: {
             channels: 2,

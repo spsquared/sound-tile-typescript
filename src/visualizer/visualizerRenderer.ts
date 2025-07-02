@@ -135,14 +135,15 @@ class VisualizerRenderInstance {
     readonly ctx: OffscreenCanvasRenderingContext2D;
     private data: VisualizerSettingsData;
     private dataUpdated: boolean = false;
-    private canvasStyle: CanvasGradient | string = '#FFFFFF';
-    private canvasStyle2: CanvasGradient | string = '#FFFFFF';
-    private chromaScale: chroma.Scale = chroma.scale(['#FFFFFF']);
-    // private chromaScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
+    private colorStyle: CanvasGradient | string = '#FFFFFF';
+    private colorStyle2: CanvasGradient | string = '#FFFFFF';
+    private colorScale: chroma.Scale = chroma.scale(['#FFFFFF']);
+    // private colorScale2: chroma.Scale = chroma.scale(['#FFFFFF']);
     private corrwaveData: {
         buffer: Float32Array,
         shift: number
     } | null = null;
+    private spectogramData: OffscreenCanvas | null = null;
 
     playing: boolean = false;
     debugInfo: boolean = false;
@@ -162,20 +163,21 @@ class VisualizerRenderInstance {
         this.debugText.length = 0;
         this.ctx.reset();
         if (this.dataUpdated) {
-            this.canvasStyle = this.createCanvasStyle(this.data.color);
-            this.canvasStyle2 = this.createCanvasStyle(this.data.color2, this.data.color2Alpha);
-            this.chromaScale = this.createChromaScale(this.data.color);
-            // this.chromaScale2 = this.createChromaScale(this.data.color2, this.data.color2Alpha);
+            this.colorStyle = this.createColorStyle(this.data.color);
+            this.colorStyle2 = this.createColorStyle(this.data.color2, this.data.color2Alpha);
+            this.colorScale = this.createColorScale(this.data.color);
+            // this.colorScale2 = this.createColorScale(this.data.color2, this.data.color2Alpha);
         }
-        // move origin to bottom left and apply transforms
+        // move origin to bottom left and apply transforms & padding
         this.ctx.translate(0, this.canvas.height);
         this.ctx.scale(1, -1);
         this.ctx.scale(this.data.flipX ? -1 : 1, this.data.flipY ? -1 : 1);
         this.ctx.translate(this.data.flipX ? -this.canvas.width : 0, this.data.flipY ? -this.canvas.height : 0);
         if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
-        // padding thing
         this.ctx.translate(this.data.paddingInline, this.data.paddingBlock);
+        const { width, height } = this.calcViewportSize();
         // spaghetti v2
+        this.ctx.save();
         switch (this.data.mode) {
             case VisualizerMode.FREQ_BAR:
                 if (!(buffer instanceof Uint8Array)) break;
@@ -202,15 +204,20 @@ class VisualizerRenderInstance {
                 this.drawCorrWave(buffer);
                 break;
             case VisualizerMode.SPECTROGRAM:
-                // spectrogram can quantize without losing the smoothness of gradients and it does help performance
+                if (!(buffer instanceof Uint8Array)) break;
+                this.drawFreqSpectrogram(buffer);
                 break;
             case VisualizerMode.CHANNEL_LEVELS:
                 break;
         }
+        this.ctx.restore();
+        // clip stuff that intrudes out of padded area
+        this.ctx.globalCompositeOperation = 'destination-in';
+        this.ctx.fillRect(0, 0, width, height);
+        this.ctx.globalCompositeOperation = 'source-over';
         // free up some memory by removing unused history data
-        if (this.data.mode != VisualizerMode.WAVE_CORRELATED) {
-            this.corrwaveData = null;
-        }
+        if (this.data.mode != VisualizerMode.WAVE_CORRELATED) this.corrwaveData = null;
+        if (this.data.mode != VisualizerMode.SPECTROGRAM) this.spectogramData = null;
         // track performance metrics
         const endTime = performance.now();
         this.frames.push(endTime);
@@ -223,7 +230,6 @@ class VisualizerRenderInstance {
         this.fpsHistory.push(this.frames.length);
         if (this.debugInfo) {
             if (this.playing) this.printDebugInfo(buffer);
-            // some metrics
             this.ctx.resetTransform();
             this.ctx.font = '14px monospace';
             const minArr = (a: number[]): number => a.reduce((p, c) => Math.min(p, c), 0);
@@ -244,6 +250,7 @@ class VisualizerRenderInstance {
                 this.ctx.fillText(text[i], 12, 12 + i * 16);
             }
         }
+        this.dataUpdated = false;
     }
 
     private drawFreqBars(buffer: Uint8Array, lumi?: boolean): void {
@@ -254,14 +261,14 @@ class VisualizerRenderInstance {
         const xShift = (xStep - barWidth) / 2;
         const draw = lumi ? () => {
             // luminance bars
-            const lumiScale = this.data.freqOptions.scale / 256;
+            const lumiScale = this.data.freqOptions.scale / 255;
             if (this.data.altColorMode && this.data.color.type == 'gradient') {
                 for (let i = 0; i < freqRange; i++) {
-                    this.ctx.fillStyle = this.chromaScale(buffer[i] * lumiScale).hex();
+                    this.ctx.fillStyle = this.colorScale(buffer[i] * lumiScale).hex();
                     this.ctx.fillRect(i * xStep + xShift, 0, barWidth, height);
                 }
             } else {
-                this.ctx.fillStyle = this.canvasStyle;
+                this.ctx.fillStyle = this.colorStyle;
                 for (let i = 0; i < freqRange; i++) {
                     this.ctx.globalAlpha = Math.min(1, buffer[i] * lumiScale);
                     this.ctx.fillRect(i * xStep + xShift, 0, barWidth, height);
@@ -269,8 +276,8 @@ class VisualizerRenderInstance {
             }
         } : () => {
             // height bars
-            const dataQuantize = this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 256;
-            const dataScale = this.data.freqOptions.scale * dataQuantize / 256;
+            const dataQuantize = this.data.freqOptions.bar.ledEffect ? this.data.freqOptions.bar.ledCount : 255;
+            const dataScale = this.data.freqOptions.scale * dataQuantize / 255;
             const drawScale = height / dataQuantize;
             const minHeight = this.data.freqOptions.bar.ledEffect ? height / this.data.freqOptions.bar.ledCount : this.data.freqOptions.bar.minLength;
             const yReflect = this.data.freqOptions.reflect;
@@ -281,11 +288,11 @@ class VisualizerRenderInstance {
                 for (let i = 0; i < freqRange; i++) {
                     const t = Math.ceil(buffer[i] * dataScale);
                     const barHeight = Math.max(minHeight, t * drawScale);
-                    this.ctx.fillStyle = this.chromaScale(t * colorScale).hex();
+                    this.ctx.fillStyle = this.colorScale(t * colorScale).hex();
                     this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
                 }
             } else {
-                this.ctx.fillStyle = this.canvasStyle;
+                this.ctx.fillStyle = this.colorStyle;
                 for (let i = 0; i < freqRange; i++) {
                     const barHeight = Math.max(minHeight, Math.ceil(buffer[i] * dataScale) * drawScale);
                     this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
@@ -347,7 +354,7 @@ class VisualizerRenderInstance {
         const { width, height } = this.calcViewportSize();
         const freqRange = Math.ceil(buffer.length * this.data.freqOptions.freqCutoff);
         const xStep = width / (freqRange - 1);
-        const drawScale = height * this.data.freqOptions.scale / 256;
+        const drawScale = height * this.data.freqOptions.scale / 255;
         const tracePath = (reverse?: boolean) => {
             this.ctx.save();
             this.ctx.scale(xStep, drawScale);
@@ -443,7 +450,7 @@ class VisualizerRenderInstance {
         this.ctx.lineCap = this.data.freqOptions.line.sharpEdges ? 'square' : 'round';
         this.ctx.lineWidth = thickness;
         if (fill) {
-            this.ctx.fillStyle = this.canvasStyle2;
+            this.ctx.fillStyle = this.colorStyle2;
             this.ctx.fill();
             // fix visible overlapping of stroke and fill with translucency by cutting away fill
             // alpha check isn't perfect since colors can have translucency themselves without this
@@ -454,7 +461,7 @@ class VisualizerRenderInstance {
                 this.ctx.globalCompositeOperation = 'source-over';
             }
         }
-        this.ctx.strokeStyle = this.canvasStyle;
+        this.ctx.strokeStyle = this.colorStyle;
         this.ctx.stroke();
     }
     private drawWave(buffer: Float32Array, offset = 0, length = buffer.length): void {
@@ -464,7 +471,7 @@ class VisualizerRenderInstance {
         this.ctx.lineJoin = this.data.waveOptions.sharpEdges ? 'miter' : 'round';
         this.ctx.lineCap = this.data.waveOptions.sharpEdges ? 'square' : 'round';
         this.ctx.lineWidth = thickness;
-        this.ctx.strokeStyle = this.canvasStyle;
+        this.ctx.strokeStyle = this.colorStyle;
         this.ctx.beginPath();
         this.ctx.save();
         this.ctx.translate(thickness / 2, height / 2);
@@ -478,16 +485,11 @@ class VisualizerRenderInstance {
     }
     private drawCorrWave(buffer: Float32Array): void {
         const windowSize = buffer.length / 2;
-        if (this.corrwaveData === null) {
+        if (this.corrwaveData === null || this.corrwaveData.buffer.length != windowSize) {
             this.corrwaveData = {
                 buffer: buffer.slice(0, windowSize),
                 shift: 0
             };
-            if (this.debugInfo) this.debugText.push(`Reset null: ${windowSize}`);
-        }
-        if (this.corrwaveData.buffer.length != windowSize) {
-            this.corrwaveData.buffer = buffer.slice(0, windowSize);
-            this.corrwaveData.shift = 0;
             if (this.debugInfo) this.debugText.push(`Reset: ${windowSize}`);
         }
         if (this.debugInfo) this.debugText.push(`Previous shift: ${this.corrwaveData.shift}`);
@@ -569,6 +571,102 @@ class VisualizerRenderInstance {
         }
         this.drawWave(buffer, bestShift, windowSize);
     }
+    private drawFreqSpectrogram(buffer: Uint8Array): void {
+        const { width, height } = this.calcViewportSize();
+        let forceRedraw = false;
+        if (this.spectogramData === null || this.spectogramData.width != this.data.freqOptions.spectrogram.historyLength || this.spectogramData.height != buffer.length) {
+            forceRedraw = true;
+            this.spectogramData = new OffscreenCanvas(this.data.freqOptions.spectrogram.historyLength, buffer.length);
+            const ctx = this.spectogramData.getContext('2d')!;
+            ctx.imageSmoothingEnabled = false;
+            if (this.debugInfo) this.debugText.push(`Reset: ${this.spectogramData.width}x${this.spectogramData.height}`);
+        }
+        const spectFrame = this.spectogramData;
+        const spectCtx = spectFrame.getContext('2d')!;
+        const freqRange = Math.ceil(buffer.length * this.data.freqOptions.freqCutoff);
+        const altColor = this.data.altColorMode && this.data.color.type == 'gradient';
+        if (this.playing || forceRedraw) {
+            // spectFrame is unscaled (1x1 pixel = 1 frame x 1 frequency bin) to minimize resource usage
+            spectCtx.resetTransform();
+            spectCtx.globalCompositeOperation = 'copy';
+            spectCtx.drawImage(spectFrame, -1, 0);
+            spectCtx.globalCompositeOperation = 'source-over';
+            spectCtx.save();
+            spectCtx.translate(spectFrame.width - 1, 0);
+            // spectrogram can quantize without losing the smoothness of gradients and it does help performance
+            const scale = this.data.freqOptions.scale / 255;
+            const dataQuantize = Math.round(this.data.freqOptions.spectrogram.quantization); // because user input bad
+            if (dataQuantize >= 2) {
+                // array of buckets, each entry is position, sorted ascending (inserted in ascending order)
+                const dataScale = scale * dataQuantize;
+                const maxBucket = dataQuantize - 1;
+                // shenanigans needed to divide 0-1 scale evenly
+                const buckets: number[][] = new Array(dataQuantize).fill(0).map(() => []);
+                for (let i = 0; i < freqRange; i++) {
+                    buckets[Math.min(maxBucket, Math.floor(buffer[i] * dataScale))].push(i);
+                }
+                if (this.debugInfo) this.debugText.push(`Quantization buckets: ${dataQuantize} - ${buckets.map((v) => v.length).join(', ')}`);
+                // buckets are drawn in consecutive blocks of the same color (probably unnecessary but original had it)
+                if (!altColor) spectCtx.fillStyle = '#FFFFFF';
+                for (let i = 0; i < dataQuantize; i++) {
+                    if (altColor) spectCtx.fillStyle = this.colorScale(i / maxBucket).hex();
+                    else spectCtx.globalAlpha = i / maxBucket;
+                    const bucket = buckets[i];
+                    let j = 0, k = 0, startY = 0;
+                    while (j < bucket.length) {
+                        k = j;
+                        startY = bucket[j];
+                        do j++;
+                        while (j < bucket.length && bucket[j] - bucket[j - 1] == 1);
+                        spectCtx.fillRect(0, startY, 1, j - k);
+                    }
+                }
+            } else {
+                if (this.debugInfo) this.debugText.push('No quantizing')
+                if (altColor) {
+                    for (let i = 0; i < freqRange; i++) {
+                        spectCtx.fillStyle = this.colorScale(buffer[i] * scale).hex();
+                        spectCtx.fillRect(0, i, 1, 1);
+                    }
+                } else {
+                    // color/gradient is applied to spectrogram later
+                    spectCtx.fillStyle = '#FFFFFF';
+                    for (let i = 0; i < freqRange; i++) {
+                        spectCtx.globalAlpha = Math.min(1, buffer[i] * scale);
+                        spectCtx.fillRect(0, i, 1, 1);
+                    }
+                }
+            }
+            spectCtx.restore();
+        }
+        this.ctx.imageSmoothingEnabled = false; // prevents anti-aliasing when scaling up
+        this.ctx.save();
+        switch (this.data.freqOptions.symmetry) {
+            case 'none':
+                this.ctx.drawImage(spectFrame, 0, 0, spectFrame.width, freqRange, 0, 0, width, height);
+                break;
+            case 'low':
+                this.ctx.translate(0, height / 2);
+                this.ctx.drawImage(spectFrame, 0, 0, spectFrame.width, freqRange, 0, 0, width, height / 2);
+                this.ctx.scale(1, -1);
+                this.ctx.drawImage(spectFrame, 0, 0, spectFrame.width, freqRange, 0, 0, width, height / 2);
+                break;
+            case 'high':
+                this.ctx.drawImage(spectFrame, 0, 0, spectFrame.width, freqRange, 0, 0, width, height / 2);
+                this.ctx.translate(0, height);
+                this.ctx.scale(1, -1);
+                this.ctx.drawImage(spectFrame, 0, 0, spectFrame.width, freqRange, 0, 0, width, height / 2);
+                break;
+        }
+        this.ctx.restore();
+        this.ctx.imageSmoothingEnabled = true;
+        if (!altColor) {
+            // apply color/gradient by tinting and using a grayscale alpha version as a mask
+            this.ctx.globalCompositeOperation = 'source-in';
+            this.ctx.fillStyle = this.colorStyle;
+            this.ctx.fillRect(0, 0, width, height);
+        }
+    }
 
     private calcViewportSize(): { readonly width: number, readonly height: number } {
         return {
@@ -576,12 +674,11 @@ class VisualizerRenderInstance {
             height: (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2
         };
     }
-    private createCanvasStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {
+    private createColorStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {
         if (color.type == 'solid') {
             return chroma(color.color).alpha(color.alpha * alpha).hex();
         } else if (color.type == 'gradient') {
-            const width = (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline;
-            const height = (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock;
+            const { width, height } = this.calcViewportSize();
             const angle = color.angle * Math.PI / 180;
             const halfWidth = width / 2;
             const halfHeight = height / 2;
@@ -599,7 +696,7 @@ class VisualizerRenderInstance {
         }
         return 'white';
     }
-    private createChromaScale(color: ColorData, alpha: number = 1): chroma.Scale {
+    private createColorScale(color: ColorData, alpha: number = 1): chroma.Scale {
         if (color.type == 'solid') {
             return chroma.scale([chroma(color.color).alpha(color.alpha * alpha)]);
         } else if (color.type == 'gradient') {

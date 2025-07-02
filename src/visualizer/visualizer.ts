@@ -92,17 +92,18 @@ export class Visualizer {
                     this.gain.connect(analyzer);
                 }
             }, { immediate: true });
-            watchEffect(() => {
+            // watchEffect is unreliable and randomly breaks when other files change so fuck that
+            watch(() => this.data.fftSize, () => {
                 if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
                     for (const a of this.analyzers) a.fftSize = this.data.fftSize;
                 }
             });
-            watchEffect(() => {
+            watch(() => this.data.freqOptions.minDbCutoff, () => {
                 if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
                     for (const a of this.analyzers) a.minDecibels = this.data.freqOptions.minDbCutoff;
                 }
             });
-            watchEffect(() => {
+            watch(() => this.data.freqOptions.smoothing, () => {
                 if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
                     for (const a of this.analyzers) a.smoothingTimeConstant = this.data.freqOptions.smoothing;
                 }

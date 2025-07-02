@@ -39,7 +39,7 @@ const { width: canvasWidth, height: canvasHeight } = useElementSize(props.tile.c
 // guess I don't need my throttling code anymore
 throttledWatch([canvasWidth, canvasHeight], () => {
     props.tile.visualizer.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
-}, { throttle: 100, immediate: true });
+}, { throttle: 100, immediate: true, leading: true, trailing: true });
 
 const uploadSourceDisabled = ref(false);
 async function uploadSource() {
@@ -171,18 +171,6 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                     </div>
                 </div>
             </TileOptionsSection>
-            <TileOptionsSection title="Spectrogram Options" v-show="spectrogramModes.includes(options.mode)">
-                <div class="optionsGrid">
-                    <label title="Length of history in frames, dependent on device framerate, higher is longer time but slower">
-                        History<br>({{ (options.spectOptions.historyLength / 60).toFixed(1) }}s @ 60fps)
-                        <StrictNumberInput v-model="options.spectOptions.historyLength" :min="20" :strict-min="1" :max="1200" :strict-max="18000" :step="20" :strict-step="1"></StrictNumberInput>
-                    </label>
-                    <label title="Quantizes frequency data into discrete levels to help performance, setting to <2 disables it">
-                        Quantization
-                        <StrictNumberInput v-model="options.spectOptions.quantization" :min="0" :max="16" :strict-max="256" :step="2" :strict-step="1"></StrictNumberInput>
-                    </label>
-                </div>
-            </TileOptionsSection>
             <TileOptionsSection title="Audio Levels Options" v-show="levelsModes.includes(options.mode)">
                 <!-- audio levels reuses bar frequency options -->
                 <label title="Number of audio channels to sample">
@@ -280,6 +268,18 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                     <Toggle v-model="options.freqOptions.line.sharpEdges"></Toggle>
                 </label>
             </TileOptionsSection>
+            <TileOptionsSection title="Spectrogram" v-show="spectrogramModes.includes(options.mode)">
+                <div class="optionsGrid">
+                    <label title="Length of history in frames, dependent on device framerate, higher is longer time but slower">
+                        History<br>({{ (options.freqOptions.spectrogram.historyLength / 60).toFixed(1) }}s @ 60fps)
+                        <StrictNumberInput v-model="options.freqOptions.spectrogram.historyLength" :min="20" :strict-min="1" :max="1200" :strict-max="18000" :step="20" :strict-step="1"></StrictNumberInput>
+                    </label>
+                    <label title="Quantizes frequency data into discrete levels to help performance, setting to <2 disables it">
+                        Quantization
+                        <StrictNumberInput v-model="options.freqOptions.spectrogram.quantization" :min="0" :max="16" :strict-max="128" :step="2" :strict-step="1"></StrictNumberInput>
+                    </label>
+                </div>
+            </TileOptionsSection>
             <TileOptionsSection title="Waveform Options" v-show="waveformModes.includes(options.mode)">
                 <div class="optionsRows">
                     <div>
@@ -289,7 +289,7 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                         </label>
                         <label title="Reduce the time resolution of the waveform drawn by drawing only every N points">
                             Downsampling
-                            <StrictNumberInput v-model="options.waveOptions.resolution" :min="1" :max="16" :step="1"></StrictNumberInput>
+                            <StrictNumberInput v-model="options.waveOptions.resolution" :min="1" :max="32" :step="1"></StrictNumberInput>
                         </label>
                     </div>
                     <div>
