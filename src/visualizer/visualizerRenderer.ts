@@ -620,14 +620,13 @@ class VisualizerRenderInstance {
     }
 
     private printDebugInfo = useThrottleFn((buffer: Uint8Array | Float32Array | Uint8Array[]) => {
-        const data = {
+        console.debug({
             width: this.canvas.width,
             height: this.canvas.height,
             timings: this.timingsHistory,
             data: this.data,
             buffer: buffer
-        };
-        console.table(data, Object.keys(data));
+        });
     }, 250);
 }
 
