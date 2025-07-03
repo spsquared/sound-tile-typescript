@@ -14,7 +14,7 @@ export enum VisualizerMode {
     WAVE_DIRECT,
     WAVE_CORRELATED,
     SPECTROGRAM,
-    CHANNEL_LEVELS
+    CHANNEL_PEAKS
 }
 
 /**

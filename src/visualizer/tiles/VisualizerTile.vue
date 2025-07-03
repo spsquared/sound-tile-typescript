@@ -78,12 +78,12 @@ syncRef(colorSync2A, colorSync2B);
 const frequencyModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM];
 const waveformModes = [VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED];
 const spectrogramModes = [VisualizerMode.SPECTROGRAM];
-const levelsModes = [VisualizerMode.CHANNEL_LEVELS];
+const peakModes = [VisualizerMode.CHANNEL_PEAKS];
 const barModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE];
 const lineModes = [VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL];
 const corrwaveModes = [VisualizerMode.WAVE_CORRELATED];
 const secondaryColorSupportedModes = [VisualizerMode.FREQ_FILL];
-const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM, VisualizerMode.CHANNEL_LEVELS];
+const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM, VisualizerMode.CHANNEL_PEAKS];
 
 const reflectionDisabled = computed(() => props.tile.visualizer.data.mode == VisualizerMode.SPECTROGRAM || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
 const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptions.bar.ledEffect || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
@@ -138,7 +138,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                                 <option :value="VisualizerMode.WAVE_DIRECT">Wave (Direct)</option>
                                 <option :value="VisualizerMode.WAVE_CORRELATED">Wave (Corr)</option>
                                 <option :value="VisualizerMode.SPECTROGRAM">Spectrogram</option>
-                                <option :value="VisualizerMode.CHANNEL_LEVELS">Channel Levels</option>
+                                <option :value="VisualizerMode.CHANNEL_PEAKS">Channel Levels</option>
                             </select>
                         </label>
                         <label title="FFT window size - larger FFT increases frequency resolution">
@@ -207,11 +207,11 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                         </label>
                         <label title="Use a logarithmic frequency scale">
                             Log Scale
-                            <Toggle v-model="options.freqOptions.useLogScale"></Toggle>
+                            <Toggle v-model="options.freqOptions.useLogScale" disabled></Toggle>
                         </label>
                         <label title="Draw the frequency scale on the visualizer">
                             Draw Scale
-                            <Toggle v-model="options.freqOptions.showScale"></Toggle>
+                            <Toggle v-model="options.freqOptions.showScale" disabled></Toggle>
                         </label>
                     </div>
                 </div>
@@ -240,7 +240,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                     </div>
                 </div>
             </TileOptionsSection>
-            <TileOptionsSection title="Channel Peak Options" v-show="levelsModes.includes(options.mode)">
+            <TileOptionsSection title="Channel Peak Options" v-show="peakModes.includes(options.mode)">
                 <div class="optionsGrid">
                     <!-- most of this is a direct copy-paste of frequency and bar options -->
                     <div class="optionsGrid">
@@ -251,9 +251,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                             </select>
                         </label>
                         <label title="Smoothing of levels over time">
-                            <span style="white-space-collapse: preserve;">
-                                Smoothing<br>({{ Math.round(options.levelOptions.frameSmoothing * 100).toString() }}%)
-                            </span>
+                            Smoothing<br>({{ Math.round(options.levelOptions.frameSmoothing * 100).toString() }}%)
                             <Slider length="100px" v-model="options.levelOptions.frameSmoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.levelOptions.frameSmoothing * 100)}%`"></Slider>
                         </label>
                         <label title="Scaling factor of frequency data">
@@ -272,15 +270,15 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                         </label>
                         <label title="Use a logarithmic decibel scale">
                             Decibels
-                            <Toggle v-model="options.levelOptions.useLogScale"></Toggle>
+                            <Toggle v-model="options.levelOptions.useLogScale" disabled></Toggle>
                         </label>
                         <label title="Draw the frequency scale on the visualizer">
                             Draw Scale
-                            <Toggle v-model="options.levelOptions.showScale"></Toggle>
+                            <Toggle v-model="options.levelOptions.showScale" disabled></Toggle>
                         </label>
                         <label title="Label the channel numbers of each bar">
                             Draw Labels
-                            <Toggle v-model="options.levelOptions.showLabels"></Toggle>
+                            <Toggle v-model="options.levelOptions.showLabels" disabled></Toggle>
                         </label>
                     </div>
                     <div class="optionsGrid">

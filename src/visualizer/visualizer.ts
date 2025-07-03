@@ -64,7 +64,7 @@ export class Visualizer {
             watchEffect(() => this.data.mute ? this.gain.disconnect(Visualizer.gain) : this.gain.connect(Visualizer.gain));
             watch([() => this.data.mode, () => this.data.levelOptions.channels, () => this.data.buffer], ([], [lastMode, lastChannels, lastBuffer]) => {
                 // this could blow up very easily!!
-                if (this.data.mode == VisualizerMode.CHANNEL_LEVELS && (lastMode != VisualizerMode.CHANNEL_LEVELS || this.data.levelOptions.channels != lastChannels)) {
+                if (this.data.mode == VisualizerMode.CHANNEL_PEAKS && (lastMode != VisualizerMode.CHANNEL_PEAKS || this.data.levelOptions.channels != lastChannels)) {
                     // yeetus analyzers-us
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     else for (const a of this.analyzers) this.gain.disconnect(a);
@@ -79,7 +79,7 @@ export class Visualizer {
                         this.splitter.connect(analyzer, i);
                         this.analyzers.push(analyzer);
                     }
-                } else if (this.data.mode != VisualizerMode.CHANNEL_LEVELS && (lastMode == VisualizerMode.CHANNEL_LEVELS || this.data.buffer != lastBuffer)) {
+                } else if (this.data.mode != VisualizerMode.CHANNEL_PEAKS && (lastMode == VisualizerMode.CHANNEL_PEAKS || this.data.buffer != lastBuffer)) {
                     // reset analyzer when audio source changed too
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     this.splitter?.disconnect();
@@ -95,17 +95,17 @@ export class Visualizer {
             }, { immediate: true });
             // watchEffect is unreliable and randomly breaks when other files change so fuck that
             watch(() => this.data.fftSize, () => {
-                if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
+                if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) {
                     for (const a of this.analyzers) a.fftSize = this.data.fftSize;
                 }
             });
             watch(() => this.data.freqOptions.minDbCutoff, () => {
-                if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
+                if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) {
                     for (const a of this.analyzers) a.minDecibels = this.data.freqOptions.minDbCutoff;
                 }
             });
             watch(() => this.data.freqOptions.smoothing, () => {
-                if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) {
+                if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) {
                     for (const a of this.analyzers) a.smoothingTimeConstant = this.data.freqOptions.smoothing;
                 }
             });
@@ -146,7 +146,7 @@ export class Visualizer {
                 this.ctx.reset();
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
-        } else if (this.data.mode == VisualizerMode.CHANNEL_LEVELS) {
+        } else if (this.data.mode == VisualizerMode.CHANNEL_PEAKS) {
             const data: Uint8Array[] = [];
             for (const a of this.analyzers) {
                 const buffer = new Uint8Array(a.frequencyBinCount);

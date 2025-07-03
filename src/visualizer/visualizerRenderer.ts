@@ -208,9 +208,9 @@ class VisualizerRenderInstance {
                 if (!(buffer instanceof Uint8Array)) break;
                 this.drawFreqSpectrogram(buffer);
                 break;
-            case VisualizerMode.CHANNEL_LEVELS:
+            case VisualizerMode.CHANNEL_PEAKS:
                 if (!Array.isArray(buffer)) break;
-                this.drawLevels(buffer);
+                this.drawPeaks(buffer);
                 break;
         }
         this.ctx.restore();
@@ -221,7 +221,7 @@ class VisualizerRenderInstance {
         // free up some memory by removing unused history data
         if (this.data.mode != VisualizerMode.WAVE_CORRELATED) this.corrwaveData = null;
         if (this.data.mode != VisualizerMode.SPECTROGRAM) this.spectogramData = null;
-        if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) this.levelsData = null;
+        if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) this.levelsData = null;
         // track performance metrics
         const endTime = performance.now();
         this.frames.push(endTime);
@@ -672,7 +672,7 @@ class VisualizerRenderInstance {
             this.ctx.fillRect(0, 0, width, height);
         }
     }
-    private drawLevels(buffers: Uint8Array[]): void {
+    private drawPeaks(buffers: Uint8Array[]): void {
         this.levelsData ??= [];
         if (this.playing || this.levelsData.length != buffers.length) {
             this.levelsData.length = buffers.length; // not really a buffer but who cares lol
@@ -687,7 +687,7 @@ class VisualizerRenderInstance {
                 }
                 this.levelsData[i] = max * invSmoothing + (this.levelsData[i] ?? max) * smoothing;
             }
-            this.debugText.push('Levels: ' + this.levelsData.join(', '))
+            this.debugText.push('Peaks: ' + this.levelsData.join(', '))
         }
         // WOOOOOOO COPY SPAGHETTI TIME
         const { width, height } = this.calcViewportSize();
