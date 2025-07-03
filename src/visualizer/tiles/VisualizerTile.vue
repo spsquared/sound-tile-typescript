@@ -79,7 +79,7 @@ const frequencyModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LINE, Visua
 const waveformModes = [VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED];
 const spectrogramModes = [VisualizerMode.SPECTROGRAM];
 const levelsModes = [VisualizerMode.CHANNEL_LEVELS];
-const barModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.CHANNEL_LEVELS];
+const barModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE];
 const lineModes = [VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL];
 const corrwaveModes = [VisualizerMode.WAVE_CORRELATED];
 const secondaryColorSupportedModes = [VisualizerMode.FREQ_FILL];
@@ -87,6 +87,7 @@ const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUM
 
 const reflectionDisabled = computed(() => props.tile.visualizer.data.mode == VisualizerMode.SPECTROGRAM || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
 const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptions.bar.ledEffect || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
+const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelOptions.ledEffect);
 </script>
 
 <template>
@@ -171,21 +172,6 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                     </div>
                 </div>
             </TileOptionsSection>
-            <TileOptionsSection title="Audio Levels Options" v-show="levelsModes.includes(options.mode)">
-                <!-- audio levels reuses bar frequency options -->
-                <label title="Number of audio channels to sample">
-                    Channels
-                    <select v-model="options.levelOptions.channels">
-                        <option v-for="i in channelCounts" :key="i" :value="i">{{ i }}</option>
-                    </select>
-                </label>
-                <label title="Smoothing of levels over time">
-                    <span style="white-space-collapse: preserve;">
-                        Smoothing ({{ Math.round(options.levelOptions.frameSmoothing * 100).toString().padStart(3, ' ') }}%)
-                    </span>
-                    <Slider length="100px" v-model="options.levelOptions.frameSmoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.levelOptions.frameSmoothing * 100)}%`"></Slider>
-                </label>
-            </TileOptionsSection>
             <TileOptionsSection title="Frequency Options" v-show="frequencyModes.includes(options.mode)">
                 <div class="optionsGrid">
                     <div class="optionsGrid">
@@ -201,7 +187,7 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                             dB Cut<br>(dB)
                             <StrictNumberInput v-model="options.freqOptions.minDbCutoff" :min="-120" :strict-min="-Infinity" :max="0" :step="5" :strict-step="0.1"></StrictNumberInput>
                         </label>
-                        <label title="Scaling factor of frequency data">
+                        <label title="Scaling factor of data">
                             Scale
                             <StrictNumberInput v-model:model-value="options.freqOptions.scale" :min="0" :max="2" :strict-max="Infinity" :step="0.05" :strict-step="0"></StrictNumberInput>
                         </label>
@@ -221,11 +207,98 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                         </label>
                         <label title="Use a logarithmic frequency scale">
                             Log Scale
-                            <Toggle></Toggle>
+                            <Toggle v-model="options.freqOptions.useLogScale"></Toggle>
                         </label>
                         <label title="Draw the frequency scale on the visualizer">
                             Draw Scale
-                            <Toggle></Toggle>
+                            <Toggle v-model="options.freqOptions.showScale"></Toggle>
+                        </label>
+                    </div>
+                </div>
+            </TileOptionsSection>
+            <TileOptionsSection title="Waveform Options" v-show="waveformModes.includes(options.mode)">
+                <div class="optionsRows">
+                    <div>
+                        <label title="Scale factor for amplitude of waveform">
+                            Scale
+                            <StrictNumberInput v-model="options.waveOptions.scale" :min="0" :max="10" :strict-max="Infinity" :step="0.1" :strict-step="0"></StrictNumberInput>
+                        </label>
+                        <label title="Reduce the time resolution of the waveform drawn by drawing only every N points">
+                            Downsampling
+                            <StrictNumberInput v-model="options.waveOptions.resolution" :min="1" :max="32" :step="1"></StrictNumberInput>
+                        </label>
+                    </div>
+                    <div>
+                        <label title="Thickness of lines in pixels">
+                            Line Width
+                            <StrictNumberInput v-model="options.waveOptions.thickness" :min="1" :max="32" :strict-max="256" :step="1"></StrictNumberInput>
+                        </label>
+                        <label title="Use mitered instead of rounded line joins">
+                            Sharp Joins
+                            <Toggle v-model="options.waveOptions.sharpEdges"></Toggle>
+                        </label>
+                    </div>
+                </div>
+            </TileOptionsSection>
+            <TileOptionsSection title="Channel Peak Options" v-show="levelsModes.includes(options.mode)">
+                <div class="optionsGrid">
+                    <!-- most of this is a direct copy-paste of frequency and bar options -->
+                    <div class="optionsGrid">
+                        <label title="Number of audio channels to sample">
+                            Channels
+                            <select v-model="options.levelOptions.channels" style="width: 5em;">
+                                <option v-for="i in channelCounts" :key="i" :value="i">{{ i }}</option>
+                            </select>
+                        </label>
+                        <label title="Smoothing of levels over time">
+                            <span style="white-space-collapse: preserve;">
+                                Smoothing<br>({{ Math.round(options.levelOptions.frameSmoothing * 100).toString() }}%)
+                            </span>
+                            <Slider length="100px" v-model="options.levelOptions.frameSmoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.levelOptions.frameSmoothing * 100)}%`"></Slider>
+                        </label>
+                        <label title="Scaling factor of frequency data">
+                            Scale
+                            <StrictNumberInput v-model:model-value="options.levelOptions.scale" :min="0" :max="2" :strict-max="Infinity" :step="0.05" :strict-step="0"></StrictNumberInput>
+                        </label>
+                        <label title="&quot;Reflect&quot; the visualizer across an axis parallel to the channel axis">
+                            Reflect<br>({{ Math.round(options.levelOptions.reflect * 100) }}%)
+                            <Slider length="100px" v-model="options.levelOptions.reflect" :min="0" :max="0.5" :step="0.01" :title="`Symmetry: ${Math.round(options.levelOptions.reflect * 100)}%`"></Slider>
+                        </label>
+                    </div>
+                    <div class="optionsGrid">
+                        <label title="Thickness of bars in proportion to available width per bar">
+                            Size
+                            <StrictNumberInput v-model="options.levelOptions.size" :min="0" :max="1" :step="0.05" :strict-step="0.01"></StrictNumberInput>
+                        </label>
+                        <label title="Use a logarithmic decibel scale">
+                            Decibels
+                            <Toggle v-model="options.levelOptions.useLogScale"></Toggle>
+                        </label>
+                        <label title="Draw the frequency scale on the visualizer">
+                            Draw Scale
+                            <Toggle v-model="options.levelOptions.showScale"></Toggle>
+                        </label>
+                        <label title="Label the channel numbers of each bar">
+                            Draw Labels
+                            <Toggle v-model="options.levelOptions.showLabels"></Toggle>
+                        </label>
+                    </div>
+                    <div class="optionsGrid">
+                        <label title="Minimum length of bars when data is zero">
+                            Min Length
+                            <StrictNumberInput v-model="options.levelOptions.minLength" :min="0" :max="128" :strict-max="Infinity" :step="1" :disabled="levelsMinLengthDisabled"></StrictNumberInput>
+                        </label>
+                        <label title="Enable an LED bar-like effect">
+                            LED Bar
+                            <Toggle v-model="options.levelOptions.ledEffect"></Toggle>
+                        </label>
+                        <label title="Number of LEDs per bar of visualizer (on each side of reflection)" v-if="options.levelOptions.ledEffect">
+                            LED Count
+                            <StrictNumberInput v-model="options.levelOptions.ledCount" :min="4" :strict-min="1" :max="128" :strict-max="Infinity" :step="4"></StrictNumberInput>
+                        </label>
+                        <label title="Size of LEDs in proportion to available size per LED" v-if="options.levelOptions.ledEffect">
+                            LED Size
+                            <StrictNumberInput v-model="options.levelOptions.ledSize" :min="0" :max="1" :step="0.05" :strict-step="0.01"></StrictNumberInput>
                         </label>
                     </div>
                 </div>
@@ -268,7 +341,7 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                     <Toggle v-model="options.freqOptions.line.sharpEdges"></Toggle>
                 </label>
             </TileOptionsSection>
-            <TileOptionsSection title="Spectrogram" v-show="spectrogramModes.includes(options.mode)">
+            <TileOptionsSection title="Spectrogram Style" v-show="spectrogramModes.includes(options.mode)">
                 <div class="optionsGrid">
                     <label title="Length of history in frames, dependent on device framerate, higher is longer time but slower">
                         History<br>({{ (options.freqOptions.spectrogram.historyLength / 60).toFixed(1) }}s @ 60fps)
@@ -280,31 +353,7 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
                     </label>
                 </div>
             </TileOptionsSection>
-            <TileOptionsSection title="Waveform Options" v-show="waveformModes.includes(options.mode)">
-                <div class="optionsRows">
-                    <div>
-                        <label title="Scale factor for amplitude of waveform">
-                            Scale
-                            <StrictNumberInput v-model="options.waveOptions.scale" :min="0" :max="10" :strict-max="Infinity" :step="0.1" :strict-step="0"></StrictNumberInput>
-                        </label>
-                        <label title="Reduce the time resolution of the waveform drawn by drawing only every N points">
-                            Downsampling
-                            <StrictNumberInput v-model="options.waveOptions.resolution" :min="1" :max="32" :step="1"></StrictNumberInput>
-                        </label>
-                    </div>
-                    <div>
-                        <label title="Thickness of lines in pixels">
-                            Line Width
-                            <StrictNumberInput v-model="options.waveOptions.thickness" :min="1" :max="32" :strict-max="256" :step="1"></StrictNumberInput>
-                        </label>
-                        <label title="Use mitered instead of rounded line joins">
-                            Sharp Joins
-                            <Toggle v-model="options.waveOptions.sharpEdges"></Toggle>
-                        </label>
-                    </div>
-                </div>
-            </TileOptionsSection>
-            <TileOptionsSection title="CorrWave Options" v-show="corrwaveModes.includes(options.mode)">
+            <TileOptionsSection title="CorrWave" v-show="corrwaveModes.includes(options.mode)">
                 <div class="optionsGrid">
                     <label title="Smoothing of previous waveform &quot;memory&quot; over time">
                         Smoothing<br>({{ Math.round(options.waveOptions.correlation.frameSmoothing * 100) }}%)
@@ -386,7 +435,6 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
 
 .optionsGrid {
     display: grid !important;
-    grid-template-rows: min-content min-content;
     grid-auto-rows: min-content;
     grid-auto-columns: max-content;
     grid-auto-flow: column;
@@ -409,7 +457,7 @@ const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptio
 .optionsGrid>.optionsGrid {
     grid-template-columns: subgrid;
     /* if there's more than 1000 items there will be bigger problems */
-    grid-column: span 1000;
+    grid-column: 1 / 1000;
 }
 
 .uploadButton {

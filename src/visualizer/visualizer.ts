@@ -66,7 +66,8 @@ export class Visualizer {
                 // this could blow up very easily!!
                 if (this.data.mode == VisualizerMode.CHANNEL_LEVELS && (lastMode != VisualizerMode.CHANNEL_LEVELS || this.data.levelOptions.channels != lastChannels)) {
                     // yeetus analyzers-us
-                    for (const a of this.analyzers) this.gain.disconnect(a);
+                    if (this.splitter !== null) this.gain.disconnect(this.splitter);
+                    else for (const a of this.analyzers) this.gain.disconnect(a);
                     const channels = Math.max(1, this.data.levelOptions.channels);
                     this.splitter = Visualizer.audioContext.createChannelSplitter(channels);
                     this.gain.connect(this.splitter);

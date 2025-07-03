@@ -85,7 +85,7 @@ export interface VisualizerData {
         /**Use a logarithmic frequency scale */
         useLogScale: boolean
         /**Draw the current frequency scale below the visualizer */
-        showFreqScale: boolean
+        showScale: boolean
         /**Symmetry - `low`/`high` mirrors with low/high frequencies in center */
         symmetry: 'none' | 'low' | 'high'
     }
@@ -115,6 +115,26 @@ export interface VisualizerData {
         channels: number
         /**Sets factor for blending the previous frame's data with the current data, 0-1 */
         frameSmoothing: number
+        /**Scale of drawn bars */
+        scale: number
+        /**Proportion along the amplitude-axis to reflect across, 0-0.5 */
+        reflect: number
+        /**Use a logarithmic decibel scale */
+        useLogScale: boolean
+        /**Draw the current scale below the visualizer */
+        showScale: boolean
+        /**Label the bars for each channel */
+        showLabels: boolean
+        /**Relative width of bars to the width available */
+        size: number
+        /**Toggles discrete LED-bar effects */
+        ledEffect: boolean
+        /**Number of LEDs per bar, per side of reflection (reflection doubles LED count) */
+        ledCount: number
+        /**Relative height of LEDs to the height available */
+        ledSize: number
+        /**Minimum "height" of bars in pixels */
+        minLength: number
     }
     /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
     rotate: boolean
@@ -159,7 +179,7 @@ export function createDefaultVisualizerData(): VisualizerData {
             scale: 1,
             reflect: 0,
             useLogScale: false,
-            showFreqScale: false,
+            showScale: false,
             symmetry: 'none'
         },
         waveOptions: {
@@ -175,7 +195,17 @@ export function createDefaultVisualizerData(): VisualizerData {
         },
         levelOptions: {
             channels: 2,
-            frameSmoothing: 0.5
+            frameSmoothing: 0.5,
+            scale: 1,
+            reflect: 0,
+            useLogScale: false,
+            showScale: false,
+            showLabels: false,
+            size: 0.8,
+            ledEffect: false,
+            ledCount: 64,
+            ledSize: 0.8,
+            minLength: 2
         },
         rotate: false,
         flipX: false,

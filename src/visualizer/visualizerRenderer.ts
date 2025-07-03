@@ -144,6 +144,7 @@ class VisualizerRenderInstance {
         shift: number
     } | null = null;
     private spectogramData: OffscreenCanvas | null = null;
+    private levelsData: number[] | null = null;
 
     playing: boolean = false;
     debugInfo: boolean = false;
@@ -208,6 +209,8 @@ class VisualizerRenderInstance {
                 this.drawFreqSpectrogram(buffer);
                 break;
             case VisualizerMode.CHANNEL_LEVELS:
+                if (!Array.isArray(buffer)) break;
+                this.drawLevels(buffer);
                 break;
         }
         this.ctx.restore();
@@ -218,6 +221,7 @@ class VisualizerRenderInstance {
         // free up some memory by removing unused history data
         if (this.data.mode != VisualizerMode.WAVE_CORRELATED) this.corrwaveData = null;
         if (this.data.mode != VisualizerMode.SPECTROGRAM) this.spectogramData = null;
+        if (this.data.mode != VisualizerMode.CHANNEL_LEVELS) this.levelsData = null;
         // track performance metrics
         const endTime = performance.now();
         this.frames.push(endTime);
@@ -585,6 +589,7 @@ class VisualizerRenderInstance {
         const spectCtx = spectFrame.getContext('2d')!;
         const freqRange = Math.ceil(buffer.length * this.data.freqOptions.freqCutoff);
         const altColor = this.data.altColorMode && this.data.color.type == 'gradient';
+        // spectrogram stops flowing when not playing
         if (this.playing || forceRedraw) {
             // spectFrame is unscaled (1x1 pixel = 1 frame x 1 frequency bin) to minimize resource usage
             spectCtx.resetTransform();
@@ -666,6 +671,80 @@ class VisualizerRenderInstance {
             this.ctx.fillStyle = this.colorStyle;
             this.ctx.fillRect(0, 0, width, height);
         }
+    }
+    private drawLevels(buffers: Uint8Array[]): void {
+        this.levelsData ??= [];
+        if (this.playing || this.levelsData.length != buffers.length) {
+            this.levelsData.length = buffers.length; // not really a buffer but who cares lol
+            const smoothing = this.data.levelOptions.frameSmoothing;
+            const invSmoothing = 1 - smoothing;
+            for (let i = 0; i < buffers.length; i++) {
+                const channel = buffers[i];
+                let max = 0;
+                for (let j = 0; j < channel.length; j++) {
+                    const v = Math.abs(channel[j] - 128);
+                    if (v > max) max = v;
+                }
+                this.levelsData[i] = max * invSmoothing + (this.levelsData[i] ?? max) * smoothing;
+            }
+            this.debugText.push('Levels: ' + this.levelsData.join(', '))
+        }
+        // WOOOOOOO COPY SPAGHETTI TIME
+        const { width, height } = this.calcViewportSize();
+        const xStep = width / this.levelsData.length;
+        const barWidth = Math.max(1, xStep * this.data.levelOptions.size);
+        const xShift = (xStep - barWidth) / 2;
+        const dataQuantize = this.data.levelOptions.ledEffect ? this.data.levelOptions.ledCount : 128;
+        const dataScale = this.data.levelOptions.scale * dataQuantize / 128;
+        const drawScale = height / dataQuantize;
+        const minHeight = this.data.levelOptions.ledEffect ? height / this.data.levelOptions.ledCount : this.data.levelOptions.minLength;
+        const yReflect = this.data.levelOptions.reflect;
+        const yCenter = yReflect * height;
+        if (this.data.altColorMode && this.data.color.type == 'gradient') {
+            const colorScale = 1 / dataQuantize;
+            // batching by color probably pointless since bars/colors ratio is quite low
+            for (let i = 0; i < this.levelsData.length; i++) {
+                const t = Math.ceil(this.levelsData[i] * dataScale);
+                const barHeight = Math.max(minHeight, t * drawScale);
+                this.ctx.fillStyle = this.colorScale(t * colorScale).hex();
+                this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
+            }
+        } else {
+            this.ctx.fillStyle = this.colorStyle;
+            for (let i = 0; i < this.levelsData.length; i++) {
+                const barHeight = Math.max(minHeight, Math.ceil(this.levelsData[i] * dataScale) * drawScale);
+                this.ctx.fillRect(i * xStep + xShift, yCenter - barHeight * yReflect, barWidth, barHeight);
+            }
+        }
+        this.ctx.save();
+        if (this.data.levelOptions.ledEffect) {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.fillStyle = '#000000';
+            const blockStep = height / this.data.levelOptions.ledCount;
+            const blockHeight = blockStep * (1 - this.data.levelOptions.ledSize);
+            // LED bar deletes chunks of canvas because faster
+            if (this.data.levelOptions.reflect > 0) {
+                const yReflect = this.data.levelOptions.reflect;
+                const yCenter = yReflect * height;
+                this.ctx.save();
+                this.ctx.scale(1, yReflect);
+                for (let i = -blockHeight / 2; i < height; i += blockStep) {
+                    this.ctx.fillRect(0, i, width, blockHeight);
+                }
+                this.ctx.restore();
+                this.ctx.translate(0, yCenter);
+                this.ctx.scale(1, 1 - yReflect);
+                for (let i = -blockHeight / 2; i < height; i += blockStep) {
+                    this.ctx.fillRect(0, i, width, blockHeight);
+                }
+            } else {
+                // reflection < 1% check to stop artifacting
+                for (let i = -blockHeight / 2; i < height; i += blockStep) {
+                    this.ctx.fillRect(0, i, width, blockHeight);
+                }
+            }
+        }
+        this.ctx.restore();
     }
 
     private calcViewportSize(): { readonly width: number, readonly height: number } {
