@@ -247,7 +247,7 @@ export class Visualizer {
                     if (!document.hidden) requestAnimationFrame(() => resolve());
                     else setTimeout(() => resolve(), 200);
                 });
-                await this.draw();
+                if (!document.hidden) await this.draw();
             }
         })();
         document.addEventListener('keydown', (e) => {

@@ -3,16 +3,17 @@ import ColorPicker from "@/components/inputs/colorPicker";
 import BaseTileComponent from "./tiles/BaseTile.vue";
 import GroupTileComponent from "./tiles/GroupTile.vue";
 import VisualizerTileComponent from "./tiles/VisualizerTile.vue";
-import AudioLevelsComponent from "./tiles/AudioLevelsTile.vue";
 import TextTileComponent from "./tiles/TextTile.vue";
 import ImageTileComponent from "./tiles/ImageTile.vue";
+import GrassTileComponent from "./tiles/GrassTile.vue";
 import blankTileImg from '@/img/blank-tile.png';
 import visualizerTileImg from '@/img/visualizer-tile.png';
-import audioLevelsTileImg from '@/img/audiolevels-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
 import Visualizer from "./visualizer";
 import { createDefaultVisualizerData, VisualizerData } from "./visualizerData";
+
+enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
 /**
  * Required props for all tile components.
@@ -63,8 +64,6 @@ export class Tile {
         if (this.parent !== null) this.parent.removeChild(this);
     }
 }
-
-enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
 /**
  * Tile to create layouts of other tiles in lines - can be nested to create complex arrangements.
@@ -191,15 +190,6 @@ export class VisualizerTile extends Tile {
     }
 }
 
-export class AudioLevelsTile extends Tile {
-    static readonly component = AudioLevelsComponent;
-    static readonly name: string = 'Channel Audio Levels Tile';
-    static readonly image: string = audioLevelsTileImg;
-    readonly class: typeof AudioLevelsTile = AudioLevelsTile;
-
-    label: string = AudioLevelsTile.name;
-}
-
 export class TextTile extends Tile {
     static readonly component = TextTileComponent;
     static readonly name: string = 'Text Tile';
@@ -216,4 +206,13 @@ export class ImageTile extends Tile {
     readonly class: typeof ImageTile = ImageTile;
 
     label: string = ImageTile.name;
+}
+
+export class GrassTile extends Tile {
+    static readonly component = GrassTileComponent;
+    static readonly name: string = 'Grass Tile';
+    static readonly image: string = blankTileImg;
+    readonly class: typeof GrassTile = GrassTile;
+
+    label: string = GrassTile.name;
 }

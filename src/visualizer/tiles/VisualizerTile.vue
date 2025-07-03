@@ -39,7 +39,7 @@ const { width: canvasWidth, height: canvasHeight } = useElementSize(props.tile.c
 // guess I don't need my throttling code anymore
 throttledWatch([canvasWidth, canvasHeight], () => {
     props.tile.visualizer.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
-}, { throttle: 100, immediate: true, leading: true, trailing: true });
+}, { throttle: 50, immediate: true, leading: true, trailing: true });
 
 const uploadSourceDisabled = ref(false);
 async function uploadSource() {

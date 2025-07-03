@@ -1,5 +1,5 @@
 import { computed, reactive, watch } from "vue";
-import { AudioLevelsTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
+import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
 import { AsyncLock } from "@/components/scripts/lock";
 import { useIdle } from "@vueuse/core";
 
@@ -350,10 +350,10 @@ export default TileEditor;
 // tiles that get displayed in drag-and-drop source
 TileEditor.registerTile(GroupTile, 'g', false);
 TileEditor.registerTile(VisualizerTile, 'v', true);
-TileEditor.registerTile(AudioLevelsTile, 'cp', true); // formerly channel peaks
 TileEditor.registerTile(TextTile, 't', true);
 TileEditor.registerTile(ImageTile, 'i', true);
 TileEditor.registerTile(Tile, 'b', true);
+TileEditor.registerTile(GrassTile, 'grass', false);
 
 // default state
 {
