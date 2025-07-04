@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { copyright } from '@/constants';
-import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
+import { inject, onMounted, onUnmounted, Ref, ref, watch } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import DropdownFileControls from './DropdownFileControls.vue';
 import DropdownMediaData from './DropdownMediaData.vue';
@@ -33,14 +31,14 @@ watch(() => TileEditor.state.sidebarOpen, () => {
     animateSpacer.value = true;
 });
 
-const showCopyright = ref(false);
+const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
 </script>
 
 <template>
     <input type="checkbox" id="dropdownToggle" v-model="TileEditor.state.dropdownOpen" checked>
     <div id="dropdown">
         <div id="dropdownBody">
-            <img src="@/img/logo.png" id="dropdownLogo" :title="copyright" @click="showCopyright = true">
+            <img src="@/img/logo.png" id="dropdownLogo" :title="copyright" @click="showAppInfo = true">
             <DropdownFileControls></DropdownFileControls>
             <DropdownMediaData></DropdownMediaData>
             <DropdownMediaControls></DropdownMediaControls>
@@ -52,13 +50,6 @@ const showCopyright = ref(false);
             <label id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs"></label>
         </Transition>
     </div>
-    <FullscreenModal title="Sound Tile" :mode="ModalMode.NOTIFY" v-model="showCopyright">
-        <b>{{ copyright }} under GNU GPL 3.0</b>
-        <br>
-        Source code is available on GitHub at
-        <br>
-        <a href="https://github.com/spsquared/sound-tile-typescript" target="_blank">github.com/spsquared/sound-tile-typescript</a>
-    </FullscreenModal>
 </template>
 
 <style scoped>

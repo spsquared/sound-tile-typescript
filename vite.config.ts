@@ -25,11 +25,7 @@ export default defineConfig(async () => ({
         port: 1000,
         strictPort: true,
         host: host || false,
-        hmr: host ? {
-            protocol: "ws",
-            host,
-            port: 1001,
-        } : undefined,
+        hmr: false, // HMR causes issues when some files are edited
         watch: {
             // 3. tell vite to ignore watching `src-tauri`
             ignored: ["**/src-tauri/**"],
