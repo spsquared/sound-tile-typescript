@@ -1,8 +1,8 @@
-import { reactive, ref, Ref } from "vue";
-import { throttledWatch, useThrottleFn } from "@vueuse/core";
-import { deepToRaw } from "@/components/scripts/deepToRaw";
-import { VisualizerData, VisualizerMode } from "./visualizerData";
-import { ColorData } from "@/components/inputs/colorPicker";
+import { reactive, ref, Ref } from 'vue';
+import { throttledWatch, useThrottleFn } from '@vueuse/core';
+import { deepToRaw } from '@/components/scripts/deepToRaw';
+import { VisualizerData, VisualizerMode } from './visualizerData';
+import { ColorData } from '@/components/inputs/colorPicker';
 import chroma from 'chroma-js';
 
 const isInWorker = 'importScripts' in globalThis;

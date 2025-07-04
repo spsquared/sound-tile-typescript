@@ -1,8 +1,8 @@
 
 
-import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from "vue";
-import { VisualizerData, VisualizerMode } from "./visualizerData";
-import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from "./visualizerRenderer";
+import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
+import { VisualizerData, VisualizerMode } from './visualizerData';
+import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
 
 if (!('AudioContext' in window)) {
     throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');

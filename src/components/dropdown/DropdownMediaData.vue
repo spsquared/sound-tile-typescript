@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
-import { openFilePicker } from '../inputs/fileAccess';
+import FileAccess from '../inputs/fileAccess';
 
 const title = useTemplateRef('title');
 const subtitle = useTemplateRef('subtitle');
@@ -9,7 +9,7 @@ const subtitle = useTemplateRef('subtitle');
 const open = ref(false);
 
 async function uploadCoverArt() {
-    const coverArt = await openFilePicker({
+    const coverArt = await FileAccess.openFilePicker({
         id: 'soundtileUploadCover',
         types: [{
             accept: {

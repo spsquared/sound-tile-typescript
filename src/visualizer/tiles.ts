@@ -1,17 +1,17 @@
-import { Component, watch } from "vue";
-import ColorPicker from "@/components/inputs/colorPicker";
-import BaseTileComponent from "./tiles/BaseTile.vue";
-import GroupTileComponent from "./tiles/GroupTile.vue";
-import VisualizerTileComponent from "./tiles/VisualizerTile.vue";
-import TextTileComponent from "./tiles/TextTile.vue";
-import ImageTileComponent from "./tiles/ImageTile.vue";
-import GrassTileComponent from "./tiles/GrassTile.vue";
+import { Component, watch } from 'vue';
+import ColorPicker from '@/components/inputs/colorPicker';
+import BaseTileComponent from './tiles/BaseTile.vue';
+import GroupTileComponent from './tiles/GroupTile.vue';
+import VisualizerTileComponent from './tiles/VisualizerTile.vue';
+import TextTileComponent from './tiles/TextTile.vue';
+import ImageTileComponent from './tiles/ImageTile.vue';
+import GrassTileComponent from './tiles/GrassTile.vue';
 import blankTileImg from '@/img/blank-tile.png';
 import visualizerTileImg from '@/img/visualizer-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
-import Visualizer from "./visualizer";
-import { createDefaultVisualizerData, VisualizerData } from "./visualizerData";
+import Visualizer from './visualizer';
+import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
 
 enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
@@ -19,7 +19,7 @@ enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
  * Required props for all tile components.
  * Typing isn't super strict, component should have class as type for `tile`.
  */
-export type TileComponentProps = {
+type TileComponentProps = {
     tile: Tile
 }
 

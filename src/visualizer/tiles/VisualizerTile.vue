@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { syncRef, throttledWatch, useElementSize } from '@vueuse/core';
 import { VisualizerTile } from '../tiles';
-import { openFilePicker } from '@/components/inputs/fileAccess';
+import FileAccess from '@/components/inputs/fileAccess';
 import { VisualizerMode } from '../visualizerData';
 import Visualizer from '../visualizer';
 import BaseTile from './BaseTile.vue';
@@ -44,7 +44,7 @@ throttledWatch([canvasWidth, canvasHeight], () => {
 const uploadSourceDisabled = ref(false);
 async function uploadSource() {
     uploadSourceDisabled.value = true;
-    const source = await openFilePicker({
+    const source = await FileAccess.openFilePicker({
         id: 'soundtileUploadSource',
         excludeAcceptAllOption: true,
         types: [{

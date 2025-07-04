@@ -1,7 +1,7 @@
 // need this file so the web worker can import the visualizer modes enum
 // if in visualizer.ts it explodes because audio.ts gets imported
 
-import { ColorData } from "@/components/inputs/colorPicker"
+import { ColorData } from '@/components/inputs/colorPicker'
 
 /**
  * Possible settings for visualizers - channel levels tile is its own class due to needing multiple analyzer nodes

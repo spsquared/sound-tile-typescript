@@ -1,7 +1,7 @@
-import { computed, reactive, watch } from "vue";
-import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from "./tiles";
-import { AsyncLock } from "@/components/scripts/lock";
-import { useIdle } from "@vueuse/core";
+import { computed, reactive, watch } from 'vue';
+import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
+import { AsyncLock } from '@/components/scripts/lock';
+import { useIdle } from '@vueuse/core';
 
 type TileEditorState = {
     dropdownOpen: boolean
