@@ -39,7 +39,6 @@ type LayoutHistoryEntry = Exclude<Tile, GroupTile> | {
     children: LayoutHistoryEntry[]
 }
 
-
 /**
  * Tile editing system.
  */

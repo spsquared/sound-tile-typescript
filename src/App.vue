@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { provide, reactive, ref } from 'vue';
-import { copyright, version } from '@/constants';
+import { copyright, dreamberd, version } from '@/constants';
 import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
 import Dropdown from '@/components/dropdown/Dropdown.vue';
 import TileRoot from '@/components/main/TileRoot.vue';
@@ -38,6 +38,8 @@ window.addEventListener('error', (e) => {
         Source code is available on GitHub at
         <br>
         <a href="https://github.com/spsquared/sound-tile-typescript" target="_blank">github.com/spsquared/sound-tile-typescript</a>
+        <br>
+        <span style="font-size: 8px;">{{ dreamberd }}</span>
     </FullscreenModal>
     <FullscreenModal title="An Error Occured" :mode="ModalMode.NOTIFY" color="red" v-model="errorInfo.open">
         <div style="color: red;">
