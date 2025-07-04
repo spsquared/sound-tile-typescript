@@ -687,7 +687,7 @@ class VisualizerRenderInstance {
                 }
                 this.levelsData[i] = max * invSmoothing + (this.levelsData[i] ?? max) * smoothing;
             }
-            this.debugText.push('Peaks: ' + this.levelsData.join(', '))
+            this.debugText.push('Peaks: ' + this.levelsData.map((v) => v.toFixed(1)).join(', '))
         }
         // WOOOOOOO COPY SPAGHETTI TIME
         const { width, height } = this.calcViewportSize();

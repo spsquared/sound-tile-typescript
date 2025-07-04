@@ -1,24 +1,21 @@
 <script setup lang="ts">
 import TileEditor from '@/visualizer/editor';
-import { inject, ref, Ref } from 'vue';
 
 const props = defineProps<{
-    for: string
+    for: typeof TileEditor.state.sidebarTab
     title: string
     image: string
     size?: string
 }>();
 
-const currentTab = inject<Ref<string>>('sidebarCurrentTab') ?? ref(''); // will warn if no default, intended
-
 function set() {
-    currentTab.value = props.for;
+    TileEditor.state.sidebarTab = props.for;
     TileEditor.state.sidebarOpen = true;
 }
 </script>
 
 <template>
-    <button :class="{ sidebarTab: true, sidebarTabSelected: currentTab == props.for }" :title="props.title" @click="set"></button>
+    <button :class="{ sidebarTab: true, sidebarTabSelected: TileEditor.state.sidebarTab == props.for }" :title="props.title" @click="set"></button>
 </template>
 
 <style scoped>

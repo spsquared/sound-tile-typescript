@@ -39,6 +39,8 @@ export class Tile {
 
     /**DOM element, only exists while mounted (set by component) */
     element: HTMLElement | null = null;
+    /**DOM elements in sidebar (handle and children container), only exists while mounted (set by sidebar component) */
+    sidebarElements: { handle: HTMLElement, children: HTMLElement | null } | null = null;
     /**Label used to identify tile in editor */
     label: string = Tile.name;
     /**Parent tile (don't modify this manually) */

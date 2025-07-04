@@ -31,6 +31,7 @@ onBeforeUnmount(() => {
     props.tile.element = null;
 });
 
+const destroyDisabled = computed(() => TileEditor.state.lock.locked || TileEditor.root == props.tile || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function dragTile(e: MouseEvent) {
     const rect = tile.value?.getBoundingClientRect();
     TileEditor.startDrag(props.tile, {
@@ -41,8 +42,6 @@ function dragTile(e: MouseEvent) {
         h: rect?.height ?? 150
     }, e);
 }
-
-const destroyDisabled = computed(() => TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function deleteTile() {
     if (destroyDisabled.value) return;
     TileEditor.pushLayoutHistory();
@@ -78,6 +77,10 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
             <div class="optionsWrapper">
                 <slot name="options">
                     <TileOptionsSection title="General">
+                        <label title="Label of tile">
+                            Label
+                            <input type="text" v-model="props.tile.label">
+                        </label>
                         <label class="sectionItem" title="Relative size of tile to sibling tiles">
                             Size
                             <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>

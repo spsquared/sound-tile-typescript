@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { inject, Ref } from 'vue';
+import TileEditor from '@/visualizer/editor';
 
 const props = defineProps<{
-    tab: string
+    tab: typeof TileEditor.state.sidebarTab
 }>();
-
-const currentTab = inject<Ref<string>>('sidebarCurrentTab');
 </script>
 
 <template>
     <Transition>
-        <div class="sidebarContentWrapper" v-if="currentTab == props.tab">
+        <div class="sidebarContentWrapper" v-if="TileEditor.state.sidebarTab == props.tab">
             <div class="sidebarHeader">
                 <slot name="header"></slot>
             </div>

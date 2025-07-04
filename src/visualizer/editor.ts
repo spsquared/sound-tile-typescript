@@ -6,6 +6,7 @@ import { useIdle } from "@vueuse/core";
 type TileEditorState = {
     dropdownOpen: boolean
     sidebarOpen: boolean
+    sidebarTab: 'edit' | 'export' | 'playlist'
     hideTabs: boolean
     idleHideTabs: boolean
     sidebarScreenWidth: number
@@ -22,6 +23,7 @@ type TileEditorState = {
             createGroup: boolean
             newGroupVertical: boolean
         }
+        sidebarDrop: boolean
     }
     sidebarHoverTile: Tile | null
     lock: AsyncLock
@@ -46,6 +48,7 @@ export class TileEditor {
     static readonly state = reactive<TileEditorState>({
         dropdownOpen: true,
         sidebarOpen: false,
+        sidebarTab: 'edit',
         hideTabs: false,
         idleHideTabs: computed(() => this.idleTracker.idle.value && !this.state.dropdownOpen && !this.state.sidebarOpen) as any, // vue ref unwrapping conflicts with need to preserve private properties
         sidebarScreenWidth: Number(localStorage.getItem('sidebarScreenWidth') ?? 25),
@@ -61,7 +64,8 @@ export class TileEditor {
                 insertBefore: false,
                 createGroup: false,
                 newGroupVertical: false
-            }
+            },
+            sidebarDrop: false
         },
         sidebarHoverTile: null,
         lock: new AsyncLock()
@@ -190,6 +194,51 @@ export class TileEditor {
         };
         // reset
         this.state.drag.drop.tile = null;
+        // sidebar drag and drop switch
+        const sidebarThreshold = window.innerWidth - Math.max(this.state.minSidebarWidthPx, window.innerWidth * this.state.sidebarScreenWidth / 100);
+        if (this.state.sidebarOpen && this.state.sidebarTab == 'edit' && pos.x >= sidebarThreshold) {
+            this.updateDragSidebar(pos);
+        } else {
+            this.updateDragTiles(pos);
+        }
+    }
+    private static updateDragSidebar(mousePos: { x: number, y: number }): void {
+        const pos = mousePos;
+        this.state.drag.sidebarDrop = true;
+        // sidebar drag-and-drop is simpler since there are no overlapping bounding boxes caused by groups
+        // a simple DFS that goes down the tree, creating groups done by hovering over the left half
+        // also allows dropping into position for collapsed tiles because no overlaps
+        const stack: Tile[] = [...this.root.children]; // don't drop onto root!
+        let currTile: Tile | null = null;
+        while (stack.length > 0) {
+            const curr = stack.pop()!;
+            if (curr.sidebarElements === null) {
+                console.warn(`${curr.label} sidebar elements are null! Perhaps the sidebar is not open or the tile is not mounted?`);
+                continue;
+            }
+            const handleRect = curr.sidebarElements.handle.getBoundingClientRect();
+            if (pos.x >= handleRect.left && pos.x <= handleRect.right && pos.y >= handleRect.top && pos.y <= handleRect.bottom) {
+                currTile = curr;
+            } else if (curr instanceof GroupTile) {
+                const childrenRect = curr.sidebarElements.children?.getBoundingClientRect();
+                if (childrenRect !== undefined && pos.x >= childrenRect.left && pos.y <= childrenRect.right && pos.y >= childrenRect.top && pos.y <= childrenRect.bottom) {
+                    stack.push(...curr.children);
+                }
+            }
+        }
+        if (currTile === null) return;
+        // guaranteed to have a handle element by DFS
+        const rect = currTile.sidebarElements!.handle.getBoundingClientRect();
+        const relX = pos.x - rect.left;
+        const relY = pos.y - rect.top;
+        this.state.drag.drop.tile = currTile;
+        this.state.drag.drop.createGroup = relX < rect.width / 2;
+        this.state.drag.drop.insertBefore = relY < rect.height / 2;
+        this.state.drag.drop.newGroupVertical = false; // default
+    }
+    private static updateDragTiles(mousePos: { x: number, y: number }): void {
+        const pos = mousePos;
+        this.state.drag.sidebarDrop = false;
         // border implementation leaves gaps between tiles (tiles don't actually have borders)
         const fixBoundingRect = (rect: DOMRect): DOMRect => {
             const rect2 = {
@@ -243,51 +292,50 @@ export class TileEditor {
             const halfHeight = rect.height / 2;
             const halfBoxWidth = Math.min(12 * Math.log(rect.width + 1), rect.width * 0.6);
             const halfBoxHeight = Math.min(12 * Math.log(rect.height + 1), rect.height * 0.6);
-            // TODO: IMPLEMENT COLLAPSED GROUP SPECIAL CASES
             if (relY < halfBoxHeight && relX > halfWidth - halfBoxWidth && relX < halfWidth + halfBoxWidth) {
                 // top box
                 this.state.drag.drop.tile = currTile;
+                this.state.drag.drop.insertBefore = true;
                 if (relY < halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.VERTICAL) {
-                    this.state.drag.drop.insertBefore = true;
                     this.state.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.insertBefore = true;
                     this.state.drag.drop.createGroup = true;
                     this.state.drag.drop.newGroupVertical = true;
                 }
             } else if (relY > rect.height - halfBoxHeight && relX && relX > halfWidth - halfBoxWidth && relX < halfWidth + halfBoxWidth) {
                 // bottom box
                 this.state.drag.drop.tile = currTile;
+                this.state.drag.drop.insertBefore = false;
                 if (relY > rect.height - halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.VERTICAL) {
-                    this.state.drag.drop.insertBefore = false;
                     this.state.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.insertBefore = false;
                     this.state.drag.drop.createGroup = true;
                     this.state.drag.drop.newGroupVertical = true;
                 }
             } else if (relX < halfBoxWidth && relY > halfHeight - halfBoxHeight && relY < halfHeight + halfBoxHeight) {
                 // left box
                 this.state.drag.drop.tile = currTile;
+                this.state.drag.drop.insertBefore = true;
                 if (relX < halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.HORIZONTAL) {
-                    this.state.drag.drop.insertBefore = true;
                     this.state.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.insertBefore = true;
                     this.state.drag.drop.createGroup = true;
                     this.state.drag.drop.newGroupVertical = false;
                 }
             } else if (relX > rect.width - halfBoxWidth && relY > halfHeight - halfBoxHeight && relY < halfHeight + halfBoxHeight) {
                 // right box
                 this.state.drag.drop.tile = currTile;
+                this.state.drag.drop.insertBefore = false;
                 if (relX > rect.width - halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.HORIZONTAL) {
-                    this.state.drag.drop.insertBefore = false;
                     this.state.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.insertBefore = false;
                     this.state.drag.drop.createGroup = true;
                     this.state.drag.drop.newGroupVertical = false;
                 }
+            } else if (Math.max(Math.abs(relX - halfWidth), Math.abs(relY - halfHeight)) < Math.min(halfWidth, halfHeight) / 2 && currTile.parent?.orientation === GroupTile.COLLAPSED) {
+                // center box, special case for collapsed groups (append to end)
+                this.state.drag.drop.tile = currTile;
+                this.state.drag.drop.createGroup = false;
             } else if (currTile.parent !== null) {
                 currTile = currTile.parent;
                 continue;
@@ -325,6 +373,9 @@ export class TileEditor {
                 const insertFn = (this.state.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
                 insertFn.call(newGroup, this.state.drag.current, this.state.drag.drop.tile);
             }
+        } else if (parent.orientation == GroupTile.COLLAPSED && !this.state.drag.sidebarDrop) {
+            // always append to end for collapsed groups except for sidebar drops
+            parent.addChild(this.state.drag.current);
         } else {
             // drop target tile can't be root because updateDrag parent orientation check always fails
             const insertFn = (this.state.drag.drop.insertBefore ? parent.insertChildBefore : parent.insertChildAfter);
@@ -342,6 +393,7 @@ export class TileEditor {
         document.addEventListener('mouseup', () => this.endDrag());
         document.addEventListener('touchend', () => this.endDrag());
         window.addEventListener('blur', () => this.endDrag());
+        this.root.label = 'Root Group Tile';
     }
 }
 

@@ -17,6 +17,10 @@ const props = defineProps<{
         </template>
         <template v-slot:options>
             <TileOptionsSection title="General">
+                <label title="Label of tile">
+                    Label
+                    <input type="text" v-model="props.tile.label">
+                </label>
                 <label title="Relative size of tile to sibling tiles">
                     Size
                     <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>

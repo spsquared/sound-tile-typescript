@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TileEditor from '@/visualizer/editor';
 import { GroupTile, Tile } from '@/visualizer/tiles';
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import arrowRightIcon from '@/img/arrow-right.svg';
 import arrowDownIcon from '@/img/arrow-down.svg';
 
@@ -10,6 +10,20 @@ const props = defineProps<{
     root?: boolean
 }>();
 
+const handle = useTemplateRef('handle');
+const children = useTemplateRef('children');
+
+// set element for other code - again ONLY ONE AT A TIME
+onMounted(() => {
+    if (props.tile.sidebarElements !== null) console.warn(`${props.tile.label} sidebar elements are not null on component mount! Perhaps the tile is in multiple places?`);
+    props.tile.sidebarElements = {
+        handle: handle.value!, // is this is null someone's house will be blown up (in minecraft)
+        children: children.value
+    };
+});
+onBeforeUnmount(() => {
+    props.tile.sidebarElements = null;
+});
 
 function setHover() {
     TileEditor.state.sidebarHoverTile = props.tile;
@@ -32,13 +46,12 @@ function toggleEditTile() {
     props.tile.editPaneOpen = !props.tile.editPaneOpen;
 }
 
+const destroyDisabled = computed(() => props.root || TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function dragTile(e: MouseEvent) {
     if (TileEditor.startDrag(props.tile, { x: 100, y: 5 }, { w: 200, h: 150 }, e)) {
         TileEditor.state.sidebarHoverTile = null;
     }
 }
-
-const destroyDisabled = computed(() => props.root || TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function deleteTile() {
     TileEditor.pushLayoutHistory();
     props.tile.destroy();
@@ -47,16 +60,17 @@ function deleteTile() {
 
 <template>
     <div class="editItem">
-        <div class="editItemBar" @mouseenter="setHover">
+        <div class="editItemBar" ref="handle" @mouseenter="setHover">
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
             <div class="editItemDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
             <input type="button" class="editItemEditButton" @click="toggleEditTile">
             <input type="button" class="editItemDeleteButton" title="Delete Tile" @click="deleteTile" :disabled="destroyDisabled">
+            <div class="editItemDragDropBar" v-if="TileEditor.state.drag.current !== null && props.tile === TileEditor.state.drag.drop.tile"></div>
         </div>
         <Transition>
-            <div class="editItemGroupChildrenWrapper" v-if="props.tile instanceof GroupTile" v-show="childrenOpen">
+            <div class="editItemGroupChildrenWrapper" ref="children" v-if="props.tile instanceof GroupTile" v-show="childrenOpen">
                 <div class="editItemGroupChildren">
                     <TileEditItem v-for="child of props.tile.children" :key="child.id" :tile="child"></TileEditItem>
                 </div>
@@ -74,6 +88,7 @@ function deleteTile() {
 }
 
 .editItemBar {
+    position: relative;
     grid-row: 1;
     grid-column: 2;
     display: flex;
@@ -166,6 +181,17 @@ function deleteTile() {
 .editItemDeleteButton:disabled {
     cursor: not-allowed;
     background-color: transparent;
+}
+
+.editItemDragDropBar {
+    box-sizing: border-box;
+    position: absolute;
+    top: v-bind("TileEditor.state.drag.drop.insertBefore ? '-1px' : 'unset'");
+    bottom: v-bind("TileEditor.state.drag.drop.insertBefore ? 'unset' : '-1px'");
+    left: 0px;
+    width: 100%;
+    height: v-bind("TileEditor.state.drag.drop.createGroup ? 'calc(50% + 2px)' : '2px'");
+    border: 2px solid white;
 }
 
 .editItemGroupChildrenWrapper {

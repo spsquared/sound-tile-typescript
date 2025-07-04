@@ -63,6 +63,8 @@ const draggingPos = computed(() => ({
     width: 100vw;
     height: 100vh;
     border: 4px solid white;
+    opacity: v-bind("TileEditor.state.drag.sidebarDrop ? '0.5' : '1'");
+    transition: 50ms linear opacity;
 }
 
 #tileDragTile {
@@ -73,6 +75,7 @@ const draggingPos = computed(() => ({
     width: v-bind("TileEditor.state.drag.size.w + 'px'");
     height: v-bind("TileEditor.state.drag.size.h + 'px'");
     border: 4px solid white;
+    opacity: 0.5;
     pointer-events: none;
 }
 

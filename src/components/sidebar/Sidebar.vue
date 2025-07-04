@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import SidebarTileEdit from './tileEdit/SidebarTileEdit.vue';
 import SidebarExport from './export/SidebarExport.vue';
@@ -25,9 +25,6 @@ function keydown(e: KeyboardEvent) {
 }
 onMounted(() => document.addEventListener('keydown', keydown));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
-
-const currentTab = ref<string>('edit');
-provide('sidebarCurrentTab', currentTab);
 
 let resizing = false;
 function mouseMove(e: MouseEvent) {
