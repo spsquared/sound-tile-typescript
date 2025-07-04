@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { provide, reactive, ref } from 'vue';
+import { copyright, version } from '@/constants';
 import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
 import Dropdown from '@/components/dropdown/Dropdown.vue';
 import TileRoot from '@/components/main/TileRoot.vue';
 import TileDrag from '@/components/main/TileDrag.vue';
 import Sidebar from '@/components/sidebar/Sidebar.vue';
-import { copyright, version } from '@/constants';
 
 const showAppInfo = ref(false);
 provide('showAppInfoRef', showAppInfo);

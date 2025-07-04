@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, onUnmounted, Ref, ref, watch } from 'vue';
+import { copyright } from '@/constants';
 import TileEditor from '@/visualizer/editor';
 import DropdownFileControls from './DropdownFileControls.vue';
 import DropdownMediaData from './DropdownMediaData.vue';
