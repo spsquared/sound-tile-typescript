@@ -56,7 +56,7 @@ defineExpose<{
         openLock.release();
         return result.value;
     }
-})
+});
 </script>
 <script lang="ts">
 export const enum ModalMode {
@@ -134,7 +134,7 @@ export const enum ModalMode {
     min-width: 0px;
     padding: 4px 1em;
     background-color: black;
-    border: 4px solid white;
+    border: 4px solid v-bind("$props.color ?? 'white'");
     border-radius: 8px;
     transition: 400ms ease-in-out transform;
     transform: translateY(calc(50vh + 50%));
