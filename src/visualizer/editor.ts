@@ -26,7 +26,6 @@ type TileEditorState = {
         sidebarDrop: boolean
     }
     sidebarHoverTile: Tile | null
-    lock: AsyncLock
 };
 
 /**
@@ -67,8 +66,8 @@ export class TileEditor {
             sidebarDrop: false
         },
         sidebarHoverTile: null,
-        lock: new AsyncLock()
     }) as TileEditorState; // fixes Vue typing errors
+    static readonly lock: AsyncLock = new AsyncLock();
 
     static registerTile(t: typeof Tile, id: string, visible: boolean): void {
         this.state.tileTypes[id] = { Tile: t, visible: visible };
@@ -86,8 +85,7 @@ export class TileEditor {
      * @param root Provided layout
      * @returns Reference to root of new tree
      */
-    static attachRoot(root: GroupTile): GroupTile | null {
-        if (this.state.lock.locked) return null;
+    static attachRoot(root: GroupTile): GroupTile {
         this.endDrag();
         this.layoutHistory.length = 0;
         this.root.copyProperties(root);
@@ -102,8 +100,7 @@ export class TileEditor {
      * Remove and return the current layout as a new tree. Deletes the current tree and returns the root of the new tree.
      * @returns Reference to root of new tree
      */
-    static detachRoot(): GroupTile | null {
-        if (this.state.lock.locked) return null;
+    static detachRoot(): GroupTile {
         this.endDrag();
         this.layoutHistory.length = 0;
         const root = new GroupTile();
@@ -175,7 +172,7 @@ export class TileEditor {
     }
 
     static startDrag(tile: Tile, offset?: TileEditorState['drag']['offset'], size?: TileEditorState['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
-        if (this.state.lock.locked) return false;
+        if (this.lock.locked) return false;
         if (this.state.drag.current !== null) return false;
         this.pushLayoutHistory();
         if (tile.parent !== null) tile.parent.removeChild(tile);
@@ -346,7 +343,7 @@ export class TileEditor {
         }
     }
     static endDrag(): boolean {
-        if (this.state.lock.locked) return false;
+        if (this.lock.locked) return false;
         if (this.state.drag.current === null) return false;
         if (this.state.drag.drop.tile === null) {
             this.popLayoutHistory();

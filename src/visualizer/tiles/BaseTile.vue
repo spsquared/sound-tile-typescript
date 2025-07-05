@@ -26,9 +26,11 @@ const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', comput
 onMounted(() => {
     if (props.tile.element !== null) console.warn(`${props.tile.label} element was not null on component mount! Perhaps the tile is in multiple places?`);
     props.tile.element = tile.value;
+    for (const cb of props.tile.mountedListeners) cb();
 });
 onBeforeUnmount(() => {
     props.tile.element = null;
+    for (const cb of props.tile.unmountedListeners) cb();
 });
 
 const destroyDisabled = computed(() => TileEditor.state.lock.locked || TileEditor.root == props.tile || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);

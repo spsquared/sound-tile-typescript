@@ -35,7 +35,7 @@ export class Visualizer {
     readonly canvas: HTMLCanvasElement;
     readonly ctx: CanvasRenderingContext2D;
     /**Sets if the visualizer is visible/playable */
-    visible: boolean = false;
+    readonly visible: Ref<boolean> = ref(false);
 
     private readonly effectScope: EffectScope;
 
@@ -57,9 +57,14 @@ export class Visualizer {
                     this.audioBuffer = this.data.buffer !== null ? await Visualizer.audioContext.decodeAudioData(this.data.buffer) : null;
                 }
                 Visualizer.recalculateDuration();
-                if (this.audioBuffer !== null && Visualizer.time.playing && this.visible) this.start();
+                if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();
                 else this.stop();
             }, { immediate: true });
+            watch(this.visible, () => {
+                Visualizer.recalculateDuration();
+                if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();
+                else this.stop();
+            });
             watchEffect(() => this.gain.gain.value = this.data.gain);
             watchEffect(() => this.data.mute ? this.gain.disconnect(Visualizer.gain) : this.gain.connect(Visualizer.gain));
             watch([() => this.data.mode, () => this.data.levelOptions.channels, () => this.data.buffer], ([], [lastMode, lastChannels, lastBuffer]) => {
@@ -114,7 +119,7 @@ export class Visualizer {
 
     private drawing: boolean = false;
     private async draw(): Promise<void> {
-        if (this.drawing || this.data.buffer === null) return;
+        if (this.drawing || this.data.buffer === null || !this.visible.value) return;
         this.drawing = true;
         if (this.audioBuffer === null) {
             this.ctx.reset();
@@ -201,7 +206,7 @@ export class Visualizer {
         Visualizer.recalculateDuration();
     }
 
-    private static readonly instances: Set<Visualizer> = reactive(new Set()) as Set<Visualizer>;
+    private static readonly instances: Set<Visualizer> = new Set();
     /**Internal timekeeping to synchronize visualizer playback states */
     private static readonly time: {
         startTime: number
@@ -215,7 +220,7 @@ export class Visualizer {
         this.time.playing = true;
         VisualizerRenderer.playing = true;
         for (const vis of this.instances) {
-            if (vis.visible) vis.start();
+            if (vis.visible.value) vis.start();
         }
         Visualizer.audioContext.resume();
     }
@@ -229,7 +234,7 @@ export class Visualizer {
     private static recalculateDuration(): void {
         let time = 0;
         for (const vis of this.instances) {
-            if (vis.duration > time) time = vis.duration;
+            if (vis.visible.value && vis.duration > time) time = vis.duration;
         }
         this._duration.value = time;
     }
@@ -238,7 +243,7 @@ export class Visualizer {
     }
 
     private static async draw(): Promise<void> {
-        await Promise.all(Array.from(this.instances.values()).filter((v) => v.visible).map((v) => v.draw()));
+        await Promise.all(Array.from(this.instances.values()).filter((v) => v.visible.value).map((v) => v.draw()));
     }
 
     static {

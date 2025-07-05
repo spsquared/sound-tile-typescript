@@ -46,7 +46,7 @@ function toggleEditTile() {
     props.tile.editPaneOpen = !props.tile.editPaneOpen;
 }
 
-const destroyDisabled = computed(() => props.root || TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
+const destroyDisabled = computed(() => props.root || TileEditor.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function dragTile(e: MouseEvent) {
     if (TileEditor.startDrag(props.tile, { x: 100, y: 5 }, { w: 200, h: 150 }, e)) {
         TileEditor.state.sidebarHoverTile = null;

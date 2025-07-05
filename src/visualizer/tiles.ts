@@ -1,4 +1,4 @@
-import { Component, watch } from 'vue';
+import { Component } from 'vue';
 import ColorPicker from '@/components/inputs/colorPicker';
 import BaseTileComponent from './tiles/BaseTile.vue';
 import GroupTileComponent from './tiles/GroupTile.vue';
@@ -55,12 +55,8 @@ export class Tile {
         this.backgroundColor = new ColorPicker('#000000');
     }
 
-    onMounted(cb: () => any): void {
-        watch(() => this.element, () => this.element !== null && cb());
-    }
-    onUnmounted(cb: () => any): void {
-        watch(() => this.element, () => this.element === null && cb());
-    }
+    readonly mountedListeners: Set<() => any> = new Set();
+    readonly unmountedListeners: Set<() => any> = new Set();
 
     destroy(): void {
         if (this.parent !== null) this.parent.removeChild(this);
@@ -182,8 +178,8 @@ export class VisualizerTile extends Tile {
         super();
         this.canvas = document.createElement('canvas');
         this.visualizer = new Visualizer(data ?? createDefaultVisualizerData(), this.canvas);
-        this.onMounted(() => this.visualizer.visible = true);
-        this.onUnmounted(() => this.visualizer.visible = false);
+        this.mountedListeners.add(() => this.visualizer.visible.value = true);
+        this.unmountedListeners.add(() => this.visualizer.visible.value = false);
     }
 
     destroy(): void {

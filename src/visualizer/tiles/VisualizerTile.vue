@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import { syncRef, throttledWatch, useElementSize } from '@vueuse/core';
 import { VisualizerTile } from '../tiles';
 import FileAccess from '@/components/inputs/fileAccess';
@@ -28,11 +28,7 @@ const options = computed(() => props.tile.visualizer.data);
 const wrapper = useTemplateRef('canvasWrapper');
 onMounted(() => {
     wrapper.value?.appendChild(props.tile.canvas);
-    props.tile.visualizer.visible = true;
 });
-onBeforeUnmount(() => {
-    props.tile.visualizer.visible = false;
-})
 props.tile.canvas.classList.add('visualizerCanvas');
 
 const { width: canvasWidth, height: canvasHeight } = useElementSize(props.tile.canvas);
