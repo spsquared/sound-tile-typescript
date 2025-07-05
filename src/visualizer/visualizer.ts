@@ -8,7 +8,7 @@ if (!('AudioContext' in window)) {
     throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
 }
 
-export const webWorkerSupported = 'Worker' in window;
+const webWorkerSupported = 'Worker' in window;
 
 /**
  * Audio and drawing context of visualizer tiles.

@@ -4,7 +4,7 @@
 import { ColorData } from '@/components/inputs/colorPicker'
 
 /**
- * Possible settings for visualizers - channel levels tile is its own class due to needing multiple analyzer nodes
+ * Possible settings for visualizers.
  */
 export enum VisualizerMode {
     FREQ_BAR,
@@ -27,6 +27,8 @@ export interface VisualizerData {
     gain: number
     /**Mute the output without affecting the visualizer gain */
     mute: boolean
+    /**Visualizer style */
+    mode: VisualizerMode
     /**Primary color */
     color: ColorData
     /**Secondary color (if available) */
@@ -35,8 +37,6 @@ export interface VisualizerData {
     color2Alpha: number
     /**Apply colors in alternate mode (if available) */
     altColorMode: boolean
-    /**Visualizer style */
-    mode: VisualizerMode
     /**The size of the underlying FFT, power of 2 from 32 to 32768 */
     fftSize: number
     /**Inline padding on edges of visualizer - left/right for horizontal */
@@ -149,11 +149,11 @@ export function createDefaultVisualizerData(): VisualizerData {
         buffer: null,
         gain: 1,
         mute: false,
+        mode: VisualizerMode.FREQ_BAR,
         color: { type: 'solid', color: '#FFFFFF', alpha: 1 },
         color2: { type: 'solid', color: '#FFFFFF', alpha: 1 },
         color2Alpha: 1,
         altColorMode: false,
-        mode: VisualizerMode.FREQ_BAR,
         fftSize: 256,
         paddingInline: 8,
         paddingBlock: 8,

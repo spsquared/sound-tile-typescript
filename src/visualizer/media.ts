@@ -19,15 +19,15 @@ export class Media implements MediaMetadata {
     subtitle: string = '';
     coverArt: string = '';
     tree: GroupTile;
-    
-    constructor(dat: MediaMetadata) {
-        for (const key in dat) {
-            (this as any)[key] = (dat as any)[key];
+
+    constructor(data: MediaMetadata, root?: GroupTile) {
+        for (const key in data) {
+            (this as any)[key] = (data as any)[key];
         }
-        this.tree = new GroupTile();
+        this.tree = root ?? new GroupTile();
     }
 
-    compress(): ArrayBuffer {
-        return new Uint8Array(0).buffer;
+    async compress(): Promise<ArrayBuffer | null> {
+        return null;
     }
 }

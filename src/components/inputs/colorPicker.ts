@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core';
 import { reactive } from 'vue';
-import { deepToRaw } from '../scripts/deepToRaw';
+import { deepToRaw } from '../scripts/utils';
 import chroma from 'chroma-js';
 
 export type ColorData = ({ type: 'solid' } & ColorPicker['solidData'])

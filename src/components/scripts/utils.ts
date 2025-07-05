@@ -1,13 +1,6 @@
+import { toRaw, isRef, isReactive, isProxy, } from 'vue';
+
 // https://github.com/vuejs/core/issues/5303
-// nope not importing lodash just to use cloneDeep
-
-import {
-    toRaw,
-    isRef,
-    isReactive,
-    isProxy,
-} from 'vue';
-
 export function deepToRaw<T extends Record<string, any>>(sourceObj: T): T {
     const objectIterator = (input: any): any => {
         if (Array.isArray(input)) {
@@ -27,3 +20,7 @@ export function deepToRaw<T extends Record<string, any>>(sourceObj: T): T {
 
     return objectIterator(sourceObj);
 }
+
+export type DeepPartial<T, Ignore = never> = T extends Ignore ? T : (T extends object ? {
+    [K in keyof T]?: DeepPartial<T[K], Ignore>
+} : T);

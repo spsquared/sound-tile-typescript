@@ -1,6 +1,6 @@
 import { reactive, ref, Ref } from 'vue';
 import { throttledWatch, useThrottleFn } from '@vueuse/core';
-import { deepToRaw } from '@/components/scripts/deepToRaw';
+import { deepToRaw } from '@/components/scripts/utils';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { ColorData } from '@/components/inputs/colorPicker';
 import chroma from 'chroma-js';

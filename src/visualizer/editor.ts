@@ -91,6 +91,7 @@ export class TileEditor {
         this.endDrag();
         this.layoutHistory.length = 0;
         this.root.copyProperties(root);
+        this.root.label = root.label;
         for (const child of root.children) child.parent = this.root;
         this.root.children.length = 0;
         this.root.children.push(...root.children);
@@ -107,11 +108,13 @@ export class TileEditor {
         this.layoutHistory.length = 0;
         const root = new GroupTile();
         root.copyProperties(this.root);
+        root.label = this.root.label;
         for (const child of this.root.children) child.parent = root;
         root.children.length = 0;
         root.children.push(...this.root.children);
         this.root.children.length = 0;
         this.root.addChild(new Tile()); // blank tile to fill group tile
+        this.root.label = 'Root Group Tile';
         return root;
     }
 
@@ -392,7 +395,6 @@ export class TileEditor {
         document.addEventListener('mouseup', () => this.endDrag());
         document.addEventListener('touchend', () => this.endDrag());
         window.addEventListener('blur', () => this.endDrag());
-        this.root.label = 'Root Group Tile';
     }
 }
 
@@ -420,5 +422,6 @@ TileEditor.registerTile(GrassTile, 'grass', false);
     root.addChild(subA);
     root.addChild(new VisualizerTile());
     root.addChild(new VisualizerTile());
+    root.label = 'Root Group Tile';
     TileEditor.attachRoot(root);
 }
