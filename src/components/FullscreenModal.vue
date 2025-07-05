@@ -13,14 +13,9 @@ const openLock = new AsyncLock();
 const result = ref(false);
 
 const body = useTemplateRef('body');
-function keydown(e: KeyboardEvent) {
-    if (!open.value) return;
-    const key = e.key.toLowerCase();
-    // in this case we don't want enter on a button to confirm the modal since it breaks keyboard accessibility
-    if ((e.target instanceof HTMLElement && e.target.matches('input'))) return;
-    if (key == 'escape') close(false);
-    else if (key == 'enter') close(true);
-}
+
+// v-bind doens't work within <Teleport> elements so we do this mess instead
+watch(() => props.color, () => body.value !== null && (body.value.style.borderColor = props.color ?? 'white'), { immediate: true });
 
 const emit = defineEmits<{
     (e: 'close', res: boolean): any
@@ -41,6 +36,14 @@ watch(open, () => {
         document.removeEventListener('keydown', keydown);
     }
 });
+function keydown(e: KeyboardEvent) {
+    if (!open.value) return;
+    const key = e.key.toLowerCase();
+    // in this case we don't want enter on a button to confirm the modal since it breaks keyboard accessibility
+    if ((e.target instanceof HTMLElement && e.target.matches('input'))) return;
+    if (key == 'escape') close(false);
+    else if (key == 'enter') close(true);
+}
 
 defineExpose<{
     open: () => void
@@ -134,7 +137,7 @@ export const enum ModalMode {
     min-width: 0px;
     padding: 4px 1em;
     background-color: black;
-    border: 4px solid v-bind("$props.color ?? 'white'");
+    border: 4px solid white;
     border-radius: 8px;
     transition: 400ms ease-in-out transform;
     transform: translateY(calc(50vh + 50%));
