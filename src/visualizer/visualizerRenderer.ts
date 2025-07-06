@@ -1,9 +1,9 @@
 import { reactive, ref, Ref } from 'vue';
 import { throttledWatch, useThrottleFn } from '@vueuse/core';
-import { deepToRaw } from '@/components/scripts/utils';
+import chroma from 'chroma-js';
+import { cloneDeep } from 'lodash-es';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { ColorData } from '@/components/inputs/colorPicker';
-import chroma from 'chroma-js';
 
 const isInWorker = 'importScripts' in globalThis;
 
@@ -49,7 +49,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
         // initialize worker with canvas immediately, this sets up communications as well
         const workerCanvas = this.canvas.transferControlToOffscreen();
         const cleanData = {
-            ...deepToRaw(this.data),
+            ...cloneDeep(this.data),
             buffer: undefined
         };
         this.worker.postMessage([workerCanvas, cleanData satisfies VisualizerSettingsData], [workerCanvas]);
@@ -68,7 +68,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     protected updateData(): void {
         // even though typing is fine, object is passed in from outside and could have buffer properties
         const clean = {
-            ...deepToRaw(this.data),
+            ...cloneDeep(this.data),
             buffer: undefined
         };
         this.postMessage('settings', { data: clean satisfies VisualizerSettingsData });
@@ -103,7 +103,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
 
     constructor(data: VisualizerSettingsData) {
         super(data);
-        this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), deepToRaw(this.data));
+        this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
     }
 
     async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
@@ -115,7 +115,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
         this.renderer.resize(w, h);
     }
     protected updateData(): void {
-        this.renderer.updateData(deepToRaw(this.data));
+        this.renderer.updateData(cloneDeep(this.data));
     }
 
     destroy(): void {

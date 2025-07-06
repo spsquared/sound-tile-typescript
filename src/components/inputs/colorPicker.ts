@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core';
 import { reactive } from 'vue';
-import { deepToRaw } from '../scripts/utils';
+import { cloneDeep } from 'lodash-es';
 import chroma from 'chroma-js';
 
 export type ColorData = ({ type: 'solid' } & ColorPicker['solidData'])
@@ -114,11 +114,11 @@ export class ColorPicker {
     }
 
     copyColor(): void {
-        clipboard.value = structuredClone(deepToRaw(this.colorData));
+        clipboard.value = cloneDeep(this.colorData);
     }
 
     pasteColor(): void {
-        this.colorData = structuredClone(deepToRaw(clipboard.value));
+        this.colorData = cloneDeep(clipboard.value);
     }
 }
 
