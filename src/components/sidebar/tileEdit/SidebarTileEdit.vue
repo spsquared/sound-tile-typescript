@@ -4,7 +4,7 @@ import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import TileEditItem from './TileEditItem.vue';
 
 function resetHover() {
-    TileEditor.state.sidebarHoverTile = null;
+    TileEditor.state.sidebarIdentifyTile = null;
 }
 </script>
 

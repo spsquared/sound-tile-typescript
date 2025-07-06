@@ -479,7 +479,7 @@ class VisualizerRenderInstance {
         this.ctx.beginPath();
         this.ctx.save();
         this.ctx.translate(thickness / 2, height / 2);
-        this.ctx.scale(xStep, this.data.waveOptions.scale * height / 4);
+        this.ctx.scale(xStep, this.data.waveOptions.scale * height / 2);
         const step = this.data.waveOptions.resolution;
         for (let i = 0; i < length; i += step) {
             this.ctx.lineTo(i, buffer[i + offset]);

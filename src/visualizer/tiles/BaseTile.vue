@@ -60,6 +60,10 @@ function toggleEditTile() {
     props.tile.editPaneOpen = !props.tile.editPaneOpen;
 }
 onBeforeUnmount(() => props.tile.editPaneOpen = false);
+
+function setIdentifyTile(v: boolean) {
+    TileEditor.state.editWindowIdentifyTile = v ? props.tile : null;
+}
 </script>
 
 <template>
@@ -73,9 +77,14 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
         </div>
         <input type="button" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" class="tileEditButton" @click="toggleEditTile">
         <Transition name="outline">
-            <div class="tileOutline" v-if="TileEditor.state.sidebarHoverTile === props.tile"></div>
+            <div class="tileOutline" v-if="TileEditor.state.sidebarIdentifyTile === props.tile || TileEditor.state.editWindowIdentifyTile === props.tile"></div>
         </Transition>
-        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarHoverTile === props.tile ? 'cyan' : 'white'" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
+        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarIdentifyTile === props.tile ? 'cyan' : 'white'" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
+            <template v-slot:bar>
+                <div class="optionsBarIdentify" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
+                    ID
+                </div>
+            </template>
             <div class="optionsWrapper">
                 <slot name="options">
                     <TileOptionsSection title="General">
@@ -224,6 +233,16 @@ onBeforeUnmount(() => props.tile.editPaneOpen = false);
 .outline-enter-to,
 .outline-leave-from {
     opacity: 1;
+}
+
+.optionsBarIdentify {
+    font-size: 16px;
+    padding: 0px 2px;
+    outline-offset: -2px;
+}
+
+.optionsBarIdentify:hover {
+    outline: 2px solid cyan;
 }
 
 .optionsWrapper {

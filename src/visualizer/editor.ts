@@ -25,7 +25,8 @@ type TileEditorState = {
         }
         sidebarDrop: boolean
     }
-    sidebarHoverTile: Tile | null
+    sidebarIdentifyTile: Tile | null
+    editWindowIdentifyTile: Tile | null
     lock: AsyncLock
 };
 
@@ -66,7 +67,8 @@ export class TileEditor {
             },
             sidebarDrop: false
         },
-        sidebarHoverTile: null,
+        sidebarIdentifyTile: null,
+        editWindowIdentifyTile: null,
         lock: new AsyncLock()
     }) as TileEditorState; // fixes Vue typing errors
 

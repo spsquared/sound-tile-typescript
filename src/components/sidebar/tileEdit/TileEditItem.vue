@@ -26,7 +26,7 @@ onBeforeUnmount(() => {
 });
 
 function setHover() {
-    TileEditor.state.sidebarHoverTile = props.tile;
+    TileEditor.state.sidebarIdentifyTile = props.tile;
 }
 
 const label = useTemplateRef('label');
@@ -49,7 +49,7 @@ function toggleEditTile() {
 const destroyDisabled = computed(() => props.root || TileEditor.state.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function dragTile(e: MouseEvent) {
     if (TileEditor.startDrag(props.tile, { x: 100, y: 5 }, { w: 200, h: 150 }, e)) {
-        TileEditor.state.sidebarHoverTile = null;
+        TileEditor.state.sidebarIdentifyTile = null;
     }
 }
 function deleteTile() {
@@ -60,7 +60,7 @@ function deleteTile() {
 
 <template>
     <div class="editItem">
-        <div class="editItemBar" ref="handle" @mouseenter="setHover">
+        <div :class="{ editItemBar: true, editItemBarIdentify: TileEditor.state.editWindowIdentifyTile === props.tile }" ref="handle" @mouseenter="setHover">
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
@@ -94,11 +94,16 @@ function deleteTile() {
     display: flex;
     flex-direction: row;
     height: 18px;
+    outline-offset: -2px;
     cursor: v-bind("props.tile instanceof GroupTile ? 'pointer' : 'default'");
 }
 
 .editItemBar:hover {
     background-color: #555;
+}
+
+.editItemBarIdentify {
+    outline: 2px solid cyan;
 }
 
 .editItemGroupIcon,

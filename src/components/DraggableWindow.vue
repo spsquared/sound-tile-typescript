@@ -141,6 +141,7 @@ const topCounter = ref(0);
         <div class="window" ref="winContainer" v-if="open" :style="dragStyle" @mousedown="bringToTop">
             <div class="windowBar" ref="winBar">
                 <span class="windowTitle">{{ props.title }}</span>
+                <slot name="bar"></slot>
                 <input type="button" class="windowClose" v-if="!props.closeOnClickOut" @click="open = false">
             </div>
             <div class="windowBody">
