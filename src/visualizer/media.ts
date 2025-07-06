@@ -180,6 +180,7 @@ export class Media implements MediaMetadata {
                     }
                     case 'cp': {
                         tile = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
+                        tile.label = 'Channel Peaks Tile';
                         break;
                     }
                     case 'i': {
