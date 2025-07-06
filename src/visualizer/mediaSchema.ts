@@ -142,15 +142,15 @@ export namespace MediaSchema {
                 alpha: 1
             };
         } else if (color.mode == 1) {
-            // currently all loaded gradients are upside down
+            // new gradients have the y-axis flipped to match the visualizer y-axis so old gradients are upside-down
             return {
                 type: 'gradient',
                 pattern: (['linear', 'radial', 'conic'] as const)[color.value.type],
-                stops: color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))),
+                stops: color.value.type == 1 ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))),
                 x: color.value.x,
-                y: color.value.y,
+                y: 1 - color.value.y,
                 radius: color.value.r,
-                angle: color.value.angle
+                angle: -color.value.angle
             };
         }
         // i mean idk

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useTemplateRef, watch } from 'vue';
+import { useEyeDropper } from '@vueuse/core';
 import DraggableWindow from '../DraggableWindow.vue';
 import ColorPicker from './colorPicker';
-import { useEyeDropper } from '@vueuse/core';
 import StrictNumberInput from './StrictNumberInput.vue';
 import ColorInput from './ColorInput.vue';
 
@@ -126,6 +126,7 @@ function removeStop(i: number) {
 
 <style scoped>
 .pickerBadge {
+    container: size;
     display: inline-block;
     box-sizing: border-box;
     vertical-align: top;
@@ -134,9 +135,19 @@ function removeStop(i: number) {
     height: v-bind("$props.badgeHeight ?? '20px'");
     border: 2px solid white;
     background-color: black;
-    background: v-bind("$props.picker.cssStyle");
     cursor: pointer;
-    --radial-gradient-size: 22px;
+    --radial-gradient-size: v-bind("`min(${$props.badgeWidth ?? '44px'}, ${$props.badgeHeight ?? '20px'})`");
+}
+
+.pickerBadge::after {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background: v-bind("$props.picker.cssStyle");
+    transform: scaleY(-1);
 }
 
 .pickerBadgeDisabled {
