@@ -54,7 +54,8 @@ export class Visualizer {
                 this.audioBuffer = null;
                 if (this.data.buffer !== null) {
                     Visualizer.recalculateDuration();
-                    this.audioBuffer = this.data.buffer !== null ? await Visualizer.audioContext.decodeAudioData(this.data.buffer) : null;
+                    // buffer is sliced as browser consumes the buffer in decoding
+                    this.audioBuffer = this.data.buffer !== null ? await Visualizer.audioContext.decodeAudioData(this.data.buffer.slice()) : null;
                 }
                 Visualizer.recalculateDuration();
                 if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();

@@ -1,4 +1,5 @@
 import { Component } from 'vue';
+import { cloneDeep, merge } from 'lodash-es';
 import ColorPicker from '@/components/inputs/colorPicker';
 import BaseTileComponent from './tiles/BaseTile.vue';
 import GroupTileComponent from './tiles/GroupTile.vue';
@@ -10,6 +11,7 @@ import blankTileImg from '@/img/blank-tile.png';
 import visualizerTileImg from '@/img/visualizer-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
+import { MediaSchema } from './mediaSchema';
 import Visualizer from './visualizer';
 import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
 
@@ -27,11 +29,17 @@ type TileComponentProps = {
  * Blank template superclass for all tiles, defines component and data standardization for all tiles.
  */
 export class Tile {
+    private static idCounter: number = 0;
+    protected static readonly tileTypes: { [key: string]: typeof Tile } = {};
+    protected static registerTile(tile: typeof Tile) { this.tileTypes[tile.id] = tile; }
+
+    static readonly id: string = 'b';
     static readonly component: Component<TileComponentProps> = BaseTileComponent;
     static readonly name: string = 'Blank Tile';
     static readonly image: string = blankTileImg;
     readonly class: typeof Tile = Tile;
-    private static idCounter: number = 0;
+    static { this.registerTile(this); }
+
     /**ID used by Vue v-for */
     readonly id: number;
     /**Ref used in components to open window */
@@ -58,6 +66,27 @@ export class Tile {
     readonly mountedListeners: Set<() => any> = new Set();
     readonly unmountedListeners: Set<() => any> = new Set();
 
+    /**Dehydrate a tile to its data */
+    getSchemaData(): MediaSchema.Tile {
+        return cloneDeep({
+            type: this.class.id,
+            label: this.label,
+            size: this.size,
+            backgroundColor: this.backgroundColor.colorData
+        });
+    }
+    /**Reconstitute a tile from its data */
+    static fromSchemaData(data: MediaSchema.Tile): Tile {
+        return this.reconstitute(data, new Tile());
+    }
+    protected static reconstitute(data: MediaSchema.Tile, tile: Tile): Tile {
+        tile.label = data.label;
+        tile.size = data.size;
+        tile.backgroundColor.colorData = data.backgroundColor;
+        return tile;
+    }
+
+    /**Deletes the tile and disposes of all resources */
     destroy(): void {
         if (this.parent !== null) this.parent.removeChild(this);
     }
@@ -67,10 +96,12 @@ export class Tile {
  * Tile to create layouts of other tiles in lines - can be nested to create complex arrangements.
  */
 export class GroupTile extends Tile {
+    static readonly id: string = 'g';
     static readonly component = GroupTileComponent;
     static readonly name: string = 'Group Tile';
     static readonly image: string = blankTileImg;
     readonly class: typeof GroupTile = GroupTile;
+    static { this.registerTile(this); }
 
     static readonly HORIZONTAL: GroupTileOrientation = GroupTileOrientation.HORIZONTAL;
     static readonly VERTICAL: GroupTileOrientation = GroupTileOrientation.VERTICAL;
@@ -156,6 +187,36 @@ export class GroupTile extends Tile {
         this.borderColor.colorData = o.borderColor.colorData;
     }
 
+    getSchemaData(): MediaSchema.GroupTile {
+        return {
+            ...super.getSchemaData(),
+            ...cloneDeep<Omit<MediaSchema.GroupTile, keyof MediaSchema.Tile>>({
+                orientation: this.orientation,
+                borderColor: this.borderColor.colorData,
+                children: this.children.map((c) => c.getSchemaData())
+            })
+        } as MediaSchema.GroupTile;
+    }
+    static fromSchemaData(data: MediaSchema.GroupTile): GroupTile {
+        return this.reconstitute(data, new GroupTile());
+    }
+    protected static reconstitute(data: MediaSchema.GroupTile, tile: GroupTile): GroupTile {
+        super.reconstitute(data, tile);
+        tile.orientation = data.orientation;
+        tile.borderColor.colorData = data.borderColor;
+        tile.children.push(...data.children.map<Tile>((child) => {
+            const TileConstructor = Tile.tileTypes[child.type];
+            if (TileConstructor === undefined) {
+                const tile = new TextTile();
+                Tile.reconstitute(child, tile);
+                // TODO: when text tiles actually exist add text
+                return tile;
+            }
+            return TileConstructor.fromSchemaData(child);
+        }))
+        return tile;
+    }
+
     destroy(): void {
         super.destroy();
         for (const child of this.children) child.destroy();
@@ -163,10 +224,12 @@ export class GroupTile extends Tile {
 }
 
 export class VisualizerTile extends Tile {
+    static readonly id: string = 'v';
     static readonly component = VisualizerTileComponent;
     static readonly name: string = 'Visualizer Tile';
     static readonly image: string = visualizerTileImg;
     readonly class: typeof VisualizerTile = VisualizerTile;
+    static { this.registerTile(this); }
 
     label: string = VisualizerTile.name;
 
@@ -182,6 +245,25 @@ export class VisualizerTile extends Tile {
         this.unmountedListeners.add(() => this.visualizer.visible.value = false);
     }
 
+    getSchemaData(): MediaSchema.VisualizerTile {
+        return {
+            ...super.getSchemaData(),
+            ...cloneDeep<Omit<MediaSchema.VisualizerTile, keyof MediaSchema.Tile>>({
+                data: this.visualizer.data
+            })
+        } as MediaSchema.VisualizerTile;
+    }
+    static fromSchemaData(data: MediaSchema.VisualizerTile): VisualizerTile {
+        // visualizer data can't be set after creation so it has to be done here
+        return this.reconstitute(data, new VisualizerTile(merge(createDefaultVisualizerData(), data.data)));
+    }
+    protected static reconstitute(data: MediaSchema.VisualizerTile, tile: VisualizerTile): VisualizerTile {
+        super.reconstitute(data, tile);
+        // if for some reason some tile extends VisualizerTile it'll have to apply visualizer data on its own
+        return tile;
+    }
+
+
     destroy(): void {
         super.destroy();
         this.visualizer.destroy();
@@ -189,28 +271,79 @@ export class VisualizerTile extends Tile {
 }
 
 export class TextTile extends Tile {
+    static readonly id: string = 't';
     static readonly component = TextTileComponent;
     static readonly name: string = 'Text Tile';
     static readonly image: string = textTileImg;
     readonly class: typeof TextTile = TextTile;
+    static { this.registerTile(this); }
 
     label: string = TextTile.name;
+
+    getSchemaData(): MediaSchema.TextTile {
+        return {
+            ...super.getSchemaData(),
+            ...cloneDeep<Omit<MediaSchema.TextTile, keyof MediaSchema.Tile>>({
+            })
+        } as MediaSchema.TextTile;
+    }
+    static fromSchemaData(data: MediaSchema.TextTile): TextTile {
+        return this.reconstitute(data, new TextTile());
+    }
+    protected static reconstitute(data: MediaSchema.TextTile, tile: TextTile): TextTile {
+        super.reconstitute(data, tile);
+        return tile;
+    }
 }
 
 export class ImageTile extends Tile {
+    static readonly id: string = 'i';
     static readonly component = ImageTileComponent;
     static readonly name: string = 'Image Tile';
     static readonly image: string = imageTileImg;
     readonly class: typeof ImageTile = ImageTile;
+    static { this.registerTile(this); }
 
     label: string = ImageTile.name;
+
+    getSchemaData(): MediaSchema.ImageTile {
+        return {
+            ...super.getSchemaData(),
+            ...cloneDeep<Omit<MediaSchema.ImageTile, keyof MediaSchema.Tile>>({
+            })
+        } as MediaSchema.ImageTile;
+    }
+    static fromSchemaData(data: MediaSchema.ImageTile): ImageTile {
+        return this.reconstitute(data, new ImageTile());
+    }
+    protected static reconstitute(data: MediaSchema.ImageTile, tile: ImageTile): ImageTile {
+        super.reconstitute(data, tile);
+        return tile
+    }
 }
 
 export class GrassTile extends Tile {
+    static readonly id: string = 'grass';
     static readonly component = GrassTileComponent;
     static readonly name: string = 'Grass Tile';
     static readonly image: string = blankTileImg;
     readonly class: typeof GrassTile = GrassTile;
+    static { this.registerTile(this); }
 
     label: string = GrassTile.name;
+
+    getSchemaData(): MediaSchema.GrassTile {
+        return {
+            ...super.getSchemaData(),
+            ...cloneDeep<Omit<MediaSchema.GrassTile, keyof MediaSchema.Tile>>({
+            })
+        } as MediaSchema.GrassTile;
+    }
+    static fromSchemaData(data: MediaSchema.GrassTile): GrassTile {
+        return this.reconstitute(data, new GrassTile());
+    }
+    protected static reconstitute(data: MediaSchema.GrassTile, tile: GrassTile): GrassTile {
+        super.reconstitute(data, tile);
+        return tile
+    }
 }

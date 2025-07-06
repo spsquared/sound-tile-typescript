@@ -70,8 +70,8 @@ export class TileEditor {
         lock: new AsyncLock()
     }) as TileEditorState; // fixes Vue typing errors
 
-    static registerTile(t: typeof Tile, id: string, visible: boolean): void {
-        this.state.tileTypes[id] = { Tile: t, visible: visible };
+    static registerTile(t: typeof Tile, visible: boolean): void {
+        this.state.tileTypes[t.id] = { Tile: t, visible: visible };
     }
 
     /**
@@ -399,27 +399,9 @@ export class TileEditor {
 export default TileEditor;
 
 // tiles that get displayed in drag-and-drop source
-TileEditor.registerTile(GroupTile, 'g', false);
-TileEditor.registerTile(VisualizerTile, 'v', true);
-TileEditor.registerTile(TextTile, 't', true);
-TileEditor.registerTile(ImageTile, 'i', true);
-TileEditor.registerTile(Tile, 'b', true);
-TileEditor.registerTile(GrassTile, 'grass', false);
-
-// default state
-{
-    const root = new GroupTile();
-    const subA = new GroupTile();
-    const subB = new GroupTile();
-    subA.orientation = GroupTile.VERTICAL;
-    subA.addChild(new VisualizerTile());
-    subB.addChild(new ImageTile());
-    subB.addChild(new TextTile());
-    subA.addChild(subB);
-    subA.addChild(new VisualizerTile());
-    root.addChild(subA);
-    root.addChild(new VisualizerTile());
-    root.addChild(new VisualizerTile());
-    root.label = 'Root Group Tile';
-    TileEditor.attachRoot(root);
-}
+TileEditor.registerTile(GroupTile, false);
+TileEditor.registerTile(VisualizerTile, true);
+TileEditor.registerTile(TextTile, true);
+TileEditor.registerTile(ImageTile, true);
+TileEditor.registerTile(Tile, true);
+TileEditor.registerTile(GrassTile, false);

@@ -2,17 +2,21 @@ import { computed, ComputedRef, reactive, ref, Ref, watch, WritableComputedRef }
 import { Media, defaultCoverArt } from './media';
 import Visualizer from './visualizer';
 import { throttledWatch, useWakeLock } from '@vueuse/core';
+import TileEditor from './editor';
+import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
+
+type MediaPlayerState = {
+    current: Media
+    shuffle: boolean
+    loop: boolean
+    volume: number
+};
 
 /**
  * Global media controls, coordinates visualizer & controls.
  */
 export class MediaPlayer {
-    static readonly state = reactive<{
-        current: Media
-        shuffle: boolean
-        loop: boolean
-        volume: number
-    }>({
+    static readonly state: MediaPlayerState = reactive<MediaPlayerState>({
         current: new Media({
             title: '',
             subtitle: '',
@@ -21,7 +25,7 @@ export class MediaPlayer {
         shuffle: localStorage.getItem('shuffle') == 'true',
         loop: localStorage.getItem('loop') == 'true',
         volume: Number(localStorage.getItem('volume') ?? '1')
-    });
+    }) as MediaPlayerState;
     private static readonly internalTimer = reactive<{
         // setting startTime essentially determines the offset of the audio
         startTime: number
@@ -81,6 +85,7 @@ export class MediaPlayer {
         return `${minutes}:${seconds}`;
     }
 
+    // playback
     static {
         watch(() => this.state.shuffle, () => localStorage.setItem('shuffle', this.state.shuffle + ''));
         watch(() => this.state.loop, () => localStorage.setItem('loop', this.state.loop + ''));
@@ -104,6 +109,39 @@ export class MediaPlayer {
         });
         setInterval(() => this.internalTimer.now = performance.now() / 1000, 20);
     }
+
+    // playlist and session
+    static {
+        watch(() => this.state.current, async (_session, oldSession) => {
+            // put the old tree back into old session
+            await TileEditor.state.lock.acquire();
+            oldSession.tree = TileEditor.detachRoot();
+            this.state.current.tree = TileEditor.attachRoot(this.state.current.tree);
+            TileEditor.state.lock.release();
+        });
+    }
+}
+
+// default state
+{
+    const root = new GroupTile();
+    const subA = new GroupTile();
+    const subB = new GroupTile();
+    subA.orientation = GroupTile.VERTICAL;
+    subA.addChild(new VisualizerTile());
+    subB.addChild(new ImageTile());
+    subB.addChild(new TextTile());
+    subA.addChild(subB);
+    subA.addChild(new VisualizerTile());
+    root.addChild(subA);
+    root.addChild(new VisualizerTile());
+    root.addChild(new VisualizerTile());
+    root.label = 'Root Group Tile';
+    MediaPlayer.state.current = new Media({
+        title: '',
+        subtitle: '',
+        coverArt: defaultCoverArt
+    }, root);
 }
 
 export default MediaPlayer;

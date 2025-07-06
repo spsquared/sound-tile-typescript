@@ -2,24 +2,27 @@ import { merge } from 'lodash-es'; // hopefully tree-shakeable
 import { DeepPartial } from '@/components/scripts/utils';
 import { ColorData } from '@/components/inputs/colorPicker';
 import { createDefaultVisualizerData, VisualizerData, VisualizerMode } from './visualizerData';
+import { GroupTile as GroupTileInstance } from './tiles';
 
 export namespace MediaSchema {
-    // extracting data using types was too annoying so here we are
-
     /**Blank tile schema-layout data */
     export type Tile = {
+        // type can't be stricter without causing issues for subclasses
+        // abstract BaseTile would break code that relies on instances of arbitrary tiles
+        type: string
         label: string
         size: number
         backgroundColor: ColorData
     };
     /**Group tile schema-layout data */
     export type GroupTile = Tile & {
+        orientation: typeof GroupTileInstance.HORIZONTAL
         borderColor: ColorData
         children: Tile[]
     };
     /**Visualizer tile schema-layout data - data is partial as files may be missing newer additions */
     export type VisualizerTile = Tile & {
-        data: DeepPartial<Omit<VisualizerData, 'buffer'>, ColorData> & { buffer: number }
+        data: DeepPartial<Omit<VisualizerData, 'buffer'>, ColorData> & { buffer: ArrayBuffer | number | null }
     };
     /**Text tile schema-layout data */
     export type TextTile = Tile & {};
@@ -48,7 +51,14 @@ export namespace MediaSchema {
         value: string
     } | {
         mode: 1,
-        value: Omit<(ColorData & { type: 'gradient' }), 'radius' | 'stops'> & { r: number, stops: [number, string][] }
+        value: {
+            type: 0 | 1 | 2
+            stops: [number, string][]
+            x: number
+            y: number
+            r: number
+            angle: number
+        }
     }
     /**Legacy (old Sound Tile) visualizer options & audio data. */
     export type LegacyVisualizerData = {
@@ -132,13 +142,14 @@ export namespace MediaSchema {
                 alpha: 1
             };
         } else if (color.mode == 1) {
+            // currently all loaded gradients are upside down
             return {
                 type: 'gradient',
-                pattern: color.value.pattern,
-                stops: color.value.stops.map((([t, c]) => ({ t: t / 100, c: c, a: 1 }))),
-                x: color.value.x / 100,
-                y: color.value.y / 100,
-                radius: color.value.r / 100,
+                pattern: (['linear', 'radial', 'conic'] as const)[color.value.type],
+                stops: color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))),
+                x: color.value.x,
+                y: color.value.y,
+                radius: color.value.r,
                 angle: color.value.angle
             };
         }
@@ -224,7 +235,7 @@ export namespace MediaSchema {
 
     /**Legacy (old Sound Tile) tree layouts, very scuffed. */
     export type LegacyTree = {
-        orientation: number
+        orientation: 0 | 1
         flex?: number
         flexGrow?: number
         children: LegacyTree[]
@@ -284,34 +295,29 @@ export namespace MediaSchema {
 
     /**File layout for extremely old legacy Sound Tile schema V1 */
     export type SchemaV0 = {
-        version: 0,
-        tree: {
-            root: LegacyTree
-        }
+        version: 0
+        root: LegacyTree
     };
     /**File layout for legacy Sound Tile schema V2 */
     export type SchemaV1 = {
-        version: 1,
-        tree: {
-            // why metadata in tree? NO IDEA
-            metadata: {
-                image: string
-                title: string
-                subtitle: string
-            },
-            root: LegacyTree
-        }
+        version: 1
+        root: LegacyTree
+        metadata: {
+            image: string
+            title: string
+            subtitle: string
+        },
     };
     /**File layout for Sound Tile schema V1, current version */
     export type SchemaV2 = {
-        version: 2,
+        version: 2
         metadata: {
             coverArt: string
             title: string
             subtitle: string
         }
         sources: ArrayBuffer[]
-        tree: Tile
+        tree: GroupTile
     };
 
     /**File layouts for all schema versions. */
