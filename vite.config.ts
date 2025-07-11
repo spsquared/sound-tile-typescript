@@ -30,9 +30,9 @@ export default defineConfig(async () => ({
             // 3. tell vite to ignore watching `src-tauri`
             ignored: ["**/src-tauri/**"],
         },
-        https: {
+        https: existsSync('localhost.key') ? {
             key: readFileSync('localhost.key'),
             cert: readFileSync('localhost.crt')
-        }
+        } : undefined
     }
 }));
