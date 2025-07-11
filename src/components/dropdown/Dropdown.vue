@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, onUnmounted, Ref, ref, watch } from 'vue';
-import { copyright } from '@/constants';
+import { copyright, matchTextInput } from '@/constants';
 import TileEditor from '@/visualizer/editor';
 import DropdownFileControls from './DropdownFileControls.vue';
 import DropdownMediaData from './DropdownMediaData.vue';
@@ -8,7 +8,7 @@ import DropdownMediaControls from './DropdownMediaControls.vue';
 import DropdownEditControls from './DropdownEditControls.vue';
 
 function keydown(e: KeyboardEvent) {
-    if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
+    if (matchTextInput(e.target)) return;
     if (e.key.toLowerCase() == 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.shiftKey) {
             TileEditor.state.dropdownOpen = false;

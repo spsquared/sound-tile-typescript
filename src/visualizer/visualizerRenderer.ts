@@ -45,7 +45,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
 
     constructor(data: VisualizerSettingsData) {
         super(data);
-        this.worker = new Worker(new URL('./visualizerRenderer.ts', import.meta.url), { type: 'module' });
+        this.worker = new Worker(import.meta.url, { type: 'module' });
         // initialize worker with canvas immediately, this sets up communications as well
         const workerCanvas = this.canvas.transferControlToOffscreen();
         const cleanData = {

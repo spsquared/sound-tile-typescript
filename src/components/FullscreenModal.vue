@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { nextTick, ref, useTemplateRef, watch } from 'vue';
+import { matchInput } from '@/constants';
 import { AsyncLock } from './scripts/lock';
 
 const props = defineProps<{
     title: string
     mode: ModalMode
     color?: string
+    effect?: 'frost-window' | 'frost-screen' | 'dim-screen' // default is dim-screen
 }>();
 
 const open = defineModel({ default: false });
@@ -40,7 +42,7 @@ function keydown(e: KeyboardEvent) {
     if (!open.value) return;
     const key = e.key.toLowerCase();
     // in this case we don't want enter on a button to confirm the modal since it breaks keyboard accessibility
-    if ((e.target instanceof HTMLElement && e.target.matches('input'))) return;
+    if (matchInput(e.target)) return;
     if (key == 'escape') close(false);
     else if (key == 'enter') close(true);
 }
@@ -74,8 +76,8 @@ export const enum ModalMode {
 <template>
     <Teleport to="#root">
         <Transition>
-            <div class="modalContainer" v-if="open">
-                <div class="modalBody" ref="body">
+            <div :class="{ modalContainer: true, modalContainerFrost: props.effect == 'frost-screen' }" v-if="open">
+                <div :class="{ modalBody: true, modalBodyFrost: props.effect == 'frost-window' }" ref="body">
                     <h1>{{ props.title }}</h1>
                     <slot></slot>
                     <div class="modalButtons">
@@ -117,8 +119,11 @@ export const enum ModalMode {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     transition: 300ms linear opacity;
-    backdrop-filter: blur(2px);
     z-index: 1000;
+}
+
+.modalContainerFrost {
+    backdrop-filter: blur(4px);
 }
 
 @media (max-width: 500px) {
@@ -142,6 +147,11 @@ export const enum ModalMode {
     transition: 400ms ease-in-out transform;
     transform: translateY(calc(50vh + 50%));
     text-align: center;
+}
+
+.modalBodyFrost {
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px);
 }
 
 .modalBody h1 {

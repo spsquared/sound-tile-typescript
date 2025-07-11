@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '../inputs/Toggle.vue';
+import { matchTextInput } from '@/constants';
 import volume0Icon from '@/img/volume0-dark.svg';
 import volume1Icon from '@/img/volume1-dark.svg';
 import volume2Icon from '@/img/volume2-dark.svg';
@@ -12,7 +13,7 @@ import { computed, onMounted, onUnmounted } from 'vue';
 const volumeIcon = computed(() => MediaPlayer.state.volume > 0.75 ? volume2Icon : (MediaPlayer.state.volume > 0 ? volume1Icon : volume0Icon));
 
 function keydown(e: KeyboardEvent) {
-    if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
+    if (matchTextInput(e.target)) return;
     const key = e.key.toLowerCase();
     if (key == ' ' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
         MediaPlayer.playing.value = !MediaPlayer.playing.value;

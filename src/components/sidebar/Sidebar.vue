@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
+import { matchTextInput } from '@/constants';
 import TileEditor from '@/visualizer/editor';
 import SidebarTileEdit from './tileEdit/SidebarTileEdit.vue';
 import SidebarExport from './export/SidebarExport.vue';
@@ -10,7 +11,7 @@ import exportIcon from '@/img/export.svg';
 import playlistIcon from '@/img/playlist.svg';
 
 function keydown(e: KeyboardEvent) {
-    if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
+    if (matchTextInput(e.target)) return;
     if (e.key.toLowerCase() == 'e' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.shiftKey) {
             TileEditor.state.dropdownOpen = false;

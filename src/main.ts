@@ -15,8 +15,9 @@ document.addEventListener('keydown', (e) => {
     else if (key == 'o' && e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) e.preventDefault();
     else if (key == 'p' && e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
     // really annoying when pressing space triggers a button or checkbox
-    if (key == ' ' && e.target instanceof HTMLElement && e.target.matches('input[type=button],input[type=checkbox]')) e.preventDefault();
+    if (key == ' ' && e.target instanceof HTMLElement && e.target.matches('button,input[type=button],input[type=checkbox]')) e.preventDefault();
 });
+
 // warn leaving page
 // window.addEventListener('beforeunload', (e) => {
 //     e.preventDefault();

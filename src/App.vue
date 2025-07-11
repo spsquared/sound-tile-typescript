@@ -32,7 +32,7 @@ window.addEventListener('error', (e) => {
     <TileRoot></TileRoot>
     <TileDrag></TileDrag>
     <Sidebar></Sidebar>
-    <FullscreenModal :title="`Sound Tile v${version}`" :mode="ModalMode.NOTIFY" v-model="showAppInfo">
+    <FullscreenModal :title="`Sound Tile v${version}`" :mode="ModalMode.NOTIFY" v-model="showAppInfo" effect="frost-window">
         <b>{{ copyright }} under GNU GPL 3.0</b>
         <br>
         Source code is available on GitHub at

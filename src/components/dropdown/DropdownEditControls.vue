@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue';
+import { matchTextInput } from '@/constants';
 import TileEditor from '@/visualizer/editor';
 import TileSource from './TileSource.vue';
 
 function keydown(e: KeyboardEvent) {
-    if (e.target instanceof HTMLElement && e.target.matches('input[type=text],input[type=number]')) return;
+    if (matchTextInput(e.target)) return;
     if (e.key.toLowerCase() == 't' && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
         TileEditor.state.treeMode = !TileEditor.state.treeMode;
     }
