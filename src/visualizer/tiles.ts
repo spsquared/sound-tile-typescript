@@ -280,6 +280,8 @@ export class TextTile extends Tile {
 
     label: string = TextTile.name;
 
+    text: string = 'Text Here';
+
     getSchemaData(): MediaSchema.TextTile {
         return {
             ...super.getSchemaData(),

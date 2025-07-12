@@ -1,6 +1,8 @@
 import '@/assets/fonts.css';
 import '@/assets/common.css';
 
+import('@/trixConfig');
+
 import { createApp } from 'vue';
 import App from '@/App.vue';
 

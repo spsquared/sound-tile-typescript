@@ -148,10 +148,34 @@ a[no-deco] {
 }
 
 code {
-    padding: 0px 0.3em;
+    padding-inline: 0px;
+    padding-block: 0.2em;
     font-family: 'Source Code Pro', Courier, monospace;
-    background-color: #FFF3;
+    background-color: #FFF2;
     border-radius: 0.2em;
+}
+
+pre {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.2em 0.2em;
+    margin-inline: 0px;
+    margin-block: 0.5em;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #FFF2;
+    border-radius: 0.2em;
+    white-space: pre;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+blockquote {
+    box-sizing: border-box;
+    padding: 0.2em 0.2em;
+    border-left: 0.2em solid #FFF5;
+    border-radius: 0.2em;
+    margin-inline: 1em;
+    margin-block: 0.5em;
 }
 
 ul,

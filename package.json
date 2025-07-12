@@ -17,6 +17,8 @@
     "chroma-js": "^3.1.2",
     "fflate": "^0.8.2",
     "lodash-es": "^4.17.21",
+    "sanitize-html": "^2.17.0",
+    "trix": "^2.1.15",
     "vue": "^3.5.13"
   },
   "devDependencies": {
@@ -25,10 +27,11 @@
     "@types/chroma-js": "^3.1.1",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.15.24",
+    "@types/sanitize-html": "^2.16.0",
     "@types/wicg-file-system-access": "^2023.10.6",
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "^5.8.3",
-    "vite": "^6.0.3",
+    "vite": "^6.3.5",
     "vue-tsc": "^2.1.10"
   }
 }
