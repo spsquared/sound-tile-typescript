@@ -79,7 +79,7 @@ function setIdentifyTile(v: boolean) {
         <Transition name="outline">
             <div class="tileOutline" v-if="TileEditor.state.sidebarIdentifyTile === props.tile || TileEditor.state.editWindowIdentifyTile === props.tile"></div>
         </Transition>
-        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarIdentifyTile === props.tile ? 'cyan' : 'white'" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
+        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.optionsWindow?.title ?? props.tile.label" :border-color="TileEditor.state.sidebarIdentifyTile === props.tile ? 'cyan' : 'white'" frosted :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
             <template v-slot:bar>
                 <div class="optionsBarIdentify" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
                     ID

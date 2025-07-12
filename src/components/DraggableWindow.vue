@@ -11,6 +11,7 @@ const props = defineProps<{
     resizeable?: boolean
     closeOnClickOut?: boolean
     borderColor?: string
+    frosted?: boolean
 }>();
 
 const winBounds = useTemplateRef('winBounds');
@@ -144,7 +145,7 @@ const topCounter = ref(0);
                 <slot name="bar"></slot>
                 <input type="button" class="windowClose" v-if="!props.closeOnClickOut" @click="open = false">
             </div>
-            <div class="windowBody">
+            <div :class="{ windowBody: true, windowBodyFrosted: props.frosted }">
                 <slot></slot>
             </div>
             <div class="windowResize reTop" v-if="props.resizeable || props.resizeHeight" @mousedown="beginResize(0b1000, $event)"></div>
@@ -231,6 +232,11 @@ const topCounter = ref(0);
     width: v-bind("size.w + 'px'");
     height: v-bind("size.h + 'px'");
     overflow: auto;
+}
+
+.windowBodyFrosted {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
 }
 
 .windowResize {
