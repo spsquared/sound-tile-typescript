@@ -1,6 +1,9 @@
 import '@/assets/fonts.css';
 import '@/assets/common.css';
 
+// trix is loaded separately from the site for better loading
+import './trixConfig';
+
 import { createApp } from 'vue';
 import App from '@/App.vue';
 

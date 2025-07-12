@@ -4,10 +4,17 @@ import { existsSync, readFileSync } from 'fs';
 import { resolve } from "path";
 
 const host = process.env.TAURI_DEV_HOST;
+const customElements = ['trix-editor'];
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-    plugins: [vue()],
+    plugins: [vue({
+        template: {
+            compilerOptions: {
+                isCustomElement: (tag) => customElements.includes(tag)
+            }
+        }
+    })],
     build: {
         target: 'modules'
     },

@@ -4,6 +4,7 @@ import { TextTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
+import TrixTextEditor from '@/components/inputs/TrixTextEditor.vue';
 
 const props = defineProps<{
     tile: TextTile
@@ -11,7 +12,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <BaseTile :tile="props.tile">
+    <BaseTile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template v-slot:content>
             oof text tile
         </template>
@@ -29,6 +30,9 @@ const props = defineProps<{
                     Background
                     <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
                 </label>
+            </TileOptionsSection>
+            <TileOptionsSection title="Text">
+                <TrixTextEditor></TrixTextEditor>
             </TileOptionsSection>
         </template>
     </BaseTile>
