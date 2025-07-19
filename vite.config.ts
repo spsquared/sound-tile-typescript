@@ -23,7 +23,8 @@ export default defineConfig(async () => ({
     build: {
         target: 'modules',
         // lower this because why not
-        assetsInlineLimit: 1024
+        assetsInlineLimit: 2048,
+        // rollupOptions: { output: { sourcemap: true } }
     },
     resolve: {
         alias: {

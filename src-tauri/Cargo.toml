@@ -1,9 +1,9 @@
 [package]
 name = "sound-tile"
-version = "0.0.0"
+version = "2.0.0"
 description = "Tile-based music visualizer"
 authors = ["spsquared"]
-edition = "2021"
+edition = "2025"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
