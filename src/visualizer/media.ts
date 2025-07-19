@@ -1,5 +1,5 @@
-import { encode as encodeMsgpack, decodeAsync as decodeMsgpackAsync } from '@msgpack/msgpack';
-import { gzip, gzipSync, decompress, decompressSync } from 'fflate';
+const msgpack = import('@msgpack/msgpack');
+const fflate = import('fflate');
 import { printStackTrace } from '@/components/scripts/debug';
 import { soundtileMsgpackExtensions } from '@/components/scripts/msgpackExtensions';
 import { MediaSchema } from './mediaSchema';
@@ -40,7 +40,8 @@ export class Media implements MediaMetadata {
      * (buffers may still be destroyed if `consume` is true!)
      */
     async compress(consume: boolean = false): Promise<ArrayBuffer | null> {
-        consume = false
+        const encodeMsgpack = (await msgpack).encode;
+        const { gzip, gzipSync } = await fflate;
         try {
             // conversion recursion actually happens in the tile code
             const root: MediaSchema.GroupTile = this.tree.getSchemaData();
@@ -105,6 +106,7 @@ export class Media implements MediaMetadata {
      * @returns Media instance, or `null` if an error occured in decoding
      */
     static async decompress(file: ArrayBuffer | File): Promise<Media | null> {
+        const decodeMsgpackAsync = (await msgpack).decodeAsync;
         try {
             // if the data is invalid then it'll probably crash and then we return null
             const stream = file instanceof File ? file.stream() : new ReadableStream(new Blob([new Uint8Array(file)]).stream());
@@ -217,6 +219,7 @@ export class Media implements MediaMetadata {
     }
     private static async decompressV1(data: MediaSchema.SchemaV1): Promise<Media | null> {
         const { root, metadata } = data;
+        const { decompress, decompressSync } = await fflate;
         // mirroring legacy code, decompress all buffers and then run v0 decompression
         const stack: MediaSchema.LegacyTree[] = [root];
         const promises: Promise<any>[] = [];
@@ -251,6 +254,7 @@ export class Media implements MediaMetadata {
     }
     private static async decompressV2(data: MediaSchema.SchemaV2): Promise<Media | null> {
         const { sources, tree, metadata } = data;
+        const { decompress, decompressSync } = await fflate;
         // decompress all sources first
         await Promise.all(sources.map(async (buffer, i) => {
             if (webWorkerSupported) {
