@@ -157,6 +157,7 @@ code {
 
 pre {
     box-sizing: border-box;
+    display: block;
     width: 100%;
     padding: 0.2em 0.2em;
     margin-inline: 0px;
