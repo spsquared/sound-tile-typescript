@@ -229,7 +229,7 @@ namespace Trix {
 
         attributeIsActive(attribute: string, value?: AttributeValue): boolean
         canActivateAttribute(attribute: string): boolean
-        activateAttribute(attribute: string): boolean
+        activateAttribute(attribute: string, value: AttributeValue): boolean
         deactivateAttribute(attribute: string): boolean
         canIncreaseNestingLevel(): boolean
         increaseNestingLevel(): boolean
