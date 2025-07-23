@@ -132,7 +132,7 @@ export namespace MediaSchema {
      * @param color Color in old format
      * @returns Color in new format
      */
-    export function translateLegacyColorData(color: string | LegacyColorData): ColorData {
+    export function translateLegacyColorData(color: string | LegacyColorData, preserveGradientStops: boolean = false): ColorData {
         if (typeof color == 'string') {
             return {
                 type: 'solid',
@@ -151,7 +151,7 @@ export namespace MediaSchema {
             return {
                 type: 'gradient',
                 pattern: (['linear', 'radial', 'conic'] as const)[color.value.type],
-                stops: color.value.type == 1 ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))).reverse(),
+                stops: (color.value.type == 1 || preserveGradientStops) ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))).reverse(),
                 x: color.value.x,
                 y: 1 - color.value.y,
                 radius: color.value.r,
@@ -194,7 +194,7 @@ export namespace MediaSchema {
             mode: legacyModeTranslator[data.mode] ?? VisualizerMode.FREQ_BAR,
             gain: data?.volume,
             mute: data?.muteOutput,
-            color: translateLegacyColorData(data.color),
+            color: translateLegacyColorData(data.color, data.altColor && [0, 1, 8].includes(data.mode)),
             color2: translateLegacyColorData(data.color2),
             color2Alpha: data.fillAlpha,
             altColorMode: data.altColor,
