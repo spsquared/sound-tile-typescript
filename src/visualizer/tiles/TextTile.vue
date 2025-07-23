@@ -42,7 +42,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
                 </label>
             </TileOptionsSection>
             <TileOptionsSection title="Text">
-                <TrixTextEditor @input="setText" :initial-value="props.tile.text"></TrixTextEditor>
+                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" resizeable></TrixTextEditor>
             </TileOptionsSection>
         </template>
     </BaseTile>
@@ -52,13 +52,11 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
 .textContain {
     /* NO CSS PUTTING STUFF OUTSIDE THE BOX */
     contain: strict;
-    /* text is sized using CH units */
-    container-type: size;
-    /* box */
     position: absolute;
     top: 0px;
     left: 0px;
     width: 100%;
     height: 100%;
+    font-size: 1cqh;
 }
 </style>

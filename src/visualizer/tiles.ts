@@ -280,7 +280,7 @@ export class TextTile extends Tile {
 
     label: string = TextTile.name;
 
-    text: string = 'Text Here';
+    text: string = '<span style="font-size: 20em;">Text Here</span>';
 
     getSchemaData(): MediaSchema.TextTile {
         return {

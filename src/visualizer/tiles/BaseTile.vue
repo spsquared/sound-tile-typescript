@@ -110,6 +110,7 @@ function setIdentifyTile(v: boolean) {
 <style scoped>
 .tile {
     contain: strict;
+    container-type: size;
     position: relative;
     background: v-bind("props.tile.backgroundColor.cssStyle");
     flex: v-bind("$props.tile.size");

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trixLoaded } from '@/trix';
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
 // trix isn't made for vue so it's not reactive, hence all this weird stuff
@@ -8,6 +9,7 @@ const props = defineProps<{
     initialValue?: string
     minLines?: number
     maxLines?: number
+    resizeable?: boolean
     disabled?: boolean
 }>();
 
@@ -20,7 +22,7 @@ const emit = defineEmits<{
 }>();
 
 function trixUpdate() {
-    if (inputEl.value !== null) {
+    if (inputEl.value !== null && value.value !== inputEl.value.value) {
         value.value = inputEl.value.value;
         emit('input', value.value);
         console.log(inputEl.value.value)
@@ -35,9 +37,10 @@ let globalIdCounter = 0;
 </script>
 
 <template>
-    <div class="editorContainer">
+    <div class="editorContainer" v-if="trixLoaded">
         <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
-        <trix-editor :input="thisId" :disabled="props.disabled"></trix-editor>
+        <trix-toolbar :id="thisId + 'a'"></trix-toolbar>
+        <trix-editor :input="thisId" :toolbar="thisId + 'a'" :disabled="props.disabled"></trix-editor>
     </div>
 </template>
 
@@ -49,8 +52,10 @@ let globalIdCounter = 0;
 }
 
 trix-editor {
-    min-height: v-bind("($props.minLines ?? 0) + 'em'");
-    max-height: v-bind("($props.maxLines ?? -1) + 'em'");
+    min-height: v-bind("($props.minLines ?? 0) * 12 + 'em'") !important;
+    max-height: v-bind("($props.maxLines ?? -1) * 12 + 'em'") !important;
+    height: 60em;
+    resize: v-bind("$props.resizeable ? 'vertical' : 'none'")
 }
 
 pre {
