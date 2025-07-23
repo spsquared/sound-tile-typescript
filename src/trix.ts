@@ -18,6 +18,14 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
         parser: (el: HTMLElement) => el.style.textDecoration == 'underline',
         inheritable: true
     };
+    ['align-left', 'align-center', 'align-right', 'align-justified'].forEach((tag) => {
+        Trix.config.blockAttributes[tag.substring(0, 5) + tag.charAt(6).toUpperCase() + tag.substring(7)] = {
+            tagName: tag,
+            // there's no way to just make it its own thing
+            nestable: false,
+            exclusive: true
+        }
+    });
     Trix.config.toolbar.getDefaultHTML = () => html;
 
     // no easy way to add things like colors and font size so this is how we do it then
@@ -29,8 +37,6 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
             console.warn('Failed to properly initialize Trix editor custom controls');
             return;
         }
-        // attribute syncing
-        const commonAttributeListeners: Set<(attr: Trix.AttributeRecord) => any> = new Set();
         // font SIZE
         fontSize: {
             const input = toolbarElement.querySelector('.trix-x-size-input') as HTMLInputElement;
@@ -58,19 +64,19 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
             });
             decrement.addEventListener('click', () => setValue(Math.round(currentValue) - 1));
             increment.addEventListener('click', () => setValue(Math.round(currentValue) + 1));
-            commonAttributeListeners.add((attributes) => {
-                if ('fontSize' in attributes) setValue(Number(attributes.fontSize.toString().replace('em', '')) * 10, false);
-                else input.value = '';
+            editorElement.addEventListener('trix-selection-change', () => {
+                // not checking event target since this is the editor element
+                if (!editor.attributeIsActive('fontSize')) {
+                    // when creating new blocks fontSize is lost, wait is necessary because event is fired at weird time
+                    setTimeout(() => setValue(currentValue));
+                } else {
+                    const attributes = editor.getDocument().getCommonAttributesAtRange(editor.getSelectedRange());
+                    if ('fontSize' in attributes) setValue(Number(attributes.fontSize.toString().replace('em', '')) * 10, false);
+                    else input.value = '';
+                }
             });
             setValue(20);
         }
-        editorElement.addEventListener('trix-selection-change', () => {
-            // not checking event target since this is the editor element
-            const attributes = editor.getDocument().getCommonAttributesAtRange(editor.getSelectedRange());
-            for (const cb of commonAttributeListeners) {
-                try { cb(attributes) } catch (err) { console.error(err); }
-            }
-        });
     });
     // document.addEventListener('trix-action-invoke', (e: any) => {
     //     const { target, invokingElement, action } = e as TrixEvent;

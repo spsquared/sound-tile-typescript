@@ -184,6 +184,32 @@ ol {
     margin: 0px 0px;
 }
 
+/* custom elements but not using web components api but also browser dont care */
+
+align-left,
+align-center,
+align-right,
+align-justified {
+    display: inline-block;
+    width: 100%;
+}
+
+align-left {
+    text-align: left;
+}
+
+align-center {
+    text-align: center;
+}
+
+align-right {
+    text-align: right;
+}
+
+align-justified {
+    text-align: justify;
+}
+
 /* scroll bars */
 
 * {

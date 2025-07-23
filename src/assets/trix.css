@@ -116,4 +116,20 @@ trix-toolbar {
     .trix-button--icon-font::before {
         background-image: url(data:image/svg+xml,);
     }
+
+    .trix-button--icon-align-left::before {
+        background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224px%22%20viewBox%3D%220%20-960%20960%20960%22%20width%3D%2224px%22%20fill%3D%22000000%22%3E%3Cpath%20d%3D%22M120-120v-80h720v80H120Zm0-160v-80h480v80H120Zm0-160v-80h720v80H120Zm0-160v-80h480v80H120Zm0-160v-80h720v80H120Z%22%2F%3E%3C%2Fsvg%3E);
+    }
+
+    .trix-button--icon-align-center::before {
+        background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224px%22%20viewBox%3D%220%20-960%20960%20960%22%20width%3D%2224px%22%20fill%3D%22000000%22%3E%3Cpath%20d%3D%22M120-120v-80h720v80H120Zm160-160v-80h400v80H280ZM120-440v-80h720v80H120Zm160-160v-80h400v80H280ZM120-760v-80h720v80H120Z%22%2F%3E%3C%2Fsvg%3E);
+    }
+
+    .trix-button--icon-align-right::before {
+        background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224px%22%20viewBox%3D%220%20-960%20960%20960%22%20width%3D%2224px%22%20fill%3D%22000000%22%3E%3Cpath%20d%3D%22M120-760v-80h720v80H120Zm240%20160v-80h480v80H360ZM120-440v-80h720v80H120Zm240%20160v-80h480v80H360ZM120-120v-80h720v80H120Z%22%2F%3E%3C%2Fsvg%3E);
+    }
+
+    .trix-button--icon-align-justified::before {
+        background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224px%22%20viewBox%3D%220%20-960%20960%20960%22%20width%3D%2224px%22%20fill%3D%22000000%22%3E%3Cpath%20d%3D%22M120-120v-80h720v80H120Zm0-160v-80h720v80H120Zm0-160v-80h720v80H120Zm0-160v-80h720v80H120Zm0-160v-80h720v80H120Z%22%2F%3E%3C%2Fsvg%3E);
+    }
 }

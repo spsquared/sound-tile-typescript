@@ -227,9 +227,9 @@ namespace Trix {
         getDocument(): Document
         loadDocument(doc: Document): unknown
 
-        attributeIsActive(attribute: string, value?: AttributeValue): boolean
+        attributeIsActive(attribute: string): boolean
         canActivateAttribute(attribute: string): boolean
-        activateAttribute(attribute: string, value: AttributeValue): boolean
+        activateAttribute(attribute: string, value?: AttributeValue): boolean
         deactivateAttribute(attribute: string): boolean
         canIncreaseNestingLevel(): boolean
         increaseNestingLevel(): boolean
@@ -318,9 +318,24 @@ namespace Trix {
         Text: typeof Text
         UndoManager: typeof EmptyClass
         VERSION: string
+        // most config options are basically undocumented unless you want to do some code archeology
         config: {
             attachments: any
-            blockAttributes: any
+            blockAttributes: Record<string, {
+                tagName: string
+                parse?: boolean
+                nestable?: boolean
+                terminal?: boolean
+                exclusive?: boolean
+                group?: boolean
+                breakOnReturn?: boolean
+                text?: {
+                    plaintext?: boolean
+                }
+                htmlAttributes?: string[] // just allowed HTML attributes
+                listAttribute?: string
+                test?: (element: HTMLElement) => boolean
+            }>
             browser: any
             css: any
             dompurify: any
@@ -329,7 +344,14 @@ namespace Trix {
             keyNames: any
             lang: any
             parser: any
-            textAttributes: any
+            textAttributes: Record<string, {
+                tagName?: string
+                groupTagName?: string
+                inheritable?: boolean
+                style?: Record<string, string>
+                styleProperty?: string
+                parser?: (element: HTMLElement) => boolean
+            }>
             toolbar: any
             undo: any
         }

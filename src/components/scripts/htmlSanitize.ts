@@ -1,6 +1,7 @@
 import sanitizeHtml from 'sanitize-html';
 
 const tags = [
+    'br',
     'div',
     'span',
     'b',
@@ -8,7 +9,10 @@ const tags = [
     'em',
     'strong',
     'del',
-    'br',
+    'align-left',
+    'align-center',
+    'aligh-right',
+    'align-justified',
     'blockquote',
     'pre',
     'code',

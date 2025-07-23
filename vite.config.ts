@@ -6,7 +6,14 @@ import { resolve } from "path";
 import pack from './package.json';
 
 const host = process.env.TAURI_DEV_HOST;
-const customElements = ['trix-editor', 'trix-toolbar'];
+const customElements = [
+    'trix-editor',
+    'trix-toolbar',
+    'align-left',
+    'align-center',
+    'align-right',
+    'align-justified'
+];
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
