@@ -298,6 +298,9 @@ export class TextTile extends Tile {
         return {
             ...super.getSchemaData(),
             ...cloneDeep<Omit<MediaSchema.TextTile, keyof MediaSchema.Tile>>({
+                textHtml: this.text,
+                textColor: this.textColor.colorData,
+                align: this.align
             })
         } as MediaSchema.TextTile;
     }
@@ -306,6 +309,9 @@ export class TextTile extends Tile {
     }
     protected static reconstitute(data: MediaSchema.TextTile, tile: TextTile): TextTile {
         super.reconstitute(data, tile);
+        tile.text = data.textHtml;
+        tile.textColor.colorData = data.textColor;
+        tile.align = data.align;
         return tile;
     }
 }

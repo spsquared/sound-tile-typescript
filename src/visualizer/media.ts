@@ -138,7 +138,8 @@ export class Media implements MediaMetadata {
                 let tile: Tile = new TextTile();
                 switch (curr.type) {
                     case 'v': {
-                        tile = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
+                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
+                        tile = visualizer;
                         break;
                     }
                     case 'vi': {
@@ -162,7 +163,6 @@ export class Media implements MediaMetadata {
                         break;
                     }
                     case 'vt': {
-                        // TODO: actually add text tiles
                         const group = new GroupTile();
                         group.label = 'Visualizer Text Tile (converted)';
                         group.orientation = GroupTile.VERTICAL;
@@ -174,7 +174,20 @@ export class Media implements MediaMetadata {
                         const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
                         visualizer.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
                         const text = new TextTile();
+                        // legacy font size is relative to viewport height, not tile height, so the conversion is sort of arbitrary
+                        const textAlign = curr.textAlign == 1 ? 'right' : curr.textAlign == 0.5 ? 'center' : 'left';
+                        // font size here is just fitting the number of lines to the tile (bee movie script will not enjoy this)
+                        const lineCount = curr.text.split('\n').length;
+                        text.text = `<align-${textAlign}><span style="font-size: ${6 / lineCount}em;">${curr.text.replace('\n', '<br>')}</span></align-${textAlign}>`;
                         text.backgroundColor.colorData = visualizer.backgroundColor.colorData;
+                        text.textColor.colorData = {
+                            type: 'solid',
+                            color: curr.textColor,
+                            alpha: 1
+                        };
+                        text.align = 'center';
+                        // increase size of visualizer instead of decreasing text since smallest valid input value is 1
+                        visualizer.size = Math.ceil(60 / (lineCount * curr.fontSize));
                         group.addChild(visualizer);
                         group.addChild(text);
                         tile = group;
@@ -191,8 +204,19 @@ export class Media implements MediaMetadata {
                         break;
                     }
                     case 't': {
-                        // TODO: actually add text tiles
-                        tile = new TextTile();
+                        const text = new TextTile();
+                        // why is text align a number????
+                        const textAlign = curr.textAlign == 1 ? 'right' : curr.textAlign == 0.5 ? 'center' : 'left';
+                        // fit lines to tile, sort of have to throw out the old font size since conversion would be dependent on window size
+                        const lineCount = curr.text.split('\n').length;
+                        text.text = `<align-${textAlign}><span style="font-size: ${6 / lineCount}em;">${curr.text.replace('\n', '<br>')}</span></align-${textAlign}>`;
+                        text.textColor.colorData = {
+                            type: 'solid',
+                            color: curr.color,
+                            alpha: 1
+                        };
+                        text.align = 'center';
+                        tile = text;
                         break;
                     }
                     case 'b': {

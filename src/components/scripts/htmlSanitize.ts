@@ -11,7 +11,7 @@ const tags = [
     'del',
     'align-left',
     'align-center',
-    'aligh-right',
+    'align-right',
     'align-justified',
     'blockquote',
     'pre',

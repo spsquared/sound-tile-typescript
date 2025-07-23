@@ -25,7 +25,11 @@ export namespace MediaSchema {
         data: DeepPartial<Omit<VisualizerData, 'buffer'>, ColorData> & { buffer: ArrayBuffer | number | null }
     };
     /**Text tile schema-layout data */
-    export type TextTile = Tile & {};
+    export type TextTile = Tile & {
+        textHtml: string
+        textColor: ColorData
+        align: 'start' | 'center' | 'end'
+    };
     /**Image tile schema-layout data */
     export type ImageTile = Tile & {};
     /**Grass tile schema-layout data */

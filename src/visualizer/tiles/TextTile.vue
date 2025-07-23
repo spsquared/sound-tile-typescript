@@ -25,7 +25,9 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
 <template>
     <BaseTile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template v-slot:content>
-            <div class="textContain" v-html="sanitizedText"></div>
+            <div class="textContain">
+                <div class="textWrapper"v-html="sanitizedText"></div>
+            </div>
         </template>
         <template v-slot:options>
             <TileOptionsSection title="General">
@@ -79,12 +81,17 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     width: 100%;
     height: 100%;
     font-size: 10cqh;
+    align-items: v-bind("$props.tile.align");
+}
+
+.textWrapper {
+    margin: 4px 8px;
+    flex-grow: 1;
     white-space: pre;
     text-wrap: nowrap;
     color: transparent;
     background: v-bind("$props.tile.textColor.cssStyle");
     background-clip: text;
-    align-items: v-bind("$props.tile.align");
 }
 
 pre {
