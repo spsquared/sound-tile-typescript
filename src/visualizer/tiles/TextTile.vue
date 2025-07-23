@@ -57,7 +57,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     left: 0px;
     width: 100%;
     height: 100%;
-    font-size: 1cqh;
+    font-size: 10cqh;
 }
 
 pre {

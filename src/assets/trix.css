@@ -34,7 +34,7 @@ trix-editor {
     border: 2px solid white;
     border-radius: 4px;
     background-color: #222;
-    font-size: 1px;
+    font-size: 10px;
     overflow-y: scroll;
 }
 

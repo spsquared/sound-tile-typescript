@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { trixLoaded } from '@/trix';
-import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { onMounted, ref, useTemplateRef } from 'vue';
 
 // trix isn't made for vue so it's not reactive, hence all this weird stuff
 const thisId: string = 'trixEditor' + globalIdCounter++;
@@ -21,15 +21,14 @@ const emit = defineEmits<{
     (e: 'input', value: string): any
 }>();
 
+const editorEl = useTemplateRef<HTMLElement>('editor');
 function trixUpdate() {
-    if (inputEl.value !== null && value.value !== inputEl.value.value) {
+    if (inputEl.value !== null) {
         value.value = inputEl.value.value;
         emit('input', value.value);
-        console.log(inputEl.value.value)
     }
 }
-onMounted(() => document.addEventListener('trix-change', trixUpdate));
-onUnmounted(() => document.removeEventListener('trix-change', trixUpdate));
+onMounted(() => editorEl.value?.addEventListener('trix-change', trixUpdate));
 </script>
 <script lang="ts">
 // this is an incredibly scuffed way to do this, on the verge of being completely scraped to bits
@@ -40,7 +39,7 @@ let globalIdCounter = 0;
     <div class="editorContainer" v-if="trixLoaded">
         <!-- reverse flexbox ftw!!! -->
         <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
-        <trix-editor :input="thisId" :toolbar="thisId + 'a'" :disabled="props.disabled"></trix-editor>
+        <trix-editor ref="editor" :input="thisId" :toolbar="thisId + 'a'" :disabled="props.disabled"></trix-editor>
         <trix-toolbar :id="thisId + 'a'"></trix-toolbar>
     </div>
     <div class="editorPlaceholder" v-else>

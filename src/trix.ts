@@ -45,7 +45,7 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
                 if (!isFinite(v)) v = currentValue;
                 currentValue = Math.max(5, Math.min(1000, Math.round(v * 10))) / 10;
                 input.value = '' + currentValue;
-                if (triggerUpdate) editor.activateAttribute('fontSize', currentValue + 'em');
+                if (triggerUpdate) editor.activateAttribute('fontSize', `${currentValue / 10}em`);
             };
             // setting value when empty sets the value to 0
             input.addEventListener('blur', () => input.value != '' && setValue(Number(input.value)));
@@ -59,7 +59,7 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
             decrement.addEventListener('click', () => setValue(Math.round(currentValue) - 1));
             increment.addEventListener('click', () => setValue(Math.round(currentValue) + 1));
             commonAttributeListeners.add((attributes) => {
-                if ('fontSize' in attributes) setValue(Number(attributes.fontSize.toString().replace('em', '')), false);
+                if ('fontSize' in attributes) setValue(Number(attributes.fontSize.toString().replace('em', '')) * 10, false);
                 else input.value = '';
             });
             setValue(20);
