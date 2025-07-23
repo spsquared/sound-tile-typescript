@@ -147,10 +147,11 @@ export namespace MediaSchema {
             };
         } else if (color.mode == 1) {
             // new gradients have the y-axis flipped to match the visualizer y-axis so old gradients are upside-down
+            // also includes fix for gradients that technically use undefined behavior (two stops with the same position)
             return {
                 type: 'gradient',
                 pattern: (['linear', 'radial', 'conic'] as const)[color.value.type],
-                stops: color.value.type == 1 ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))),
+                stops: color.value.type == 1 ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))).reverse(),
                 x: color.value.x,
                 y: 1 - color.value.y,
                 radius: color.value.r,
