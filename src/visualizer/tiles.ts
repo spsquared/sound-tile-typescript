@@ -283,7 +283,7 @@ export class TextTile extends Tile {
     label: string = TextTile.name;
 
     /**Text HTML of tile */
-    text: string = '<span style="font-size: 2em;">Text Here</span>';
+    text: string = '<align-center><span style="font-size: 2em;">Text Here</span></align-align-center>';
     /**Color of text */
     textColor: ColorPicker;
     /**Alignment of text block along block axis - inline axis is determined by text itself */

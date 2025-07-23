@@ -263,7 +263,7 @@ export namespace MediaSchema {
         text: string
         fontSize: number
         textAlign: number
-        textColor: number
+        textColor: string
     } | {
         type: 'cp'
         backgroundColor: string
@@ -282,7 +282,7 @@ export namespace MediaSchema {
         text: string
         fontSize: number
         textAlign: number
-        textColor: number
+        color: string
     } | {
         type: 'b'
         backgroundColor: string

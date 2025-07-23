@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { ref, useTemplateRef, watch } from 'vue';
 import { trixLoaded } from './trix';
 
 // trix isn't made for vue so it's not reactive, hence all this weird stuff
@@ -29,7 +29,7 @@ function trixUpdate() {
         emit('input', value.value);
     }
 }
-onMounted(() => editorEl.value?.addEventListener('trix-change', trixUpdate));
+watch(editorEl, () => editorEl.value?.addEventListener('trix-change', trixUpdate));
 </script>
 <script lang="ts">
 // this is an incredibly scuffed way to do this, on the verge of being completely scraped to bits
@@ -38,7 +38,7 @@ let globalIdCounter = 0;
 
 <template>
     <div class="editorContainer" v-if="trixLoaded">
-        <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
+        <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="initialValue" v-model="value">
         <trix-editor ref="editor" :input="thisId" :toolbar="thisId + 'a'" :class="{ editorNoWrap: props.noWrap }" :disabled="props.disabled"></trix-editor>
         <trix-toolbar :id="thisId + 'a'"></trix-toolbar>
     </div>
