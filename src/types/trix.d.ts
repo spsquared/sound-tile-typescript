@@ -271,23 +271,23 @@ namespace Trix {
 
     export class Controller { }
     export class EditorController extends Controller {
-        // currentActions: {
-        //     [key: string]: boolean | undefined
-        // }
-        // currentAttributes: {
-        //     [key: string]: boolean | undefined
-        // }
+        currentActions: {
+            [key: string]: boolean | undefined
+        }
+        currentAttributes: {
+            [key: string]: boolean | undefined
+        }
         editor: Editor
         editorElement: TrixEditorElement
         toolbarController: ToolbarController
     }
     export class ToolbarController extends Controller {
-        // actions: {
-        //     [key: string]: boolean | undefined
-        // }
-        // attributes: {
-        //     [key: string]: boolean | undefined
-        // }
+        actions: {
+            [key: string]: boolean | undefined
+        }
+        attributes: {
+            [key: string]: boolean | undefined
+        }
         delegate: EditorController
         element: TrixToolbarElement
     }
@@ -331,7 +331,7 @@ namespace Trix {
             parser: any
             textAttributes: any
             toolbar: any
-            undo
+            undo: any
         }
         controllers: {
             Controller: typeof Controller

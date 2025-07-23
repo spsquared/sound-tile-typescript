@@ -59,9 +59,9 @@ trix-toolbar {
 }
 
 trix-editor {
-    min-height: v-bind("($props.minLines ?? 0) * 12 + 'em'") !important;
-    max-height: v-bind("($props.maxLines ?? -1) * 12 + 'em'") !important;
-    height: 60em;
+    min-height: v-bind("($props.minLines ?? 0) * 1.2 + 'em'") !important;
+    max-height: v-bind("($props.maxLines ?? -1) * 1.2 + 'em'") !important;
+    height: 6em;
     resize: v-bind("$props.resizeable ? 'vertical' : 'none'");
     border-color: #AAA !important;
 }
