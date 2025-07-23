@@ -356,6 +356,7 @@ export class TileEditor {
         const parent = this.state.drag.drop.tile.parent ?? this.root;
         if (this.state.drag.drop.createGroup) {
             const newGroup = new GroupTile();
+            newGroup.size = this.state.drag.drop.tile.size;
             if (this.state.drag.drop.tile == this.root) {
                 // special case for root tile, root has no parent and breaks
                 newGroup.copyProperties(this.root);
