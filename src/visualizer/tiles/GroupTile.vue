@@ -2,9 +2,9 @@
 import { computed, ComputedRef, inject, provide } from 'vue';
 import { GroupTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
+import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
-import TileOptionsSection from './options/TileOptionsSection.vue';
 
 const props = defineProps<{
     tile: GroupTile

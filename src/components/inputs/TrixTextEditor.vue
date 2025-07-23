@@ -38,7 +38,6 @@ let globalIdCounter = 0;
 
 <template>
     <div class="editorContainer" v-if="trixLoaded">
-        <!-- reverse flexbox ftw!!! -->
         <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
         <trix-editor ref="editor" :input="thisId" :toolbar="thisId + 'a'" :class="{ editorNoWrap: props.noWrap }" :disabled="props.disabled"></trix-editor>
         <trix-toolbar :id="thisId + 'a'"></trix-toolbar>

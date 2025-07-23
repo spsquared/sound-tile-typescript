@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Slider from '@/components/inputs/Slider.vue';
-import Toggle from '../inputs/Toggle.vue';
+import Toggle from '@/components/inputs/Toggle.vue';
 import { matchTextInput } from '@/constants';
 import volume0Icon from '@/img/volume0-dark.svg';
 import volume1Icon from '@/img/volume1-dark.svg';

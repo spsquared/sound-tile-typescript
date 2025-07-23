@@ -1,13 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useThrottle, useThrottleFn } from '@vueuse/core';
-import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import { sanitize } from '@/components/scripts/htmlSanitize';
+import TileEditor from '../editor';
 import { TextTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
-import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import TrixTextEditor from '@/components/inputs/TrixTextEditor.vue';
-import { computed } from 'vue';
-import { sanitize } from '@/components/scripts/htmlSanitize';
 
 const props = defineProps<{
     tile: TextTile
@@ -28,25 +29,39 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
         </template>
         <template v-slot:options>
             <TileOptionsSection title="General">
-                <label title="Label of tile">
-                    Label
-                    <input type="text" v-model="props.tile.label">
-                </label>
-                <label title="Relative size of tile to sibling tiles">
-                    Size
-                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
-                </label>
-                <label title="Background style of tile">
-                    Background
-                    <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
-                </label>
-                <label title="Text style">
-                    Text
-                    <EnhancedColorPicker :picker="props.tile.textColor"></EnhancedColorPicker>
-                </label>
+                <div class="optionsRows">
+                    <div>
+                        <label title="Label of tile">
+                            Label
+                            <input type="text" v-model="props.tile.label">
+                        </label>
+                        <label title="Relative size of tile to sibling tiles">
+                            Size
+                            <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
+                        </label>
+                    </div>
+                    <div>
+                        <label title="Background style of tile">
+                            Background
+                            <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                        </label>
+                        <label title="Text style">
+                            Text
+                            <EnhancedColorPicker :picker="props.tile.textColor"></EnhancedColorPicker>
+                        </label>
+                        <label title="Text style">
+                            Align
+                            <select v-model="props.tile.align">
+                                <option value="start">Start</option>
+                                <option value="center">Middle</option>
+                                <option value="end">End</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
             </TileOptionsSection>
             <TileOptionsSection title="Text">
-                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable></TrixTextEditor>
+                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable :disabled="TileEditor.state.lock.locked"></TrixTextEditor>
             </TileOptionsSection>
         </template>
     </BaseTile>
@@ -56,6 +71,8 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
 .textContain {
     /* NO CSS PUTTING STUFF OUTSIDE THE BOX */
     contain: strict;
+    display: flex;
+    flex-direction: row;
     position: absolute;
     top: 0px;
     left: 0px;
@@ -67,10 +84,26 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     color: transparent;
     background: v-bind("$props.tile.textColor.cssStyle");
     background-clip: text;
+    align-items: v-bind("$props.tile.align");
 }
 
 pre {
     /* no scrollbar 4 u */
     overflow-x: hidden;
+}
+
+.optionsRows {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    row-gap: 4px;
+}
+
+.optionsRows>div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 4px;
 }
 </style>

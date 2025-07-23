@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTemplateRef, watch } from 'vue';
 import { useEyeDropper } from '@vueuse/core';
-import DraggableWindow from '../DraggableWindow.vue';
+import DraggableWindow from '@/components/DraggableWindow.vue';
 import ColorPicker from './colorPicker';
 import StrictNumberInput from './StrictNumberInput.vue';
 import ColorInput from './ColorInput.vue';

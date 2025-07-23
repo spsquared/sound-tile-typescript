@@ -286,6 +286,8 @@ export class TextTile extends Tile {
     text: string = '<span style="font-size: 2em;">Text Here</span>';
     /**Color of text */
     textColor: ColorPicker;
+    /**Alignment of text block along block axis - inline axis is determined by text itself */
+    align: 'start' | 'center' | 'end' = 'center';
 
     constructor() {
         super();

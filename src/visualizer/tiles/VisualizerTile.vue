@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import { syncRef, throttledWatch, useElementSize } from '@vueuse/core';
-import { VisualizerTile } from '../tiles';
 import FileAccess from '@/components/inputs/fileAccess';
+import TileEditor from '../editor';
+import { VisualizerTile } from '../tiles';
 import { VisualizerMode } from '../visualizerData';
 import Visualizer from '../visualizer';
 import BaseTile from './BaseTile.vue';
-import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
 import ColorPicker from '@/components/inputs/colorPicker';
@@ -91,7 +92,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
         <template v-slot:content>
             <div ref="canvasWrapper"></div>
             <div class="visualizerUploadCover" v-if="options.buffer === null">
-                <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" :disabled="uploadSourceDisabled">
+                <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" :disabled="uploadSourceDisabled || TileEditor.state.lock.locked">
             </div>
         </template>
         <template v-slot:options>
@@ -99,7 +100,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                 <div class="optionsRows">
                     <div>
                         <label title="Audio source file">
-                            <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :disabled="uploadSourceDisabled">
+                            <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :disabled="uploadSourceDisabled || TileEditor.state.lock.locked">
                         </label>
                         <!-- future - linking multiple tiles to the same source audio -->
                     </div>

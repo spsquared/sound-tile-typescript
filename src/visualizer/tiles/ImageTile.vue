@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import { ImageTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
-import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 
 const props = defineProps<{
     tile: ImageTile

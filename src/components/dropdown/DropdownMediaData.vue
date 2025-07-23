@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
-import FileAccess from '../inputs/fileAccess';
+import FileAccess from '@/components/inputs/fileAccess';
 
 const title = useTemplateRef('title');
 const subtitle = useTemplateRef('subtitle');

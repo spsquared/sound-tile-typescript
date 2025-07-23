@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import FullscreenModal, { ModalMode } from '../FullscreenModal.vue';
+import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
 import TileEditor from '@/visualizer/editor';
 import { Media } from '@/visualizer/media';
 import MediaPlayer from '@/visualizer/mediaPlayer';
-import FileAccess from '../inputs/fileAccess';
+import FileAccess from '@/components/inputs/fileAccess';
 
 // these file controls operate directly on the tile editor by setting the current media player session
 const errorMessageType = ref(false);

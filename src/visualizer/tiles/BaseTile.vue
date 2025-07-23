@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { useElementSize } from '@vueuse/core';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
 import DraggableWindow from '@/components/DraggableWindow.vue';
+import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
-import { useElementSize } from '@vueuse/core';
-import TileOptionsSection from './options/TileOptionsSection.vue';
 
 const props = defineProps<{
     tile: Tile
