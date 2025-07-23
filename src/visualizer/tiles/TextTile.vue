@@ -40,9 +40,13 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
                     Background
                     <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
                 </label>
+                <label title="Text style">
+                    Text
+                    <EnhancedColorPicker :picker="props.tile.textColor"></EnhancedColorPicker>
+                </label>
             </TileOptionsSection>
             <TileOptionsSection title="Text">
-                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" resizeable></TrixTextEditor>
+                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable></TrixTextEditor>
             </TileOptionsSection>
         </template>
     </BaseTile>
@@ -58,6 +62,11 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     width: 100%;
     height: 100%;
     font-size: 10cqh;
+    white-space: pre;
+    text-wrap: nowrap;
+    color: transparent;
+    background: v-bind("$props.tile.textColor.cssStyle");
+    background-clip: text;
 }
 
 pre {

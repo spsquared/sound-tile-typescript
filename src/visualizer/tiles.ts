@@ -112,6 +112,7 @@ export class GroupTile extends Tile {
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
     orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
+    /**Border color of tile - has no effect on collapsed groups */
     borderColor: ColorPicker;
 
     constructor() {
@@ -233,8 +234,9 @@ export class VisualizerTile extends Tile {
 
     label: string = VisualizerTile.name;
 
-    /**Create canvas here for visualizer to always have one canvas, unmount/remount spam creates lots of canvases */
+    /**Canvas element maintained by tile instance, as component mount-unmount would create and destroy it */
     readonly canvas: HTMLCanvasElement;
+    /**Visualizer instance attached */
     readonly visualizer: Visualizer;
 
     constructor(data?: VisualizerData) {
@@ -280,7 +282,15 @@ export class TextTile extends Tile {
 
     label: string = TextTile.name;
 
+    /**Text HTML of tile */
     text: string = '<span style="font-size: 2em;">Text Here</span>';
+    /**Color of text */
+    textColor: ColorPicker;
+
+    constructor() {
+        super();
+        this.textColor = new ColorPicker('#FFFFFF');
+    }
 
     getSchemaData(): MediaSchema.TextTile {
         return {

@@ -78,12 +78,6 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
             setValue(20);
         }
     });
-    // document.addEventListener('trix-action-invoke', (e: any) => {
-    //     const { target, invokingElement, action } = e as TrixEvent;
-    //     switch (action) {
-
-    //     }
-    // });
 
     // screw attachments we dont want those
     document.addEventListener('trix-attachment-add', (e) => e.preventDefault());

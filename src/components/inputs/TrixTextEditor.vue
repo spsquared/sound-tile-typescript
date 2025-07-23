@@ -9,6 +9,7 @@ const props = defineProps<{
     initialValue?: string
     minLines?: number
     maxLines?: number
+    noWrap?: boolean
     resizeable?: boolean
     disabled?: boolean
 }>();
@@ -39,7 +40,7 @@ let globalIdCounter = 0;
     <div class="editorContainer" v-if="trixLoaded">
         <!-- reverse flexbox ftw!!! -->
         <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
-        <trix-editor ref="editor" :input="thisId" :toolbar="thisId + 'a'" :disabled="props.disabled"></trix-editor>
+        <trix-editor ref="editor" :input="thisId" :toolbar="thisId + 'a'" :class="{ editorNoWrap: props.noWrap }" :disabled="props.disabled"></trix-editor>
         <trix-toolbar :id="thisId + 'a'"></trix-toolbar>
     </div>
     <div class="editorPlaceholder" v-else>
@@ -76,6 +77,10 @@ trix-editor:focus-within+trix-toolbar {
 
 trix-editor:not(:focus-within)::selection {
     background-color: #555;
+}
+
+.editorNoWrap {
+    text-wrap: nowrap;
 }
 
 .editorPlaceholder {
