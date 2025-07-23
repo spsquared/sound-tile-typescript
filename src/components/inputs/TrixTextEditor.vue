@@ -37,7 +37,7 @@ let globalIdCounter = 0;
 </script>
 
 <template>
-    <div class="editorContainer" v-if="trixLoaded && false">
+    <div class="editorContainer" v-if="trixLoaded">
         <!-- reverse flexbox ftw!!! -->
         <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
         <trix-editor :input="thisId" :toolbar="thisId + 'a'" :disabled="props.disabled"></trix-editor>
