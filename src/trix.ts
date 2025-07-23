@@ -46,9 +46,16 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
                 currentValue = Math.max(5, Math.min(1000, Math.round(v * 10))) / 10;
                 input.value = '' + currentValue;
                 if (triggerUpdate) editor.activateAttribute('fontSize', currentValue + 'em');
-            }
-            input.addEventListener('blur', () => setValue(Number(input.value)));
-            input.addEventListener('keydown', (e) => e.key == 'Enter' && setValue(Number(input.value)));
+            };
+            // setting value when empty sets the value to 0
+            input.addEventListener('blur', () => input.value != '' && setValue(Number(input.value)));
+            input.addEventListener('keydown', (e) => {
+                if (e.key == 'Enter') {
+                    e.preventDefault(); // prevents trix from randomly typing all over the place
+                    if (input.value != '') setValue(Number(input.value));
+                    input.blur();
+                }
+            });
             decrement.addEventListener('click', () => setValue(Math.round(currentValue) - 1));
             increment.addEventListener('click', () => setValue(Math.round(currentValue) + 1));
             commonAttributeListeners.add((attributes) => {

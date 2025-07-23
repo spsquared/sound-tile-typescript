@@ -59,4 +59,9 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     height: 100%;
     font-size: 1cqh;
 }
+
+pre {
+    /* no scrollbar 4 u */
+    overflow-x: hidden;
+}
 </style>

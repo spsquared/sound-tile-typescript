@@ -37,29 +37,57 @@ let globalIdCounter = 0;
 </script>
 
 <template>
-    <div class="editorContainer" v-if="trixLoaded">
+    <div class="editorContainer" v-if="trixLoaded && false">
+        <!-- reverse flexbox ftw!!! -->
         <input :id="thisId" ref="input" type="hidden" :name="'trix content ' + thisId" :value="value" v-model="value">
-        <trix-toolbar :id="thisId + 'a'"></trix-toolbar>
         <trix-editor :input="thisId" :toolbar="thisId + 'a'" :disabled="props.disabled"></trix-editor>
+        <trix-toolbar :id="thisId + 'a'"></trix-toolbar>
+    </div>
+    <div class="editorPlaceholder" v-else>
+        Loading editor...
     </div>
 </template>
 
-<style>
+<style scoped>
 .editorContainer {
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     width: 100%;
+}
+
+trix-toolbar {
+    --trix-border-color: #AAA !important;
 }
 
 trix-editor {
     min-height: v-bind("($props.minLines ?? 0) * 12 + 'em'") !important;
     max-height: v-bind("($props.maxLines ?? -1) * 12 + 'em'") !important;
     height: 60em;
-    resize: v-bind("$props.resizeable ? 'vertical' : 'none'")
+    resize: v-bind("$props.resizeable ? 'vertical' : 'none'");
+    border-color: #AAA !important;
 }
 
-pre {
-    /* no scrollbar 4 u */
-    overflow-x: hidden;
+trix-editor:focus-within {
+    border-color: white !important;
+}
+
+trix-editor:focus-within+trix-toolbar {
+    --trix-border-color: white !important;
+}
+
+trix-editor:not(:focus-within)::selection {
+    background-color: #555;
+}
+
+.editorPlaceholder {
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    height: 60px;
+    border: 2px solid white;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset #FFFA 0px 0px 8px 2px;
 }
 </style>

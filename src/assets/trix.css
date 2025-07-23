@@ -7,6 +7,8 @@ trix-toolbar {
     margin-bottom: 4px;
     font-size: 12px;
 
+    --trix-border-color: white;
+
     .trix-button-row {
         display: flex;
         flex-direction: row;
@@ -20,7 +22,7 @@ trix-toolbar {
         flex-direction: row;
         flex-grow: 1;
         margin: 0px 0px !important;
-        border: 2px solid #AAA;
+        border: 2px solid var(--trix-border-color);
         border-radius: 4px;
     }
 }
@@ -29,15 +31,11 @@ trix-toolbar {
 
 trix-editor {
     padding: 4px 4px;
-    border: 2px solid #AAA;
+    border: 2px solid white;
     border-radius: 4px;
     background-color: #222;
     font-size: 1px;
     overflow-y: scroll;
-
-    &:focus-visible {
-        border-color: white;
-    }
 }
 
 /* BUTTON */
@@ -72,7 +70,7 @@ trix-toolbar {
     }
 
     .trix-button:not(:first-child) {
-        border-left: 2px solid #AAA;
+        border-left: 2px solid var(--trix-border-color);
     }
 
     /* SCUFF */
@@ -80,7 +78,7 @@ trix-toolbar {
     .trix-x-size-label {
         display: grid;
         font-size: 1em;
-        grid-template-columns: 1.6em 1fr 1.6em;
+        grid-template-columns: minmax(1.6em, 1fr) 2fr minmax(1.6em, 1fr);
         padding: 0px 0px;
 
         * {
@@ -93,7 +91,7 @@ trix-toolbar {
             grid-column: 2;
             margin: 0px 2px;
             text-align: center;
-            min-width: 2em;
+            min-width: 1em;
 
             &::-webkit-inner-spin-button {
                 display: none;
