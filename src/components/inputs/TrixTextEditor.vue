@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { trixLoaded } from '@/trix';
 import { onMounted, ref, useTemplateRef } from 'vue';
+import { trixLoaded } from './trix';
 
 // trix isn't made for vue so it's not reactive, hence all this weird stuff
 const thisId: string = 'trixEditor' + globalIdCounter++;

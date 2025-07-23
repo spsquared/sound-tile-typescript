@@ -1,7 +1,7 @@
 import '@/assets/fonts.css';
 import '@/assets/common.css';
 
-import '@/trix';
+import '@/components/inputs/trix';
 
 import { createApp } from 'vue';
 import App from '@/App.vue';

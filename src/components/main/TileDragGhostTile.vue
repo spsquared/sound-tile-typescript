@@ -30,9 +30,9 @@ const props = defineProps<{
 .ghostDropGroup {
     box-sizing: border-box;
     display: flex;
+    flex-direction: v-bind("TileEditor.state.drag.drop.newGroupVertical ? 'column' : 'row'");
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
-    flex-direction: v-bind("TileEditor.state.drag.drop.newGroupVertical ? 'column' : 'row'");
     gap: 4px;
 }
 
@@ -46,10 +46,10 @@ const props = defineProps<{
 
 .ghostTileGroup {
     display: flex;
-    margin: 0px 0px;
-    border: none;
     /* ($props.tile as GroupTile) creates a syntax error on line 3 for some reason */
     flex-direction: v-bind("$props.tile instanceof GroupTile && $props.tile.orientation == GroupTile.VERTICAL ? 'column' : 'row'");
+    margin: 0px 0px;
+    border: none;
     gap: 4px;
 }
 

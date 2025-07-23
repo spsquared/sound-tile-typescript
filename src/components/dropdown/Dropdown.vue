@@ -81,10 +81,10 @@ const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
 
 #dropdownBody {
     display: flex;
+    flex-direction: row;
     container-type: size;
     width: 100vw;
     height: 120px;
-    flex-direction: row;
 }
 
 #dropdownTab {

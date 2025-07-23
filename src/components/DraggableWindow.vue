@@ -188,13 +188,13 @@ const topCounter = ref(0);
 .windowBar {
     box-sizing: border-box;
     display: flex;
+    flex-direction: row;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 20px;
     border-radius: 8px 8px 0px 0px;
-    flex-direction: row;
     background-color: #555;
     cursor: move;
     user-select: none;

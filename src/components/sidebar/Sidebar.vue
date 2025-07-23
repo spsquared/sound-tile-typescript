@@ -117,13 +117,13 @@ onUnmounted(() => {
 
 #sidebarToggleTab {
     display: flex;
+    flex-direction: column;
     width: 32px;
     height: 32px;
     margin-bottom: 8px;
     border: 4px solid white;
     border-right: none;
     background-color: black;
-    flex-direction: column;
     cursor: pointer;
     background-image: url(@/img/arrow-left.svg);
     background-position: center;

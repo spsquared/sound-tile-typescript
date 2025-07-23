@@ -85,6 +85,7 @@ const { height } = useElementSize(bodyEl);
     box-sizing: border-box;
     display: flex;
     flex-wrap: wrap;
+    flex-direction: row;
     position: absolute;
     row-gap: 4px;
     column-gap: 12px;

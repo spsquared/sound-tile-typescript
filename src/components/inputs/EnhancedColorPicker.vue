@@ -165,10 +165,10 @@ function removeStop(i: number) {
 .pickerNav {
     grid-row: 2;
     display: flex;
+    flex-direction: row;
     height: 20px;
     font-size: 14px;
     border-top: 4px solid #333;
-    flex-direction: row;
 }
 
 .pickerNavTab {
@@ -274,18 +274,18 @@ function removeStop(i: number) {
     grid-row: 4;
     grid-column: 1 / 3;
     display: flex;
-    border: 2px solid white;
     flex-direction: column;
+    border: 2px solid white;
     overflow-y: auto;
 }
 
 .pickerGradientStop {
     display: flex;
+    flex-direction: row;
     height: 16px;
     border-bottom: 2px solid white;
     background-color: white;
     gap: 2px;
-    flex-direction: row;
 }
 
 .pickerGradientStopNumber {

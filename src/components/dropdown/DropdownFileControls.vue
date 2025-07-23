@@ -81,7 +81,6 @@ async function downloadFromCurrent() {
     display: grid;
     grid-template-columns: 58px;
     grid-template-rows: 58px 4px 48px;
-    flex-direction: column;
     border-left: 4px solid white;
 }
 
