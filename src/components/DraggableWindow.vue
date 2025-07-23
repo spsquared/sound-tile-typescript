@@ -92,10 +92,14 @@ async function bringToTop() {
     topCounter.value++;
     await nextTick();
     isTop.value = true;
-    (winBar.value?.querySelector('.windowClose') as HTMLElement)?.focus();
 }
 watch(topCounter, () => isTop.value = false);
-watch(open, () => open.value && bringToTop());
+watch(open, () => {
+    if (open.value) {
+        bringToTop();
+        (winBar.value?.querySelector('.windowClose') as HTMLElement)?.focus();
+    }
+});
 
 // optionally close on clicking outside the window
 onClickOutside(winContainer, () => {
