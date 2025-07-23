@@ -78,7 +78,7 @@ const { height } = useElementSize(bodyEl);
     position: relative;
     min-height: v-bind("height + 'px'");
     padding: 4px 0px;
-    overflow: hidden;
+    overflow: clip;
 }
 
 .optSectionBody {

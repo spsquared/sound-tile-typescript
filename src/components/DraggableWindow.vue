@@ -11,6 +11,8 @@ const props = defineProps<{
     resizeable?: boolean
     closeOnClickOut?: boolean
     borderColor?: string
+    overflowX?: 'auto' | 'scroll' | 'clip'
+    overflowY?: 'auto' | 'scroll' | 'clip'
     frosted?: boolean
 }>();
 
@@ -235,7 +237,8 @@ const topCounter = ref(0);
     background-color: black;
     width: v-bind("size.w + 'px'");
     height: v-bind("size.h + 'px'");
-    overflow: auto;
+    overflow-x: v-bind("$props.overflowX ?? 'auto'");
+    overflow-y: v-bind("$props.overflowY ?? 'auto'");
 }
 
 .windowBodyFrosted {
