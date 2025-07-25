@@ -32,11 +32,11 @@ onMounted(() => {
 });
 props.tile.canvas.classList.add('visualizerCanvas');
 
-const { width: canvasWidth, height: canvasHeight } = useElementSize(props.tile.canvas);
+const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
 // guess I don't need my throttling code anymore
 throttledWatch([canvasWidth, canvasHeight], () => {
     props.tile.visualizer.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
-}, { throttle: 50, immediate: true, leading: true, trailing: true });
+}, { throttle: 200, immediate: true, leading: true, trailing: true });
 
 const uploadSourceDisabled = ref(false);
 async function uploadSource() {
@@ -90,7 +90,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
 <template>
     <BaseTile :tile="props.tile" :options-window="{ minWidth: 500, minHeight: 300 }">
         <template v-slot:content>
-            <div ref="canvasWrapper"></div>
+            <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="visualizerUploadCover" v-if="options.buffer === null">
                 <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" :disabled="uploadSourceDisabled || TileEditor.state.lock.locked">
             </div>
@@ -399,15 +399,20 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
 
 <style>
 .visualizerCanvas {
-    position: absolute;
-    top: 0px;
-    left: 0px;
     width: 100%;
     height: 100%;
     background-color: transparent;
 }
 </style>
 <style scoped>
+.canvasWrapper {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
 .visualizerUploadCover {
     display: flex;
     position: absolute;

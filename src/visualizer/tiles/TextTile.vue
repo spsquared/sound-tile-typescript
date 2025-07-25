@@ -73,6 +73,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
 .textContain {
     /* NO CSS PUTTING STUFF OUTSIDE THE BOX */
     contain: strict;
+    container-type: size;
     display: flex;
     flex-direction: row;
     position: absolute;
@@ -80,7 +81,6 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     left: 0px;
     width: 100%;
     height: 100%;
-    font-size: 10cqh;
     align-items: v-bind("$props.tile.align");
 }
 
@@ -92,6 +92,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
     color: transparent;
     background: v-bind("$props.tile.textColor.cssStyle");
     background-clip: text;
+    font-size: 10cqh;
 }
 
 pre {

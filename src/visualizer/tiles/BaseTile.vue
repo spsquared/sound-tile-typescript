@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
-import { useElementSize } from '@vueuse/core';
+import { throttledRef, useElementSize } from '@vueuse/core';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
 import DraggableWindow from '@/components/DraggableWindow.vue';
@@ -25,6 +25,7 @@ const props = defineProps<{
 
 const tile = useTemplateRef('tile');
 const { width: tileWidth, height: tileHeight } = useElementSize(tile);
+const radialGradientSize = throttledRef(computed(() => Math.max(tileWidth.value, tileHeight.value) / 2 + 'px'), 200, true, true);
 
 // tiles in collapsed group can't have background, also hides header and edit buttons
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
@@ -117,12 +118,11 @@ function setIdentifyTile(v: boolean) {
 <style scoped>
 .tile {
     contain: strict;
-    container-type: size;
     position: relative;
     background: v-bind("props.tile.backgroundColor.cssStyle");
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
-    --radial-gradient-size: v-bind("Math.max(tileWidth, tileHeight) / 2 + 'px'");
+    --radial-gradient-size: v-bind("radialGradientSize");
 }
 
 .tileInCollapsedGroup {
