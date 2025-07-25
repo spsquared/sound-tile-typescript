@@ -264,7 +264,7 @@ export class Media implements MediaMetadata {
         const media = await this.decompressV0({ version: 0, root: root });
         if (media === null) return null;
         media.title = metadata.title;
-        media.subtitle = metadata.title;
+        media.subtitle = metadata.subtitle;
         media.coverArt = metadata.image;
         return media;
     }
