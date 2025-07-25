@@ -2,6 +2,7 @@ import { computed, reactive, watch } from 'vue';
 import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
 import { AsyncLock } from '@/components/scripts/lock';
 import { useIdle } from '@vueuse/core';
+import { matchTextInput } from '@/constants';
 
 type TileEditorState = {
     dropdownOpen: boolean
@@ -90,7 +91,7 @@ export class TileEditor {
      */
     static attachRoot(root: GroupTile): GroupTile {
         this.endDrag();
-        this.layoutHistory.length = 0;
+        this.clearLayoutStack();
         this.root.copyProperties(root);
         this.root.label = root.label;
         for (const child of root.children) child.parent = this.root;
@@ -105,7 +106,7 @@ export class TileEditor {
      */
     static detachRoot(): GroupTile {
         this.endDrag();
-        this.layoutHistory.length = 0;
+        this.clearLayoutStack();
         const root = new GroupTile();
         root.copyProperties(this.root);
         root.label = this.root.label;
@@ -119,9 +120,10 @@ export class TileEditor {
     }
 
     /**Stores layout history separate from tile data - root of history can never be group tile */
-    static readonly layoutHistory: Exclude<LayoutHistoryEntry, Tile>[] = [];
-    static readonly maxLayoutHistory: 32;
-    static pushLayoutHistory(): void {
+    private static readonly undoHistory: Exclude<LayoutHistoryEntry, Tile>[] = [];
+    private static readonly redoHistory: Exclude<LayoutHistoryEntry, Tile>[] = [];
+    private static readonly maxLayoutHistory: 64;
+    private static pushLayoutHistory(historyStack: Exclude<LayoutHistoryEntry, Tile>[], maxStackSize: number = Infinity): void {
         // root of history isn't root group tile, always starts as children of root
         const entry: Exclude<LayoutHistoryEntry, Tile> = {
             tile: new GroupTile(),
@@ -131,6 +133,7 @@ export class TileEditor {
         while (stack.length > 0) {
             const [tile, entry] = stack.pop()!;
             entry.tile.copyProperties(tile);
+            entry.tile.label = tile.label;
             for (const child of tile.children) {
                 if (child instanceof GroupTile) {
                     const entry2 = {
@@ -144,17 +147,18 @@ export class TileEditor {
                 }
             }
         }
-        this.layoutHistory.push(entry);
-        if (this.layoutHistory.length > this.maxLayoutHistory) this.layoutHistory.shift();
+        historyStack.push(entry);
+        if (historyStack.length > maxStackSize) historyStack.shift();
     }
-    static popLayoutHistory(): boolean {
-        if (this.layoutHistory.length == 0) return false;
-        const entry: Exclude<LayoutHistoryEntry, Tile> = this.layoutHistory.pop()!;
+    private static popLayoutHistory(historyStack: Exclude<LayoutHistoryEntry, Tile>[]): boolean {
+        if (historyStack.length == 0) return false;
+        const entry: Exclude<LayoutHistoryEntry, Tile> = historyStack.pop()!;
         const loadedRoot = new GroupTile();
         const stack: [GroupTile, Exclude<LayoutHistoryEntry, Tile>][] = [[loadedRoot, entry]];
         while (stack.length > 0) {
             const [tile, entry] = stack.pop()!;
             tile.copyProperties(entry.tile);
+            tile.label = entry.tile.label;
             for (const child of entry.children) {
                 if (child instanceof Tile) {
                     // don't remove from existing parent as everything gets overwritten anyway
@@ -175,9 +179,9 @@ export class TileEditor {
     }
 
     static startDrag(tile: Tile, offset?: TileEditorState['drag']['offset'], size?: TileEditorState['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
-        if (this.state.lock.locked) return false;
-        if (this.state.drag.current !== null) return false;
-        this.pushLayoutHistory();
+        if (this.state.lock.locked || this.state.drag.current !== null) return false;
+        this.markLayoutChange();
+        this.redoHistory.length = 0;
         if (tile.parent !== null) tile.parent.removeChild(tile);
         this.state.drag.current = tile;
         this.state.drag.offset = offset ?? { x: 0, y: 0 };
@@ -346,10 +350,10 @@ export class TileEditor {
         }
     }
     static endDrag(): boolean {
-        if (this.state.lock.locked) return false;
-        if (this.state.drag.current === null) return false;
+        if (this.state.lock.locked || this.state.drag.current === null) return false;
         if (this.state.drag.drop.tile === null) {
-            this.popLayoutHistory();
+            this.popLayoutHistory(this.undoHistory);
+            this.redoHistory.length = 0;
             this.state.drag.current = null;
             return true;
         }
@@ -385,17 +389,52 @@ export class TileEditor {
             insertFn.call(parent, this.state.drag.current, this.state.drag.drop.tile);
         }
         this.state.drag.current = null;
+        this.redoHistory.length = 0;
         return true;
+    }
+
+    static markLayoutChange(): boolean {
+        if (this.state.lock.locked || this.state.drag.current !== null) return false;
+        this.pushLayoutHistory(this.undoHistory, this.maxLayoutHistory);
+        return true;
+    }
+    static undoLayoutChange(): boolean {
+        if (this.state.lock.locked || this.state.drag.current !== null || this.undoHistory.length == 0) return false;
+        this.pushLayoutHistory(this.redoHistory, this.maxLayoutHistory);
+        this.popLayoutHistory(this.undoHistory);
+        return true;
+    }
+    static redoLayoutChange(): boolean {
+        if (this.state.lock.locked || this.state.drag.current !== null || this.redoHistory.length == 0) return false;
+        this.pushLayoutHistory(this.undoHistory, this.maxLayoutHistory);
+        this.popLayoutHistory(this.redoHistory);
+        return true;
+    }
+    static clearLayoutStack(): void {
+        this.undoHistory.length = 0;
+        this.redoHistory.length = 0;
     }
 
     static {
         watch(() => this.state.sidebarScreenWidth, () => localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
         // this isn't a vue composable, no lifecycle hooks
         document.addEventListener('mousemove', (e) => this.updateDrag(e), { passive: true });
-        document.addEventListener('touchmove', (e) => this.updateDrag(e), { passive: true });
         document.addEventListener('mouseup', () => this.endDrag());
-        document.addEventListener('touchend', () => this.endDrag());
         window.addEventListener('blur', () => this.endDrag());
+        // wow the undo stack
+        document.addEventListener('keydown', (e) => {
+            if (this.state.lock.locked || this.state.drag.current !== null || matchTextInput(e.target)) return;
+            if (e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'z':
+                        this.undoLayoutChange();
+                        break;
+                    case 'y':
+                        this.redoLayoutChange();
+                        break;
+                }
+            }
+        });
     }
 }
 

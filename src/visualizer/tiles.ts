@@ -188,6 +188,7 @@ export class GroupTile extends Tile {
     copyProperties(o: GroupTile) {
         this.orientation = o.orientation;
         this.borderColor.colorData = o.borderColor.colorData;
+        this.hideBorders = o.hideBorders;
     }
 
     getSchemaData(): MediaSchema.GroupTile {

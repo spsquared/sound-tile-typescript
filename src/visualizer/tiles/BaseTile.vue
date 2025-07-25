@@ -54,7 +54,7 @@ function dragTile(e: MouseEvent) {
 }
 function deleteTile() {
     if (destroyDisabled.value) return;
-    TileEditor.pushLayoutHistory();
+    TileEditor.markLayoutChange();
     props.tile.destroy();
 }
 
