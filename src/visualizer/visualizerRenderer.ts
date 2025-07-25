@@ -135,6 +135,7 @@ class VisualizerRenderInstance {
     readonly ctx: OffscreenCanvasRenderingContext2D;
     private data: VisualizerSettingsData;
     private dataUpdated: boolean = false;
+    private resized: [number, number] | undefined = undefined;
     private colorStyle: CanvasGradient | string = '#FFFFFF';
     private colorStyle2: CanvasGradient | string = '#FFFFFF';
     private colorScale: chroma.Scale = chroma.scale(['#FFFFFF']);
@@ -163,7 +164,11 @@ class VisualizerRenderInstance {
         const startTime = performance.now();
         this.debugText.length = 0;
         this.ctx.reset();
-        if (this.dataUpdated) {
+        if (this.resized !== undefined) {
+            this.canvas.width = this.resized[0];
+            this.canvas.height = this.resized[1];
+        }
+        if (this.resized !== undefined || this.dataUpdated) {
             this.colorStyle = this.createColorStyle(this.data.color);
             this.colorStyle2 = this.createColorStyle(this.data.color2, this.data.color2Alpha);
             this.colorScale = this.createColorScale(this.data.color);
@@ -254,6 +259,7 @@ class VisualizerRenderInstance {
                 this.ctx.fillText(text[i], 12, 12 + i * 16);
             }
         }
+        this.resized = undefined;
         this.dataUpdated = false;
     }
 
@@ -786,9 +792,7 @@ class VisualizerRenderInstance {
     }
 
     resize(w: number, h: number): void {
-        this.canvas.width = w;
-        this.canvas.height = h;
-        this.dataUpdated = true;
+        this.resized = [w, h];
     }
     updateData(data: VisualizerSettingsData): void {
         this.data = data;

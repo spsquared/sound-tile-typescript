@@ -121,6 +121,7 @@ export class Visualizer {
     private drawing: boolean = false;
     private async draw(): Promise<void> {
         if (this.drawing || this.data.buffer === null || !this.visible.value) return;
+        // spam-resizing hopefully doesn't cause a bunch of performance issues? it stops flickering...
         this.drawing = true;
         if (this.audioBuffer === null) {
             this.ctx.reset();
@@ -141,6 +142,8 @@ export class Visualizer {
                 this.analyzers[0].getByteFrequencyData(data);
                 await this.renderer.draw(data);
                 this.ctx.reset();
+                this.canvas.width = this.renderer.canvas.width;
+                this.canvas.height = this.renderer.canvas.height;
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
         } else if ([VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED].includes(this.data.mode)) {
@@ -150,6 +153,8 @@ export class Visualizer {
                 this.analyzers[0].getFloatTimeDomainData(data);
                 await this.renderer.draw(data);
                 this.ctx.reset();
+                this.canvas.width = this.renderer.canvas.width;
+                this.canvas.height = this.renderer.canvas.height;
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
         } else if (this.data.mode == VisualizerMode.CHANNEL_PEAKS) {
@@ -161,6 +166,8 @@ export class Visualizer {
             }
             await this.renderer.draw(data);
             this.ctx.reset();
+            this.canvas.width = this.renderer.canvas.width;
+            this.canvas.height = this.renderer.canvas.height;
             this.ctx.drawImage(this.renderer.canvas, 0, 0);
         } else {
             this.ctx.reset();
@@ -177,9 +184,12 @@ export class Visualizer {
         this.ctx.fillText(text, this.canvas.width / 2, this.canvas.height / 2);
     }
     resize(w: number, h: number): void {
-        this.canvas.width = w;
-        this.canvas.height = h;
         this.renderer.resize(w, h);
+        // only apply size when not using renderer - stops flickering
+        if (this.audioBuffer === null || VisualizerMode[this.data.mode] == undefined) {
+            this.canvas.width = w;
+            this.canvas.height = h;
+        }
     }
 
     private start(): void {
