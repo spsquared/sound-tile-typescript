@@ -112,8 +112,10 @@ export class GroupTile extends Tile {
     readonly children: Tile[] = [];
     /**If children should be laid out vertically (otherwise horizontal) */
     orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
-    /**Border color of tile - has no effect on collapsed groups */
+    /**Border color of tile - has no effect on collapsed groups and groups with hidden borders */
     borderColor: ColorPicker;
+    /**Disables internal borders and border gaps between tiles completely - no effect on collapsed groups */
+    hideBorders: boolean = false;
 
     constructor() {
         super();

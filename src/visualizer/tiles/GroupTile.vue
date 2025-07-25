@@ -4,6 +4,7 @@ import { GroupTile } from '../tiles';
 import BaseTile from './BaseTile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import Toggle from '@/components/inputs/Toggle.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 
 const props = defineProps<{
@@ -55,6 +56,10 @@ const tileOrientation = computed<string>({
                     Borders
                     <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
                 </label>
+                <label v-if="!isCollapsed" title="Disable borders and gaps between tiles within the group">
+                    Hide Borders
+                    <Toggle v-model="props.tile.hideBorders"></Toggle>
+                </label>
                 <label v-if="isCollapsed" title="Background style of tile">
                     Background
                     <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
@@ -75,7 +80,7 @@ const tileOrientation = computed<string>({
     flex-direction: v-bind("$props.tile.orientation == GroupTile.VERTICAL ? 'column' : 'row'");
     align-items: stretch;
     justify-content: stretch;
-    gap: 4px;
+    gap: v-bind("$props.tile.hideBorders ? '0px' : '4px'");
 }
 
 .groupChildrenCollapsed {

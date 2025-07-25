@@ -240,7 +240,7 @@ export namespace MediaSchema {
 
     /**Legacy (old Sound Tile) tree layouts, very scuffed. */
     export type LegacyTree = {
-        orientation: 0 | 1
+        orientation: boolean | 0 // extremely well-designed code
         flex?: number
         flexGrow?: number
         children: LegacyTree[]

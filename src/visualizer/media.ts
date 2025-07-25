@@ -129,7 +129,7 @@ export class Media implements MediaMetadata {
             const [curr, parent] = queue.shift()!;
             if ('children' in curr) {
                 const tile = new GroupTile();
-                tile.orientation = curr.orientation;
+                tile.orientation = curr.orientation ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
                 tile.size = curr.flex ?? curr.flexGrow ?? 1;
                 parent.addChild(tile);
                 queue.push(...curr.children.map<[MediaSchema.LegacyTree, GroupTile]>((v) => [v, tile]));
@@ -148,11 +148,7 @@ export class Media implements MediaMetadata {
                         const group = new GroupTile();
                         group.label = 'Visualizer Image Tile (converted)';
                         group.orientation = GroupTile.VERTICAL;
-                        group.borderColor.colorData = {
-                            type: 'solid',
-                            color: '#ffffff',
-                            alpha: 0
-                        };
+                        group.hideBorders = true;
                         const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
                         visualizer.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
                         const image = new ImageTile();
@@ -166,11 +162,7 @@ export class Media implements MediaMetadata {
                         const group = new GroupTile();
                         group.label = 'Visualizer Text Tile (converted)';
                         group.orientation = GroupTile.VERTICAL;
-                        group.borderColor.colorData = {
-                            type: 'solid',
-                            color: '#ffffff',
-                            alpha: 0
-                        };
+                        group.hideBorders = true;
                         const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
                         visualizer.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
                         const text = new TextTile();
