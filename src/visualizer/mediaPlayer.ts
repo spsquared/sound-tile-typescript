@@ -10,6 +10,7 @@ type MediaPlayerState = {
     shuffle: boolean
     loop: boolean
     volume: number
+    mediaDataTabOpen: boolean
 };
 
 /**
@@ -24,7 +25,8 @@ export class MediaPlayer {
         }),
         shuffle: localStorage.getItem('shuffle') == 'true',
         loop: localStorage.getItem('loop') == 'true',
-        volume: Number(localStorage.getItem('volume') ?? '1')
+        volume: Number(localStorage.getItem('volume') ?? '1'),
+        mediaDataTabOpen: false
     }) as MediaPlayerState;
     private static readonly internalTimer = reactive<{
         // setting startTime essentially determines the offset of the audio
@@ -118,6 +120,7 @@ export class MediaPlayer {
             oldSession.tree = TileEditor.detachRoot();
             this.state.current.tree = TileEditor.attachRoot(this.state.current.tree);
             TileEditor.state.lock.release();
+            this.state.mediaDataTabOpen = this.state.current.title.trim().length > 0;
         });
     }
 }

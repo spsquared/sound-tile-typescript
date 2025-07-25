@@ -55,7 +55,7 @@ function preventScrollIfNotFocus(e: WheelEvent) {
 </script>
 
 <template>
-    <input type="checkbox" id="mdatTabCheckbox">
+    <input type="checkbox" v-model="MediaPlayer.state.mediaDataTabOpen" id="mdatTabCheckbox">
     <div id="mdatControls">
         <div id="mdatBody">
             <img id="mdatCoverArt" :src="MediaPlayer.state.current.coverArt" @dblclick="uploadCoverArt" title="Album cover (double-click to change)">
