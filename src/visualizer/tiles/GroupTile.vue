@@ -56,7 +56,7 @@ const tileOrientation = computed<string>({
                     Borders
                     <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
                 </label>
-                <label v-if="!isCollapsed" title="Disable borders and gaps between tiles within the group">
+                <label v-if="!inCollapsedGroup && !isCollapsed" title="Disable borders and gaps between tiles within the group">
                     Hide Borders
                     <Toggle v-model="props.tile.hideBorders"></Toggle>
                 </label>
