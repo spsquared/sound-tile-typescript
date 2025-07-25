@@ -1,7 +1,7 @@
 import { Component } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import ColorPicker from '@/components/inputs/colorPicker';
-import BaseTileComponent from './tiles/BaseTile.vue';
+import TileComponent from './tiles/Tile.vue';
 import GroupTileComponent from './tiles/GroupTile.vue';
 import VisualizerTileComponent from './tiles/VisualizerTile.vue';
 import TextTileComponent from './tiles/TextTile.vue';
@@ -34,7 +34,7 @@ export class Tile {
     protected static registerTile(tile: typeof Tile) { this.tileTypes[tile.id] = tile; }
 
     static readonly id: string = 'b';
-    static readonly component: Component<TileComponentProps> = BaseTileComponent;
+    static readonly component: Component<TileComponentProps> = TileComponent;
     static readonly name: string = 'Blank Tile';
     static readonly image: string = blankTileImg;
     readonly class: typeof Tile = Tile;

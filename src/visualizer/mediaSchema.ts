@@ -8,7 +8,7 @@ export namespace MediaSchema {
     /**Blank tile schema-layout data */
     export type Tile = {
         // type can't be stricter without causing issues for subclasses
-        // abstract BaseTile would break code that relies on instances of arbitrary tiles
+        // abstract Tile would break code that relies on instances of arbitrary tiles
         type: string
         label: string
         size: number

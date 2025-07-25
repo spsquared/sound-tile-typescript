@@ -4,7 +4,7 @@ import { useThrottle, useThrottleFn } from '@vueuse/core';
 import { sanitize } from '@/components/scripts/htmlSanitize';
 import TileEditor from '../editor';
 import { TextTile } from '../tiles';
-import BaseTile from './BaseTile.vue';
+import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
@@ -23,7 +23,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
 </script>
 
 <template>
-    <BaseTile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
+    <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template v-slot:content>
             <div class="textContain">
                 <div class="textWrapper"v-html="sanitizedText"></div>
@@ -66,7 +66,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
                 <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable :disabled="TileEditor.state.lock.locked"></TrixTextEditor>
             </TileOptionsSection>
         </template>
-    </BaseTile>
+    </Tile>
 </template>
 
 <style scoped>

@@ -6,7 +6,7 @@ import TileEditor from '../editor';
 import { VisualizerTile } from '../tiles';
 import { VisualizerMode } from '../visualizerData';
 import Visualizer from '../visualizer';
-import BaseTile from './BaseTile.vue';
+import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
@@ -88,7 +88,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
 </script>
 
 <template>
-    <BaseTile :tile="props.tile" :options-window="{ minWidth: 500, minHeight: 300 }">
+    <Tile :tile="props.tile" :options-window="{ minWidth: 500, minHeight: 300 }">
         <template v-slot:content>
             <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="visualizerUploadCover" v-if="options.buffer === null">
@@ -394,7 +394,7 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
                 </div>
             </TileOptionsSection>
         </template>
-    </BaseTile>
+    </Tile>
 </template>
 
 <style>

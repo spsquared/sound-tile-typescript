@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, provide } from 'vue';
 import { GroupTile } from '../tiles';
-import BaseTile from './BaseTile.vue';
+import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
@@ -24,7 +24,7 @@ const tileOrientation = computed<string>({
 </script>
 
 <template>
-    <BaseTile :tile="props.tile" :hide-header="!isCollapsed" :hide-edit="!isCollapsed" :ignore-collapsed-group="isCollapsed && !inCollapsedGroup">
+    <Tile :tile="props.tile" :hide-header="!isCollapsed" :hide-edit="!isCollapsed" :ignore-collapsed-group="isCollapsed && !inCollapsedGroup">
         <template v-slot:content>
             <div :class="{
                 groupChildren: true,
@@ -66,7 +66,7 @@ const tileOrientation = computed<string>({
                 </label>
             </TileOptionsSection>
         </template>
-    </BaseTile>
+    </Tile>
 </template>
 
 <style scoped>

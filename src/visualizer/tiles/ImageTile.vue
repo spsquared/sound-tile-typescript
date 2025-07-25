@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ImageTile } from '../tiles';
-import BaseTile from './BaseTile.vue';
+import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
@@ -11,7 +11,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <BaseTile :tile="props.tile">
+    <Tile :tile="props.tile">
         <template v-slot:content>
             oof iamges tile
         </template>
@@ -31,7 +31,7 @@ const props = defineProps<{
                 </label>
             </TileOptionsSection>
         </template>
-    </BaseTile>
+    </Tile>
 </template>
 
 <style scoped></style>

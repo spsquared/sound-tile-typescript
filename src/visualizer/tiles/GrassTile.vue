@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import { GrassTile } from '../tiles';
-import BaseTile from './BaseTile.vue';
+import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import { throttledRef, useElementSize } from '@vueuse/core';
@@ -23,7 +23,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
 </script>
 
 <template>
-    <BaseTile :tile="props.tile">
+    <Tile :tile="props.tile">
         <template v-slot:content>
             <div class="grassWrapper" ref="wrapper">
                 <img :src="src" :style="{ width: width, height: height }">
@@ -38,7 +38,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
             </TileOptionsSection>
             Source: <a href="https://watching-grass-grow.com">https://watching-grass-grow.com</a>
         </template>
-    </BaseTile>
+    </Tile>
 </template>
 
 <style scoped>
