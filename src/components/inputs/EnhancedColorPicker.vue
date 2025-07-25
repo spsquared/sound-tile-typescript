@@ -67,7 +67,7 @@ function removeStop(i: number) {
 </script>
 
 <template>
-    <div :class="{ pickerBadge: true, pickerBadgeDisabled: props.disabled }" ref="pickerBadge" @click="togglePicker"></div>
+    <input type="button" :class="{ pickerBadge: true, pickerBadgeDisabled: props.disabled }" ref="pickerBadge" @click="togglePicker">
     <DraggableWindow v-model="props.picker.open" ref="pickerWindow" title="Color Picker" close-on-click-out :min-width="240" :min-height="240" @close="fudgeBadgeClickClose">
         <div class="pickerContainer">
             <div class="pickerNav">
@@ -135,19 +135,10 @@ function removeStop(i: number) {
     height: v-bind("$props.badgeHeight ?? '20px'");
     border: 2px solid white;
     background-color: black;
-    cursor: pointer;
-    --radial-gradient-size: v-bind("`min(${$props.badgeWidth ?? '44px'}, ${$props.badgeHeight ?? '20px'})`");
-}
-
-.pickerBadge::after {
-    content: '';
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
     background: v-bind("$props.picker.cssStyle");
     transform: scaleY(-1);
+    cursor: pointer;
+    --radial-gradient-size: v-bind("`min(${$props.badgeWidth ?? '44px'}, ${$props.badgeHeight ?? '20px'})`");
 }
 
 .pickerBadgeDisabled {

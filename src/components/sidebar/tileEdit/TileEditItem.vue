@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { GroupTile, Tile } from '@/visualizer/tiles';
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import arrowRightIcon from '@/img/arrow-right.svg';
 import arrowDownIcon from '@/img/arrow-down.svg';
 
@@ -29,10 +30,13 @@ function setHover() {
     TileEditor.state.sidebarIdentifyTile = props.tile;
 }
 
+// text label overflow stuff
 const label = useTemplateRef('label');
+const { width: handleWidth } = useElementSize(handle);
 function resetLabelScroll() {
     if (label.value !== null) label.value.scrollLeft = 0;
 }
+const labelWidth = computed(() => (handleWidth.value - (props.tile instanceof GroupTile ? 5 : 4) * 18) + 'px');
 
 const childrenOpen = ref(true);
 function toggleChildren() {
@@ -62,7 +66,7 @@ function deleteTile() {
     <div class="editItem">
         <div :class="{ editItemBar: true, editItemBarIdentify: TileEditor.state.editWindowIdentifyTile === props.tile }" ref="handle" @mouseenter="setHover">
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
-            <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="openChildren" @mouseleave="resetLabelScroll">
+            <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
             <div class="editItemDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
             <input type="button" class="editItemEditButton" @click="toggleEditTile">
@@ -125,11 +129,13 @@ function deleteTile() {
 
 .editItemLabel {
     min-width: 0px;
+    width: v-bind("labelWidth");
     flex-shrink: 1;
     border-radius: 0px;
     background-color: transparent;
     font-size: 14px;
     line-height: 1em;
+    text-overflow: ellipsis;
     user-select: none;
 }
 
@@ -210,6 +216,7 @@ function deleteTile() {
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-width: 0px;
 }
 
 .editItemGroupLine {

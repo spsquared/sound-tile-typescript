@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onClickOutside, useDraggable, useElementBounding, useThrottleFn } from '@vueuse/core';
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue';
+import { onClickOutside, useDraggable, useElementBounding, useThrottleFn } from '@vueuse/core';
 
 const props = defineProps<{
     title: string
@@ -207,6 +207,7 @@ const topCounter = ref(0);
     flex-basis: 0px;
     font-size: 16px;
     text-wrap: nowrap;
+    text-overflow: ellipsis;
     overflow: clip;
 }
 
