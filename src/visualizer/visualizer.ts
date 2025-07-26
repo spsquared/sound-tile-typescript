@@ -1,8 +1,9 @@
 
 
-import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
+import { computed, effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
+import { Modulation } from './modulation';
 
 if (!('AudioContext' in window)) {
     throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
@@ -36,6 +37,12 @@ export class Visualizer {
     readonly ctx: CanvasRenderingContext2D;
     /**Sets if the visualizer is visible/playable */
     readonly visible: Ref<boolean> = ref(false);
+
+    readonly modulator: Modulation.Source<{
+        peak: number
+    }> = new Modulation.Source({
+        peak: computed(() => 1)
+    });
 
     private readonly effectScope: EffectScope;
 

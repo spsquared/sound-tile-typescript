@@ -1,4 +1,4 @@
-import { Component } from 'vue';
+import { Component, markRaw } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -14,6 +14,7 @@ import imageTileImg from '@/img/image-tile.png';
 import { MediaSchema } from './mediaSchema';
 import Visualizer from './visualizer';
 import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
+import { Modulation } from './modulation';
 
 enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
@@ -319,7 +320,9 @@ export class TextTile extends Tile {
     }
 }
 
-export class ImageTile extends Tile {
+export class ImageTile extends Tile implements Modulation.Modulatable<{
+    imgScale: number
+}> {
     static readonly id: string = 'i';
     static readonly component = ImageTileComponent;
     static readonly name: string = 'Image Tile';
@@ -328,6 +331,13 @@ export class ImageTile extends Tile {
     static { this.registerTile(this); }
 
     label: string = ImageTile.name;
+
+    readonly modulation = markRaw(new Modulation.Target({
+        imgScale: 1
+    }));
+
+    /**Image source, (hopefully) as a data: URL */
+    imgSource: string = '';
 
     getSchemaData(): MediaSchema.ImageTile {
         return {
@@ -342,6 +352,11 @@ export class ImageTile extends Tile {
     protected static reconstitute(data: MediaSchema.ImageTile, tile: ImageTile): ImageTile {
         super.reconstitute(data, tile);
         return tile
+    }
+
+    destroy(): void {
+        super.destroy();
+        this.modulation.destroy();
     }
 }
 
