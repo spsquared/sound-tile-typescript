@@ -19,10 +19,12 @@ import TileEditor from '@/visualizer/editor';
     left: 0px;
     width: 100vw;
     height: 100vh;
-    border: 4px solid v-bind("TileEditor.root.borderColor.cssStyle");
+    padding: v-bind("TileEditor.root.orientation != TileEditor.root.class.COLLAPSED && !TileEditor.root.hideBorders ? '4px 4px' : '0px'");
+    background: v-bind("TileEditor.root.borderColor.cssStyle");
     align-items: stretch;
     justify-content: stretch;
     user-select: none;
+    --radial-gradient-size: 50vmax;
 }
 
 .tileIdleCover {
