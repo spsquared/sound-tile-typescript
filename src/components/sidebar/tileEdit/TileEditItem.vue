@@ -57,7 +57,7 @@ function dragTile(e: MouseEvent) {
     }
 }
 function deleteTile() {
-    TileEditor.pushLayoutHistory();
+    TileEditor.markLayoutChange();
     props.tile.destroy();
 }
 </script>
