@@ -1,4 +1,4 @@
-import { reactive, ref, Ref } from 'vue';
+import { reactive, ref, Ref, WatchStopHandle } from 'vue';
 import { throttledWatch, useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { cloneDeep } from 'lodash-es';
@@ -21,17 +21,21 @@ export abstract class VisualizerRenderer {
     });
     readonly canvas: HTMLCanvasElement;
 
+    private readonly stopWatching: WatchStopHandle;
+
     constructor(data: VisualizerSettingsData) {
         this.data = reactive(data);
         this.canvas = document.createElement('canvas');
-        throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
+        this.stopWatching = throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
     abstract draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void>
     abstract resize(w: number, h: number): void
     protected abstract updateData(): void
 
-    abstract destroy(): void
+    destroy(): void {
+        this.stopWatching();
+    }
 
     static playing: boolean = false;
     static debugInfo: boolean = false;
@@ -85,6 +89,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     }
 
     destroy() {
+        super.destroy();
         this.worker.terminate();
     }
 }
@@ -113,7 +118,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
     }
 
     destroy(): void {
-        // nothing?
+        super.destroy();
     }
 }
 

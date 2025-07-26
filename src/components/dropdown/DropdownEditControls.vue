@@ -13,7 +13,7 @@ function keydown(e: KeyboardEvent) {
 onMounted(() => document.addEventListener('keydown', keydown));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
 
-const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).filter((t) => t.visible).map((t) => t.Tile));
+const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).filter((t) => t!.visible).map((t) => t!.Tile));
 </script>
 
 <template>

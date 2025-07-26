@@ -12,7 +12,7 @@ type TileEditorState = {
     idleHideTabs: boolean
     sidebarScreenWidth: number
     readonly minSidebarWidthPx: number
-    readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } }
+    readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } | undefined }
     treeMode: boolean
     readonly drag: {
         current: Tile | null
