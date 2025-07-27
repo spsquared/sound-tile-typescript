@@ -17,6 +17,8 @@ const props = defineProps<{
             </div>
         </div>
     </Transition>
+    <!-- without this div the transition doesn't work -->
+    <div></div>
 </template>
 
 <style scoped>
@@ -32,7 +34,7 @@ const props = defineProps<{
     width: 100%;
     height: 100vh;
     overflow: hidden;
-    transition: 200ms linear dummy;
+    transition: 200ms linear transform;
 }
 
 .sidebarHeader {
