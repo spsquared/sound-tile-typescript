@@ -338,11 +338,14 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
 
     /**Image source, (hopefully) as a data: URL */
     imgSrc: string = '';
+    smoothDrawing: boolean = true;
 
     getSchemaData(): MediaSchema.ImageTile {
         return {
             ...super.getSchemaData(),
             ...cloneDeep<Omit<MediaSchema.ImageTile, keyof MediaSchema.Tile>>({
+                imgSrc: this.imgSrc,
+                smoothDrawing: this.smoothDrawing
             })
         } as MediaSchema.ImageTile;
     }
@@ -351,7 +354,9 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
     }
     protected static reconstitute(data: MediaSchema.ImageTile, tile: ImageTile): ImageTile {
         super.reconstitute(data, tile);
-        return tile
+        tile.imgSrc = data.imgSrc;
+        tile.smoothDrawing = data.smoothDrawing;
+        return tile;
     }
 
     destroy(): void {
@@ -382,6 +387,6 @@ export class GrassTile extends Tile {
     }
     protected static reconstitute(data: MediaSchema.GrassTile, tile: GrassTile): GrassTile {
         super.reconstitute(data, tile);
-        return tile
+        return tile;
     }
 }

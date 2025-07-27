@@ -10,10 +10,10 @@ const open = ref(false);
 
 async function uploadCoverArt() {
     const coverArt = await FileAccess.openFilePicker({
-        id: 'soundtileUploadCover',
+        id: 'soundtileUploadImage',
         types: [{
             accept: {
-                'image/*': ['.png', '.svg', '.jpeg', '.jpg', '.webp', '.bmp']
+                'image/*': ['.png', '.jpg', '.jpeg', '.svg', '.webp', '.bmp']
             }
         }]
     });

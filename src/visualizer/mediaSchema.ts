@@ -31,7 +31,10 @@ export namespace MediaSchema {
         align: 'start' | 'center' | 'end'
     };
     /**Image tile schema-layout data */
-    export type ImageTile = Tile & {};
+    export type ImageTile = Tile & {
+        imgSrc: string
+        smoothDrawing: boolean
+    };
     /**Grass tile schema-layout data */
     export type GrassTile = Tile & {};
 
