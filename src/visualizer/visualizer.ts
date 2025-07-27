@@ -1,6 +1,6 @@
 
 
-import { computed, effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
+import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
 import { Modulation } from './modulation';
@@ -41,7 +41,7 @@ export class Visualizer {
     readonly modulator: Modulation.Source<{
         peak: number
     }> = new Modulation.Source({
-        peak: computed(() => 1)
+        peak: () => 1
     });
 
     private readonly effectScope: EffectScope;

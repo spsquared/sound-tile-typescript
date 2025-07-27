@@ -52,26 +52,28 @@ async function uploadSource() {
     });
     if (source.length > 0) {
         const buffer = await source[0].arrayBuffer();
-        props.tile.visualizer.data.buffer = buffer;
+        options.value.buffer = buffer;
     }
     uploadSourceDisabled.value = false;
 }
 
 const gainIcon = computed(() => options.value.mute ? volumeMuteIcon : (options.value.gain > 0.6 ? volume2Icon : (options.value.gain > 0 ? volume1Icon : volume0Icon)));
 
-const fftSizes = Array.from(new Array(11), (_v, i) => 2 ** (i + 5));
-const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
-
 // buh ref spam
-const colorPicker1 = ColorPicker.createReactive(props.tile.visualizer.data.color);
-const colorPicker2 = ColorPicker.createReactive(props.tile.visualizer.data.color2);
-const colorSync1A = computed({ get: () => props.tile.visualizer.data.color, set: (c) => props.tile.visualizer.data.color = c });
-const colorSync2A = computed({ get: () => props.tile.visualizer.data.color2, set: (c) => props.tile.visualizer.data.color2 = c });
+const colorPicker1 = ColorPicker.createReactive(options.value.color);
+const colorPicker2 = ColorPicker.createReactive(options.value.color2);
+const colorSync1A = computed({ get: () => options.value.color, set: (c) => options.value.color = c });
+const colorSync2A = computed({ get: () => options.value.color2, set: (c) => options.value.color2 = c });
 const colorSync1B = computed({ get: () => colorPicker1.colorData, set: (c) => colorPicker1.colorData = c });
 const colorSync2B = computed({ get: () => colorPicker2.colorData, set: (c) => colorPicker2.colorData = c });
 syncRef(colorSync1A, colorSync1B);
 syncRef(colorSync2A, colorSync2B);
 
+const reflectionDisabled = computed(() => options.value.mode == VisualizerMode.SPECTROGRAM || options.value.mode == VisualizerMode.FREQ_LUMINANCE);
+const barMinLengthDisabled = computed(() => options.value.freqOptions.bar.ledEffect || options.value.mode == VisualizerMode.FREQ_LUMINANCE);
+const levelsMinLengthDisabled = computed(() => options.value.levelOptions.ledEffect);
+</script>
+<script lang="ts">
 const frequencyModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM];
 const waveformModes = [VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED];
 const spectrogramModes = [VisualizerMode.SPECTROGRAM];
@@ -82,9 +84,8 @@ const corrwaveModes = [VisualizerMode.WAVE_CORRELATED];
 const secondaryColorSupportedModes = [VisualizerMode.FREQ_FILL];
 const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM, VisualizerMode.CHANNEL_PEAKS];
 
-const reflectionDisabled = computed(() => props.tile.visualizer.data.mode == VisualizerMode.SPECTROGRAM || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
-const barMinLengthDisabled = computed(() => props.tile.visualizer.data.freqOptions.bar.ledEffect || props.tile.visualizer.data.mode == VisualizerMode.FREQ_LUMINANCE);
-const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelOptions.ledEffect);
+const fftSizes = Array.from(new Array(11), (_v, i) => 2 ** (i + 5));
+const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 </script>
 
 <template>
@@ -465,7 +466,6 @@ const levelsMinLengthDisabled = computed(() => props.tile.visualizer.data.levelO
 }
 
 .uploadButton {
-    grid-column: span 2;
     background-color: dodgerblue;
 }
 

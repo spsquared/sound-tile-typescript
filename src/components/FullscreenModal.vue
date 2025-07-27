@@ -79,7 +79,7 @@ export const enum ModalMode {
             <div :class="{ modalContainer: true, modalContainerFrost: props.effect == 'frost-screen' }" v-if="open">
                 <div :class="{ modalBody: true, modalBodyFrost: props.effect == 'frost-window' }" ref="body">
                     <h1>{{ props.title }}</h1>
-                    <slot></slot>
+                    <slot :close="close"></slot>
                     <div class="modalButtons">
                         <span v-if="props.mode == ModalMode.NOTIFY">
                             <input type="button" value="OK" class="modalButton" @click="close(true)">

@@ -147,7 +147,7 @@ export class Media implements MediaMetadata {
                         // TODO: implement modulation of properties (reactive images)
                         const group = new GroupTile();
                         group.label = 'Visualizer Image Tile (converted)';
-                        group.orientation = GroupTile.VERTICAL;
+                        group.orientation = curr.imageReactive ? GroupTile.COLLAPSED : GroupTile.VERTICAL;
                         group.hideBorders = true;
                         const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
                         visualizer.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, useTemplateRef, watch } from 'vue';
 import { onClickOutside, useDraggable, useElementBounding, useThrottleFn } from '@vueuse/core';
 
 const props = defineProps<{
@@ -88,18 +88,20 @@ watch(() => [props.resizeable, props.resizeWidth, props.resizeHeight], () => {
 }, { immediate: true });
 
 // window brought to top of other windows when clicked on
-const isTop = ref(false);
+const thisId = windowIdCounter++;
+const thisIndex = computed(() => Math.max(0, windowPile.indexOf(thisId)));
 async function bringToTop() {
     if (!open.value) return;
-    topCounter.value++;
-    await nextTick();
-    isTop.value = true;
+    const i = windowPile.indexOf(thisId);
+    if (i != -1) windowPile.splice(i, 1);
+    windowPile.unshift(thisId);
 }
-watch(topCounter, () => isTop.value = false);
 watch(open, () => {
     if (open.value) {
         bringToTop();
         (winBar.value?.querySelector('.windowClose') as HTMLElement)?.focus();
+    } else {
+        windowPile.splice(windowPile.indexOf(thisId), 1);
     }
 });
 
@@ -120,7 +122,7 @@ const emit = defineEmits<{
 watch(open, () => emit(open.value ? 'open' : 'close' as any)); // typescript dumbness
 watch([dragX, dragY], () => emit('move', dragX.value, dragY.value));
 watch(size, () => emit('resize', size.w, size.h));
-watch(isTop, () => emit(isTop.value ? 'focus' : 'blur' as any));
+watch(thisIndex, () => emit(thisIndex.value == 0 ? 'focus' : 'blur' as any));
 function fixDragPosition() {
     dragX.value = Math.min(window.innerWidth - size.w - 8, Math.max(dragX.value, 0));
     dragY.value = Math.min(window.innerHeight - size.h - 28, Math.max(dragY.value, 0));
@@ -139,8 +141,10 @@ onMounted(() => window.addEventListener('resize', fixPosOnResize));
 onUnmounted(() => window.removeEventListener('resize', fixPosOnResize));
 </script>
 <script lang="ts">
-// janky thing for global - when counter increments all windows reset z-index
-const topCounter = ref(0);
+// yes I'm calling it a pile since a stack is wrong and layers feels wrong
+// also the top window is at index 0
+const windowPile: number[] = reactive([]);
+let windowIdCounter = 0;
 </script>
 
 <template>
@@ -182,7 +186,7 @@ const topCounter = ref(0);
     display: grid;
     position: fixed;
     padding-top: 20px;
-    z-index: v-bind("isTop ? 901 : 900");
+    z-index: v-bind("999 - Math.min(99, thisIndex)");
 }
 
 .windowBar {

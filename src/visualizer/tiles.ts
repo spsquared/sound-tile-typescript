@@ -337,7 +337,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
     }));
 
     /**Image source, (hopefully) as a data: URL */
-    imgSource: string = '';
+    imgSrc: string = '';
 
     getSchemaData(): MediaSchema.ImageTile {
         return {
