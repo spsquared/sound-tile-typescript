@@ -1,26 +1,35 @@
-import { computed, ComputedRef, effectScope, EffectScope, ref, Ref, watch } from "vue";
+import { ComputedRef, effectScope, EffectScope, ref, Ref, watch } from "vue";
 
 export namespace Modulation {
-    type ModulationPropertyMap = {
+    type TargetPropertyMap = {
         [key: string]: any
     };
+    type SourcePropertyMap = {
+        [key: string]: RefOrGetter
+    };
 
-    type PropertiesWithType<Props extends ModulationPropertyMap, T> = {
-        [K in keyof Props]: Props[K] extends T ? K : never
+    type RefOrGetter = Ref<any> | ComputedRef<any> | (() => any);
+    type ExtractRefOrGetterValue<T> = T extends Ref<infer V> ? V : (T extends (() => infer V) ? V : never);
+
+    type ValidTargetsForSource<Props extends TargetPropertyMap, T extends RefOrGetter> = {
+        [K in keyof Props]: Props[K] extends ExtractRefOrGetterValue<T> ? K : never
     }[keyof Props];
 
     /**
      * Modulation source side of controller. Values set to its source refs will be applied to linked targets.
      */
-    export class Source<Props extends ModulationPropertyMap> {
+    export class Source<Props extends SourcePropertyMap> {
         /**Source refs that modulate targets */
-        readonly sources: {
-            readonly [K in keyof Props]: Ref<Props[K]> | ComputedRef<Props[K]> | (() => Props[K])
-        };
+        readonly sources: Readonly<Props>;
         /**Maps sources to their target sets */
         private readonly connections: Map<keyof Props, Set<Ref>> = new Map();
         /**Helps efficiently disconnect all targets, maps targets to map of source and target properties */
         private readonly connectionTrackers: Map<Target<any>, Map<keyof Props, any>> = new Map();
+
+        /**Reactive record of all targets modulated by this source - if this is edited it's not this class's problem */
+        readonly connectedTargets: ComputedRef<{
+            readonly [K in keyof Props]: ([Target<any>, any])[]
+        }>;
 
         private readonly effectScope: EffectScope;
 
@@ -29,7 +38,7 @@ export namespace Modulation {
          * - Source refs will be the same as the ones in the `sources` property
          * - Using computed refs and getters allows modulation based on external dependencies without additional code
          */
-        constructor(sources: Source<Props>['sources']) {
+        constructor(sources: Props) {
             this.sources = { ...sources };
             this.effectScope = effectScope();
             for (const sourceKey in this.sources) {
@@ -44,6 +53,8 @@ export namespace Modulation {
                     });
                 }
             });
+            // again, using normal refs but exposing them as readonly, and .effect is still deprecated
+            this.connectedTargets = ref(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
         }
 
         /**
@@ -52,14 +63,14 @@ export namespace Modulation {
          * @param sourceKey Name of modulation source
          * @param targetKey Name of modulation target
          */
-        connect<TargetProps extends ModulationPropertyMap, Key1 extends keyof Props>(
-            target: Target<TargetProps> | Modulatable<TargetProps>, sourceKey: Key1, targetKey: PropertiesWithType<TargetProps, Props[Key1]>
+        connect<TargetProps extends TargetPropertyMap, Key1 extends keyof Props>(
+            target: Target<TargetProps> | Modulatable<TargetProps>, sourceKey: Key1, targetKey: ValidTargetsForSource<TargetProps, Props[Key1]>
         ): void {
             const normTarget = target instanceof Target ? target : target.modulation;
-            const publicTarget = normTarget as any as TargetPublic<TargetProps>;
+            const publicTarget = normTarget as any as TargetInternalView<TargetProps>;
             // multiple sources to a target doesn't work
             if (publicTarget.connectionTrackers.has(targetKey)) return;
-            const targetRef = publicTarget.values[targetKey];
+            const targetRef = publicTarget.targets[targetKey];
             const sourceRefOrGetter = this.sources[sourceKey];
             this.connections.get(sourceKey)!.add(targetRef);
             targetRef.value = (typeof sourceRefOrGetter == 'function' ? sourceRefOrGetter() : sourceRefOrGetter.value) as any; // ts complains buh
@@ -67,6 +78,8 @@ export namespace Modulation {
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
             publicTarget.connectionTrackers.set(targetKey, [this, sourceKey]);
+            this.connectedTargets.value[sourceKey].push([normTarget, targetKey]);
+            normTarget.connectedSources.value[targetKey] = this;
         }
 
         /**
@@ -77,46 +90,49 @@ export namespace Modulation {
          * Disconnect all modulation to the target.
          * @param target Modulation target, either a `Modulatable` object or a modulation `Target`
          */
-        disconnect<TargetProps extends ModulationPropertyMap>(target: Target<TargetProps>): void;
+        disconnect<TargetProps extends TargetPropertyMap>(target: Target<TargetProps>): void;
         /**
          * Disconnect the modulation of `targetKey` by `sourceKey` to the target.
          * @param target Modulation target, either a `Modulatable` object or a modulation `Target`
          * @param sourceKey Name of modulation source
          * @param targetKey Name of modulation target
          */
-        disconnect<TargetProps extends ModulationPropertyMap, Key1 extends keyof Props>(target: Target<TargetProps>, sourceKey: Key1, targetKey: PropertiesWithType<TargetProps, Props[Key1]>): void;
+        disconnect<TargetProps extends TargetPropertyMap, Key1 extends keyof Props>(target: Target<TargetProps>, sourceKey: Key1, targetKey: ValidTargetsForSource<TargetProps, Props[Key1]>): void;
 
-        disconnect<TargetProps extends ModulationPropertyMap>(
+        disconnect<TargetProps extends TargetPropertyMap>(
             target?: Target<TargetProps> | Modulatable<TargetProps>, sourceKey?: keyof Props, targetKey?: keyof TargetProps
         ): void {
             if (target === undefined) {
                 // disconnect all targets
                 this.connections.clear();
                 for (const [target, modMap] of this.connectionTrackers) {
-                    const publicTarget = target as any as TargetPublic<TargetProps>;
+                    const publicTarget = target as any as TargetInternalView<TargetProps>;
                     for (const [_, targetKey] of modMap) {
                         publicTarget.connectionTrackers.delete(targetKey);
+                        target.connectedSources.value[targetKey] = null;
                     }
                 }
                 this.connectionTrackers.clear();
                 return;
             }
             const normTarget = target instanceof Target ? target : target.modulation;
-            const publicTarget = normTarget as any as TargetPublic<TargetProps>;
+            const publicTarget = normTarget as any as TargetInternalView<TargetProps>;
             if (sourceKey === undefined) {
                 // disconnect all modulations to a target
                 const modMap = this.connectionTrackers.get(normTarget);
                 if (modMap === undefined) return; // wasn't connected anyway
                 for (const [sourceKey, targetKey] of modMap) {
-                    this.connections.get(sourceKey)!.delete(publicTarget.values[targetKey]);
+                    this.connections.get(sourceKey)!.delete(publicTarget.targets[targetKey]);
                     publicTarget.connectionTrackers.delete(targetKey);
+                    (normTarget.connectedSources.value as any)[targetKey] = null; // shut up "can only be indexed for reading"
                 }
                 return;
             }
             // disconnect just one modulation to a target
-            this.connections.get(sourceKey)!.delete(publicTarget.values[targetKey]);
+            this.connections.get(sourceKey)!.delete(publicTarget.targets[targetKey!]);
             this.connectionTrackers.get(normTarget)?.delete(sourceKey);
             publicTarget.connectionTrackers.delete(targetKey!);
+            normTarget.connectedSources.value[targetKey!] = null;
         }
 
         /**
@@ -131,24 +147,26 @@ export namespace Modulation {
     /**
      * Modulation target side of controller. Values in its `targets` refs are controlled by linked sources.
      */
-    export class Target<Props extends ModulationPropertyMap> {
+    export class Target<Props extends TargetPropertyMap> {
         /**Target refs controlled by sources */
         readonly targets: {
             readonly [K in keyof Props]: ComputedRef<Props[K]>
         };
-        /**Internal refs to make target refs readonly */
-        private readonly values: {
-            readonly [K in keyof Props]: Ref<Props[K]>
-        };
-        /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property */
+        /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property, also used to enumerate sources */
         private readonly connectionTrackers: Map<keyof Props, [Source<any>, any]> = new Map();
+
+        /**Reactive record of all sources for this target - if this is edited it's not this class's problem */
+        readonly connectedSources: ComputedRef<{
+            [K in keyof Props]: Source<any> | null
+        }>;
 
         /**
          * @param initialValues Initial values for modulated items
          */
         constructor(initialValues: Props) {
-            this.values = Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any);
-            this.targets = Object.entries(this.values).reduce((obj, [key, ref]) => (obj[key] = computed(() => ref.value), obj), {} as any);
+            // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
+            this.targets = Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any);
+            this.connectedSources = ref(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
         }
 
         /**
@@ -167,14 +185,15 @@ export namespace Modulation {
         }
     }
 
-    interface TargetPublic<Props extends ModulationPropertyMap> {
-        readonly values: {
+    interface TargetInternalView<Props extends TargetPropertyMap> {
+        /**Target refs, internally they are normal refs but are made public as readonly */
+        readonly targets: {
             readonly [K in keyof Props]: Ref<Props[K]>
         }
         readonly connectionTrackers: Map<keyof Props, [Source<any>, any]>
     }
 
-    export interface Modulatable<Props extends ModulationPropertyMap> {
+    export interface Modulatable<Props extends TargetPropertyMap> {
         readonly modulation: Target<Props>
     }
 }

@@ -38,7 +38,7 @@ export namespace MediaSchema {
     /**Grass tile schema-layout data */
     export type GrassTile = Tile & {};
 
-    /**Legacy (old Sound Tile) mode enumeration, even more scuffed somehow. */
+    /**Legacy (old Sound Tile) mode enumeration, even more scuffed somehow */
     export enum LegacyVisualizerMode {
         FREQ_BAR_1 = 0,
         FREQ_BAR_2 = 1,
@@ -67,7 +67,7 @@ export namespace MediaSchema {
             angle: number
         }
     }
-    /**Legacy (old Sound Tile) visualizer options & audio data. */
+    /**Legacy (old Sound Tile) visualizer options & audio data */
     export type LegacyVisualizerData = {
         buffer: ArrayBuffer
         mode: LegacyVisualizerMode
@@ -99,7 +99,7 @@ export namespace MediaSchema {
         volume?: number
         muteOutput?: boolean
     };
-    /**Legacy (old Sound Tile) channel peaks mode visualizer options & audio data. */
+    /**Legacy (old Sound Tile) channel peaks mode visualizer options & audio data */
     export type LegacyChannelPeaksData = {
         buffer: ArrayBuffer
         color: string | LegacyColorData
@@ -241,7 +241,7 @@ export namespace MediaSchema {
         });
     }
 
-    /**Legacy (old Sound Tile) tree layouts, very scuffed. */
+    /**Legacy (old Sound Tile) tree layouts, very scuffed */
     export type LegacyTree = {
         orientation: boolean | 0 // extremely well-designed code
         flex?: number
@@ -328,6 +328,6 @@ export namespace MediaSchema {
         tree: GroupTile
     };
 
-    /**File layouts for all schema versions. */
+    /**File layouts for all schema versions */
     export type Schema = SchemaV0 | SchemaV1 | SchemaV2;
 }

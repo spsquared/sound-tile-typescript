@@ -97,7 +97,7 @@ export interface VisualizerData {
         thickness: number
         /**Use miter joins instead of rounded joins at corners in lines */
         sharpEdges: boolean
-        /**Reduce the number of points drawn - every 2 points, every 3 points, etc. */
+        /**Reduce the number of points drawn - every 2 points, every 3 points, etc */
         resolution: number
         /**Settings for correlated waveform mode */
         correlation: {

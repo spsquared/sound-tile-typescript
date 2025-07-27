@@ -38,9 +38,7 @@ export class Visualizer {
     /**Sets if the visualizer is visible/playable */
     readonly visible: Ref<boolean> = ref(false);
 
-    readonly modulator: Modulation.Source<{
-        peak: number
-    }> = markRaw(new Modulation.Source({
+    readonly modulator = markRaw(new Modulation.Source({
         peak: () => 1
     }));
 
