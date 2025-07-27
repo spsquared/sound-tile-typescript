@@ -15,7 +15,7 @@ export namespace Modulation {
     export class Source<Props extends ModulationPropertyMap> {
         /**Source refs that modulate targets */
         readonly sources: {
-            readonly [K in keyof Props]: Ref<Props[K]>
+            readonly [K in keyof Props]: Ref<Props[K]> | ComputedRef<Props[K]> | (() => Props[K])
         };
         /**Maps sources to their target sets */
         private readonly connections: Map<keyof Props, Set<Ref>> = new Map();
@@ -27,7 +27,7 @@ export namespace Modulation {
         /**
          * @param sources Source refs
          * - Source refs will be the same as the ones in the `sources` property
-         * - Using computed refs allows modulation based on external dependencies without additional code
+         * - Using computed refs and getters allows modulation based on external dependencies without additional code
          */
         constructor(sources: Source<Props>['sources']) {
             this.sources = { ...sources };
@@ -39,8 +39,8 @@ export namespace Modulation {
                 for (const sourceKey in this.sources) {
                     const sourceRef = this.sources[sourceKey];
                     const targetRefs = this.connections.get(sourceKey)!;
-                    watch(sourceRef, () => {
-                        for (const target of targetRefs) target.value = sourceRef.value;
+                    watch(sourceRef, (value) => {
+                        for (const target of targetRefs) target.value = value;
                     });
                 }
             });
@@ -60,8 +60,9 @@ export namespace Modulation {
             // multiple sources to a target doesn't work
             if (publicTarget.connectionTrackers.has(targetKey)) return;
             const targetRef = publicTarget.values[targetKey];
+            const sourceRefOrGetter = this.sources[sourceKey];
             this.connections.get(sourceKey)!.add(targetRef);
-            targetRef.value = this.sources[sourceKey].value as any; // ts complains buh
+            targetRef.value = (typeof sourceRefOrGetter == 'function' ? sourceRefOrGetter() : sourceRefOrGetter.value) as any; // ts complains buh
             // update connection trackers (typing is a bit scuffed still)
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
