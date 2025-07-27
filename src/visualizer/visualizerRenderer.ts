@@ -685,12 +685,13 @@ class VisualizerRenderInstance {
             const invSmoothing = 1 - smoothing;
             for (let i = 0; i < buffers.length; i++) {
                 const channel = buffers[i];
-                let max = 0;
+                let max = 0, min = 255;
                 for (let j = 0; j < channel.length; j++) {
-                    const v = Math.abs(channel[j] - 128);
-                    if (v > max) max = v;
+                    if (channel[j] < min) min = channel[j];
+                    if (channel[j] > max) max = channel[j];
                 }
-                this.levelsData[i] = max * invSmoothing + (this.levelsData[i] ?? max) * smoothing;
+                const diff = max - min;
+                this.levelsData[i] = diff * invSmoothing + (this.levelsData[i] ?? diff) * smoothing;
             }
             this.debugText.push('Peaks: ' + this.levelsData.map((v) => v.toFixed(1)).join(', '))
         }
@@ -699,8 +700,8 @@ class VisualizerRenderInstance {
         const xStep = width / this.levelsData.length;
         const barWidth = Math.max(1, xStep * this.data.levelOptions.size);
         const xShift = (xStep - barWidth) / 2;
-        const dataQuantize = this.data.levelOptions.ledEffect ? this.data.levelOptions.ledCount : 128;
-        const dataScale = this.data.levelOptions.scale * dataQuantize / 128;
+        const dataQuantize = this.data.levelOptions.ledEffect ? this.data.levelOptions.ledCount : 255;
+        const dataScale = this.data.levelOptions.scale * dataQuantize / 255;
         const drawScale = height / dataQuantize;
         const minHeight = this.data.levelOptions.ledEffect ? height / this.data.levelOptions.ledCount : this.data.levelOptions.minLength;
         const yReflect = this.data.levelOptions.reflect;
