@@ -1,4 +1,4 @@
-import { ComputedRef, effectScope, EffectScope, ref, Ref, watch } from "vue";
+import { ComputedRef, effectScope, EffectScope, markRaw, ref, Ref, watch } from "vue";
 
 export namespace Modulation {
     type TargetPropertyMap = {
@@ -22,13 +22,13 @@ export namespace Modulation {
         /**Source refs that modulate targets */
         readonly sources: Readonly<Props>;
         /**Maps sources to their target sets */
-        private readonly connections: Map<keyof Props, Set<Ref>> = new Map();
+        private readonly connections: Map<keyof Props, Set<Ref>> = markRaw(new Map());
         /**Helps efficiently disconnect all targets, maps targets to map of source and target properties */
-        private readonly connectionTrackers: Map<Target<any>, Map<keyof Props, any>> = new Map();
+        private readonly connectionTrackers: Map<Target<any>, Map<keyof Props, any>> = markRaw(new Map());
 
         /**Reactive record of all targets modulated by this source - if this is edited it's not this class's problem */
         readonly connectedTargets: ComputedRef<{
-            readonly [K in keyof Props]: ([Target<any>, any])[]
+            readonly [K in keyof Props]: readonly [Target<any>, any][]
         }>;
 
         private readonly effectScope: EffectScope;
@@ -39,7 +39,7 @@ export namespace Modulation {
          * - Using computed refs and getters allows modulation based on external dependencies without additional code
          */
         constructor(sources: Props) {
-            this.sources = { ...sources };
+            this.sources = markRaw({ ...sources });
             this.effectScope = effectScope();
             for (const sourceKey in this.sources) {
                 this.connections.set(sourceKey, new Set<Ref>());
@@ -59,6 +59,7 @@ export namespace Modulation {
 
         /**
          * Connect modulation of `targetKey` in a target by `sourceKey` in this source.
+         * The modulation source and target must have the same type to be connected.
          * @param target Modulation target, either a `Modulatable` object or a modulation `Target`
          * @param sourceKey Name of modulation source
          * @param targetKey Name of modulation target
@@ -78,8 +79,8 @@ export namespace Modulation {
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
             publicTarget.connectionTrackers.set(targetKey, [this, sourceKey]);
-            this.connectedTargets.value[sourceKey].push([normTarget, targetKey]);
-            normTarget.connectedSources.value[targetKey] = this;
+            (this.connectedTargets.value[sourceKey] as [Target<any>, any][]).push([normTarget, targetKey]);
+            publicTarget.connectedSources.value[targetKey] = this;
         }
 
         /**
@@ -106,10 +107,10 @@ export namespace Modulation {
                 // disconnect all targets
                 this.connections.clear();
                 for (const [target, modMap] of this.connectionTrackers) {
-                    const publicTarget = target as any as TargetInternalView<TargetProps>;
+                    const publicTarget = target as any as TargetInternalView<any>;
                     for (const [_, targetKey] of modMap) {
                         publicTarget.connectionTrackers.delete(targetKey);
-                        target.connectedSources.value[targetKey] = null;
+                        publicTarget.connectedSources.value[targetKey] = null;
                     }
                 }
                 this.connectionTrackers.clear();
@@ -132,7 +133,7 @@ export namespace Modulation {
             this.connections.get(sourceKey)!.delete(publicTarget.targets[targetKey!]);
             this.connectionTrackers.get(normTarget)?.delete(sourceKey);
             publicTarget.connectionTrackers.delete(targetKey!);
-            normTarget.connectedSources.value[targetKey!] = null;
+            publicTarget.connectedSources.value[targetKey!] = null;
         }
 
         /**
@@ -153,11 +154,11 @@ export namespace Modulation {
             readonly [K in keyof Props]: ComputedRef<Props[K]>
         };
         /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property, also used to enumerate sources */
-        private readonly connectionTrackers: Map<keyof Props, [Source<any>, any]> = new Map();
+        private readonly connectionTrackers: Map<keyof Props, [Source<any>, any]> = markRaw(new Map());
 
         /**Reactive record of all sources for this target - if this is edited it's not this class's problem */
         readonly connectedSources: ComputedRef<{
-            [K in keyof Props]: Source<any> | null
+            readonly [K in keyof Props]: Source<any> | null
         }>;
 
         /**
@@ -165,7 +166,7 @@ export namespace Modulation {
          */
         constructor(initialValues: Props) {
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
-            this.targets = Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any);
+            this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
             this.connectedSources = ref(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
         }
 
@@ -191,6 +192,9 @@ export namespace Modulation {
             readonly [K in keyof Props]: Ref<Props[K]>
         }
         readonly connectionTrackers: Map<keyof Props, [Source<any>, any]>
+        readonly connectedSources: Ref<{
+            [K in keyof Props]: Source<any> | null
+        }>;
     }
 
     export interface Modulatable<Props extends TargetPropertyMap> {

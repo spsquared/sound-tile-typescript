@@ -394,6 +394,9 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     </label>
                 </div>
             </TileOptionsSection>
+            <TileOptionsSection title="Modulation">
+                Modulation drag-and-drop UI coming soon!
+            </TileOptionsSection>
         </template>
     </Tile>
 </template>

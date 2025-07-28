@@ -1,4 +1,4 @@
-import { Component, markRaw } from 'vue';
+import { Component } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -322,6 +322,9 @@ export class TextTile extends Tile {
 
 export class ImageTile extends Tile implements Modulation.Modulatable<{
     imgScale: number
+    imgOffsetX: number
+    imgOffsetY: number
+    imgRotation: number
 }> {
     static readonly id: string = 'i';
     static readonly component = ImageTileComponent;
@@ -332,13 +335,19 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
 
     label: string = ImageTile.name;
 
-    readonly modulation = markRaw(new Modulation.Target({
-        imgScale: 1
-    }));
+    readonly modulation = new Modulation.Target({
+        imgScale: 1,
+        imgOffsetX: 0,
+        imgOffsetY: 0,
+        imgRotation: 0
+    });
 
     /**Image source, (hopefully) as a data: URL */
     imgSrc: string = '';
+    /**Smooth drawing */
     smoothDrawing: boolean = true;
+    /**Position the image center in percentage coordinates of tile boundaries & rotate/scale the image */
+    position: { x: number, y: number, rotation: number, scale: number } = { x: 50, y: 50, rotation: 0, scale: 1 };
 
     getSchemaData(): MediaSchema.ImageTile {
         return {

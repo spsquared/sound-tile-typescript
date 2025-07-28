@@ -3,10 +3,12 @@ import { onMounted, onUnmounted } from 'vue';
 import { matchTextInput } from '@/constants';
 import TileEditor from '@/visualizer/editor';
 import SidebarTileEdit from './tileEdit/SidebarTileEdit.vue';
+import SidebarModulators from './modulators/SidebarModulators.vue';
 import SidebarExport from './export/SidebarExport.vue';
 import SidebarPlaylist from './playlist/SidebarPlaylist.vue';
 import SidebarTab from './SidebarTab.vue';
 import editIcon from '@/img/edit.svg';
+import modulationIcon from '@/img/modulation.svg';
 import exportIcon from '@/img/export.svg';
 import playlistIcon from '@/img/playlist.svg';
 
@@ -56,6 +58,7 @@ onUnmounted(() => {
     <input type="checkbox" id="sidebarToggle" v-model="TileEditor.state.sidebarOpen">
     <div id="sidebar">
         <SidebarTileEdit></SidebarTileEdit>
+        <SidebarModulators></SidebarModulators>
         <SidebarExport></SidebarExport>
         <SidebarPlaylist></SidebarPlaylist>
         <input type="checkbox" id="dropdownShadowToggle" v-model="TileEditor.state.dropdownOpen">
@@ -64,7 +67,7 @@ onUnmounted(() => {
                 <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
                 <div id="sidebarTabsList">
                     <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
-                    <!-- TODO - audio sources tab, assigning multiple tiles the same audio -->
+                    <SidebarTab for="modulators" :image="modulationIcon" title="Edit Modulators"></SidebarTab>
                     <SidebarTab for="export" :image="exportIcon" title="Export"></SidebarTab>
                     <SidebarTab for="playlist" :image="playlistIcon" size="90%" title="Playlist"></SidebarTab>
                 </div>

@@ -1,6 +1,6 @@
 
 
-import { effectScope, EffectScope, markRaw, reactive, ref, Ref, watch, watchEffect } from 'vue';
+import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
 import { Modulation } from './modulation';
@@ -38,9 +38,9 @@ export class Visualizer {
     /**Sets if the visualizer is visible/playable */
     readonly visible: Ref<boolean> = ref(false);
 
-    readonly modulator = markRaw(new Modulation.Source({
-        peak: () => 1
-    }));
+    readonly modulator: Modulation.Source<{
+        peak: () => number
+    }>;
 
     private readonly effectScope: EffectScope;
 
@@ -51,8 +51,9 @@ export class Visualizer {
         this.gain = Visualizer.audioContext.createGain();
         this.gain.connect(Visualizer.gain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
-        Visualizer.instances.add(this);
-        // watch functions instead of getter/setter spam
+        this.modulator = new Modulation.Source({
+            peak: () => this.renderer.frameResult.value.approximatePeak
+        });
         this.effectScope = effectScope();
         this.effectScope.run(() => {
             watch(() => this.data.buffer, async () => {
@@ -121,6 +122,7 @@ export class Visualizer {
                 }
             });
         });
+        Visualizer.instances.add(this);
     }
 
     private drawing: boolean = false;
@@ -218,6 +220,7 @@ export class Visualizer {
         this.stop();
         this.effectScope.stop();
         this.gain.disconnect();
+        this.modulator.destroy();
         Visualizer.instances.delete(this);
         Visualizer.recalculateDuration();
     }

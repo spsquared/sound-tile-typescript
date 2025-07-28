@@ -143,8 +143,6 @@ export class Media implements MediaMetadata {
                         break;
                     }
                     case 'vi': {
-                        // TODO: actually add image tiles
-                        // TODO: implement modulation of properties (reactive images)
                         const group = new GroupTile();
                         group.label = 'Visualizer Image Tile (converted)';
                         group.orientation = curr.imageBackground ? GroupTile.COLLAPSED : GroupTile.VERTICAL;
@@ -154,6 +152,10 @@ export class Media implements MediaMetadata {
                         const image = new ImageTile();
                         image.backgroundColor.colorData = visualizer.backgroundColor.colorData;
                         image.imgSrc = curr.image ?? '';
+                        image.smoothDrawing = curr.smoothing ?? true;
+                        if (curr.imageReactive) {
+                            visualizer.visualizer.modulator.connect(image.modulation, 'peak', 'imgScale');
+                        }
                         if (curr.imageBackground) {
                             // image under the visualizer
                             group.addChild(image);
@@ -307,7 +309,7 @@ export class Media implements MediaMetadata {
                 if (v.buffer === null) console.warn('Visualizer buffer resolution failed');
             }
         }
-        // again reconstitution happens in tile code rather than here
+        // tree reconstitution happens in tile code rather than here
         const root = GroupTile.fromSchemaData(tree);
         // media
         return new Media(metadata, root);

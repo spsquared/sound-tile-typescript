@@ -7,7 +7,7 @@ import { matchTextInput } from '@/constants';
 type TileEditorState = {
     dropdownOpen: boolean
     sidebarOpen: boolean
-    sidebarTab: 'edit' | 'export' | 'playlist'
+    sidebarTab: 'edit' | 'modulators' | 'export' | 'playlist'
     hideTabs: boolean
     idleHideTabs: boolean
     sidebarScreenWidth: number

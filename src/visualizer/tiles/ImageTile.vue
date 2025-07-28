@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, useTemplateRef } from 'vue';
+import { computed, ComputedRef, inject, reactive, ref, useTemplateRef } from 'vue';
 import { throttledWatch, useElementSize } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
@@ -13,6 +13,9 @@ import Toggle from '@/components/inputs/Toggle.vue';
 const props = defineProps<{
     tile: ImageTile
 }>();
+const modTargets = computed(() => props.tile.modulation.targets);
+
+const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
 const wrapper = useTemplateRef('imageWrapper');
 const image = useTemplateRef('image');
@@ -54,7 +57,10 @@ async function uploadImage() {
     <Tile :tile="props.tile">
         <template v-slot:content>
             <div class="imageWrapper" ref="imageWrapper">
-                <img class="image" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" @load="resizeImage">
+                <img :class="{
+                    image: true,
+                    draggableImage: props.tile.editPaneOpen && !inCollapsedGroup
+                }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" @load="resizeImage">
             </div>
             <div class="imageUploadCover" v-if="props.tile.imgSrc == ''">
                 <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.state.lock.locked">
@@ -84,25 +90,41 @@ async function uploadImage() {
                     <Toggle v-model="props.tile.smoothDrawing"></Toggle>
                 </label>
             </TileOptionsSection>
+            <TileOptionsSection title="Position">
+            </TileOptionsSection>
+            <TileOptionsSection title="Modulation">
+                Modulation drag-and-drop UI coming soon!
+            </TileOptionsSection>
         </template>
     </Tile>
 </template>
 
 <style scoped>
 .imageWrapper {
-    display: flex;
     position: absolute;
     top: 0px;
     left: 0px;
     width: 100%;
     height: 100%;
-    align-items: center;
-    justify-content: center;
 }
 
 .image {
+    position: absolute;
+    top: v-bind("$props.tile.position.y + '%'");
+    left: v-bind("$props.tile.position.x + '%'");
     width: v-bind("imgCss.width");
     height: v-bind("imgCss.height");
+    image-rendering: v-bind("$props.tile.smoothDrawing ? 'auto' : 'pixelated'");
+    /* bruh autoformatter LET ME MAKE SEPARATE LINES */
+    transform: translate(v-bind("modTargets.imgOffsetX.value - 50 + '%'"), v-bind("modTargets.imgOffsetY.value - 50 + '%'")) rotateZ(v-bind("modTargets.imgRotation.value + 'deg'")) scale(v-bind("modTargets.imgScale.value"));
+}
+
+.draggableImage {
+    cursor: move;
+}
+
+.draggableImage:hover {
+    outline: 1px solid cyan;
 }
 
 .imageUploadCover {

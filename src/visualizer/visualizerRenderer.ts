@@ -17,7 +17,10 @@ export abstract class VisualizerRenderer {
     /**Reactive data of visualizer, should be a reference to the same object used in the visualizer instance */
     readonly data: VisualizerSettingsData;
     readonly frameResult: Ref<VisualizerRendererFrameResults> = ref<VisualizerRendererFrameResults>({
-
+        valueMax: 0,
+        valueMin: 0,
+        valueMinMaxDiff: 0,
+        approximatePeak: 0
     });
     readonly canvas: HTMLCanvasElement;
 
@@ -122,8 +125,12 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
     }
 }
 
-export class VisualizerRendererFrameResults {
-
+// quite limited in terms of modulation options but it'll do
+export type VisualizerRendererFrameResults = {
+    valueMax: number
+    valueMin: number
+    valueMinMaxDiff: number
+    approximatePeak: number
 }
 
 /**
@@ -152,6 +159,13 @@ class VisualizerRenderInstance {
     private readonly fpsHistory: number[] = [];
     private readonly timingsHistory: number[] = [];
     private readonly debugText: string[] = [];
+
+    frameResult: VisualizerRendererFrameResults = {
+        valueMax: 0,
+        valueMin: 0,
+        valueMinMaxDiff: 0,
+        approximatePeak: 0
+    };
 
     constructor(canvas: OffscreenCanvas, data: VisualizerSettingsData) {
         this.canvas = canvas;
@@ -226,6 +240,21 @@ class VisualizerRenderInstance {
         if (this.data.mode != VisualizerMode.WAVE_CORRELATED) this.corrwaveData = null;
         if (this.data.mode != VisualizerMode.SPECTROGRAM) this.spectogramData = null;
         if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) this.levelsData = null;
+        // get frame results
+        let frameResultMin = Infinity, frameResultMax = -Infinity;
+        const frameResultBuffers = Array.isArray(buffer) ? buffer : [buffer];
+        for (const buf of frameResultBuffers) {
+            for (let i = 0; i < buf.length; i++) {
+                if (buf[i] < frameResultMin) frameResultMin = buf[i];
+                if (buf[i] > frameResultMax) frameResultMax = buf[i];
+            }
+        }
+        this.frameResult = {
+            valueMin: frameResultMin,
+            valueMax: frameResultMax,
+            valueMinMaxDiff: frameResultMax - frameResultMin,
+            approximatePeak: buffer instanceof Float32Array ? frameResultMax - frameResultMin : frameResultMax
+        };
         // track performance metrics
         const endTime = performance.now();
         this.frames.push(endTime);
@@ -258,6 +287,7 @@ class VisualizerRenderInstance {
                 this.ctx.fillText(text[i], 12, 12 + i * 16);
             }
         }
+        // finalize
         this.resized = undefined;
         this.dataUpdated = false;
     }
@@ -840,7 +870,8 @@ if (isInWorker) {
                     renderer.debugInfo = e.data.debug;
                     renderer.draw(e.data.buffer);
                     postMessage({
-                        type: 'drawResponse'
+                        type: 'drawResponse',
+                        ...renderer.frameResult
                     } satisfies RendererMessageData);
                     break;
                 case 'resize':
