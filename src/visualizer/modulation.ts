@@ -12,7 +12,7 @@ export namespace Modulation {
     type ExtractRefOrGetterValue<T> = T extends Ref<infer V> ? V : (T extends (() => infer V) ? V : never);
 
     type ValidTargetsForSource<Props extends TargetPropertyMap, T extends RefOrGetter> = {
-        [K in keyof Props]: Props[K] extends ExtractRefOrGetterValue<T> ? K : never
+        [K in keyof Props]: Props[K] extends ExtractRefOrGetterValue<T> ? ExtractRefOrGetterValue<T> extends Props[K] ? K : never : never
     }[keyof Props];
 
     /**
