@@ -99,10 +99,13 @@ async function bringToTop() {
 watch(open, () => {
     if (open.value) {
         bringToTop();
-        (winBar.value?.querySelector('.windowClose') as HTMLElement)?.focus();
     } else {
         windowPile.splice(windowPile.indexOf(thisId), 1);
     }
+});
+watch(winBar, () => {
+    // when window opens it should be set to element, then set to null when window closed (keyword "should")
+    (winBar.value?.querySelector('.windowClose') as HTMLElement)?.focus();
 });
 
 // optionally close on clicking outside the window

@@ -253,7 +253,7 @@ class VisualizerRenderInstance {
             valueMin: frameResultMin,
             valueMax: frameResultMax,
             valueMinMaxDiff: frameResultMax - frameResultMin,
-            approximatePeak: buffer instanceof Float32Array ? frameResultMax - frameResultMin : frameResultMax
+            approximatePeak: buffer instanceof Float32Array ? frameResultMax - frameResultMin : frameResultMax / 255
         };
         // track performance metrics
         const endTime = performance.now();
