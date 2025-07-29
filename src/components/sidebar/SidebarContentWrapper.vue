@@ -8,7 +8,7 @@ const props = defineProps<{
 
 <template>
     <Transition>
-        <div class="sidebarContentWrapper" v-if="TileEditor.state.sidebarTab == props.tab">
+        <div class="sidebarContentWrapper" v-if="TileEditor.state.sidebarTab == props.tab" :inert="!TileEditor.state.sidebarOpen">
             <div class="sidebarHeader">
                 <slot name="header"></slot>
             </div>

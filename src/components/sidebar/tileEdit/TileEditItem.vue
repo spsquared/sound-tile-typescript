@@ -102,7 +102,8 @@ function deleteTile() {
     cursor: v-bind("props.tile instanceof GroupTile ? 'pointer' : 'default'");
 }
 
-.editItemBar:hover {
+.editItemBar:hover,
+.editItemBar:focus-within {
     background-color: #555;
 }
 
@@ -162,7 +163,10 @@ function deleteTile() {
 
 .editItemBar:hover>.editItemDrag,
 .editItemBar:hover>.editItemEditButton,
-.editItemBar:hover>.editItemDeleteButton {
+.editItemBar:hover>.editItemDeleteButton,
+.editItemBar:focus-within>.editItemDrag,
+.editItemBar:focus-within>.editItemEditButton,
+.editItemBar:focus-within>.editItemDeleteButton {
     opacity: 1;
 }
 

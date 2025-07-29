@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { nextTick, ref, useTemplateRef, watch } from 'vue';
+import { ref, useTemplateRef, watch } from 'vue';
+import * as focusTrap from 'focus-trap';
 import { matchInput } from '@/constants';
 import { AsyncLock } from './scripts/lock';
 
@@ -19,10 +20,12 @@ const body = useTemplateRef('body');
 // v-bind doens't work within <Teleport> elements so we do this mess instead
 watch([() => props.color, body], () => body.value !== null && (body.value.style.borderColor = props.color ?? 'white'), { immediate: true });
 
+
 const emit = defineEmits<{
     (e: 'close', res: boolean): any
 }>();
 
+let ftrap: focusTrap.FocusTrap | undefined = undefined;
 function close(res: boolean) {
     open.value = false;
     openLock.release();
@@ -33,8 +36,8 @@ watch(open, () => {
     if (open.value) {
         openLock.acquire();
         document.addEventListener('keydown', keydown);
-        nextTick().then(() => (body.value?.querySelector('.modalButton') as HTMLElement)?.focus());
     } else {
+        ftrap?.deactivate();
         document.removeEventListener('keydown', keydown);
     }
 });
@@ -46,6 +49,16 @@ function keydown(e: KeyboardEvent) {
     if (key == 'escape') close(false);
     else if (key == 'enter') close(true);
 }
+watch(body, () => {
+    // this bit manages focus, depends on template refs
+    if (body.value !== null) {
+        ftrap = focusTrap.createFocusTrap(body.value, {
+            onDeactivate: () => close(false),
+            initialFocus: body.value.querySelector('.modalButton') as HTMLElement
+        });
+        ftrap.activate();
+    }
+});
 
 defineExpose<{
     open: () => void

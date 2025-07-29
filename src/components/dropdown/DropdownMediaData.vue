@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { onMounted, onUnmounted, useTemplateRef } from 'vue';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import FileAccess from '@/components/inputs/fileAccess';
 
 const title = useTemplateRef('title');
 const subtitle = useTemplateRef('subtitle');
-
-const open = ref(false);
 
 async function uploadCoverArt() {
     const coverArt = await FileAccess.openFilePicker({
@@ -57,7 +55,7 @@ function preventScrollIfNotFocus(e: WheelEvent) {
 <template>
     <input type="checkbox" v-model="MediaPlayer.state.mediaDataTabOpen" id="mdatTabCheckbox">
     <div id="mdatControls">
-        <div id="mdatBody">
+        <div id="mdatBody" :inert="!MediaPlayer.state.mediaDataTabOpen">
             <img id="mdatCoverArt" :src="MediaPlayer.state.current.coverArt" @dblclick="uploadCoverArt" title="Album cover (double-click to change)">
             <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.state.current.title" @wheel.passive="preventScrollIfNotFocus" placeholder="Title" autocomplete="off" spellcheck="false">
             <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.state.current.subtitle" @wheel.passive="preventScrollIfNotFocus" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
@@ -74,7 +72,7 @@ function preventScrollIfNotFocus(e: WheelEvent) {
                 <!-- <input id="mdatPlaylistAddButton" type="button" value="+" title="Upload more Tiles to add to playlist"> -->
             </div>
         </div>
-        <label id="mdatTab" for="mdatTabCheckbox" :title="open ? 'Show media metadata' : 'Hide media metadata'"></label>
+        <label id="mdatTab" for="mdatTabCheckbox" :title="MediaPlayer.state.mediaDataTabOpen ? 'Show media metadata' : 'Hide media metadata'"></label>
     </div>
 </template>
 

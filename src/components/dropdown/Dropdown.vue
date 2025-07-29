@@ -38,7 +38,7 @@ const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
 <template>
     <input type="checkbox" id="dropdownToggle" v-model="TileEditor.state.dropdownOpen" checked>
     <div id="dropdown">
-        <div id="dropdownBody">
+        <div id="dropdownBody" :inert="!TileEditor.state.dropdownOpen">
             <img src="/logo.png" id="dropdownLogo" :title="copyright" @click="showAppInfo = true">
             <DropdownFileControls></DropdownFileControls>
             <DropdownMediaData></DropdownMediaData>
