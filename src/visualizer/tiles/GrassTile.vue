@@ -36,7 +36,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
                     <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
                 </label>
             </TileOptionsSection>
-            Source: <a href="https://watching-grass-grow.com">https://watching-grass-grow.com</a>
+            Source: <a href="https://watching-grass-grow.com" target="_blank">https://watching-grass-grow.com</a>
         </template>
     </Tile>
 </template>

@@ -515,7 +515,7 @@ class VisualizerRenderInstance {
         this.ctx.save();
         this.ctx.translate(thickness / 2, height / 2);
         this.ctx.scale(xStep, this.data.waveOptions.scale * height / 2);
-        const step = this.data.waveOptions.resolution;
+        const step = Math.max(1, this.data.waveOptions.resolution);
         for (let i = 0; i < length; i += step) {
             this.ctx.lineTo(i, buffer[i + offset]);
         }
@@ -785,8 +785,8 @@ class VisualizerRenderInstance {
 
     private calcViewportSize(): { readonly width: number, readonly height: number } {
         return {
-            width: (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2,
-            height: (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2
+            width: Math.max(0, (this.data.rotate ? this.canvas.height : this.canvas.width) - this.data.paddingInline * 2),
+            height: Math.max(0, (this.data.rotate ? this.canvas.width : this.canvas.height) - this.data.paddingBlock * 2)
         };
     }
     private createColorStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {

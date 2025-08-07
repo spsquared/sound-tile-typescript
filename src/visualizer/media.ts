@@ -195,13 +195,16 @@ export class Media implements MediaMetadata {
                         break;
                     }
                     case 'cp': {
-                        tile = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
-                        tile.label = 'Channel Peaks Tile';
+                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
+                        visualizer.label = 'Channel Peaks Tile';
+                        tile = visualizer;
                         break;
                     }
                     case 'i': {
-                        // TODO: actually add image tiles
-                        tile = new ImageTile();
+                        const image = new ImageTile();
+                        image.imgSrc = curr.image ?? '';
+                        image.smoothDrawing = curr.smoothing ?? true;
+                        tile = image;
                         break;
                     }
                     case 't': {
