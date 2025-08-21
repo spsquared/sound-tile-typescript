@@ -506,7 +506,8 @@ class VisualizerRenderInstance {
     private drawWave(buffer: Float32Array, offset = 0, length = buffer.length): void {
         const { width, height } = this.calcViewportSize();
         const thickness = this.data.waveOptions.thickness;
-        const xStep = (width - thickness) / (length - 1);
+        const iStep = Math.max(1, this.data.waveOptions.resolution);
+        const xStep = (width - thickness) / (length - iStep);
         this.ctx.lineJoin = this.data.waveOptions.sharpEdges ? 'miter' : 'round';
         this.ctx.lineCap = this.data.waveOptions.sharpEdges ? 'square' : 'round';
         this.ctx.lineWidth = thickness;
@@ -515,8 +516,7 @@ class VisualizerRenderInstance {
         this.ctx.save();
         this.ctx.translate(thickness / 2, height / 2);
         this.ctx.scale(xStep, this.data.waveOptions.scale * height / 2);
-        const step = Math.max(1, this.data.waveOptions.resolution);
-        for (let i = 0; i < length; i += step) {
+        for (let i = 0; i < length; i += iStep) {
             this.ctx.lineTo(i, buffer[i + offset]);
         }
         this.ctx.restore();
