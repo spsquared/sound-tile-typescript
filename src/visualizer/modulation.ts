@@ -1,11 +1,11 @@
-import { computed, ComputedRef, effectScope, EffectScope, markRaw, ref, Ref, watch } from "vue";
+import { computed, ComputedRef, markRaw, reactive, ref, Ref, watch, WatchHandle } from "vue";
 
 export namespace Modulation {
-    type TargetPropertyMap = {
-        [key: string]: any
-    };
     type SourcePropertyMap = {
         [key: string]: RefOrGetter
+    };
+    type TargetPropertyMap = {
+        [key: string]: any
     };
 
     type RefOrGetter<T = any> = Ref<T> | ComputedRef<T> | (() => T);
@@ -24,7 +24,8 @@ export namespace Modulation {
         /**Maps sources to their target sets */
         private readonly connections: Map<keyof Props, Set<Ref>> = markRaw(new Map());
         /**Maps target refs to their incoming transforms  */
-        private readonly transforms: Map<Ref, Transform<any>[]> = markRaw(new Map());
+        private readonly transforms: Map<Ref, Transform<any>[]> = new Map();
+        private readonly updateWatchers: Map<Ref, WatchHandle> = markRaw(new Map());
         /**Helps efficiently disconnect all targets, maps targets to map of source and target properties */
         private readonly connectionTrackers: Map<Target<any>, Map<keyof Props, string>> = markRaw(new Map());
 
@@ -33,8 +34,6 @@ export namespace Modulation {
             readonly [K in keyof Props]: readonly [Target<any>, string, Transform<ExtractRefOrGetterValue<Props[K]>>[]][]
         }>;
 
-        private readonly effectScope: EffectScope;
-
         /**
          * @param sources Source refs
          * - Source refs will be the same as the ones in the `sources` property
@@ -42,25 +41,9 @@ export namespace Modulation {
          */
         constructor(sources: Props) {
             this.sources = markRaw({ ...sources });
-            this.effectScope = effectScope();
             for (const sourceKey in this.sources) {
                 this.connections.set(sourceKey, new Set());
             }
-            this.effectScope.run(() => {
-                for (const sourceKey in this.sources) {
-                    const sourceRef = this.sources[sourceKey];
-                    const targetRefs = this.connections.get(sourceKey)!;
-                    watch(sourceRef, (value) => {
-                        for (const target of targetRefs) {
-                            const transforms = this.transforms.get(target)!; // if undefined, die
-                            for (let i = 0; i < transforms.length; i++) {
-                                value = transforms[i].apply(value);
-                            }
-                            target.value = value;
-                        }
-                    });
-                }
-            });
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
             this.connectedTargets = ref(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
         }
@@ -86,7 +69,15 @@ export namespace Modulation {
             const sourceRefOrGetter = this.sources[sourceKey];
             this.connections.get(sourceKey)!.add(targetRef);
             this.transforms.set(targetRef, transforms);
-            targetRef.value = (typeof sourceRefOrGetter == 'function' ? sourceRefOrGetter() : sourceRefOrGetter.value) as any; // ts complains buh
+            const getSourceValue: () => ExtractRefOrGetterValue<Props[Key1]> = typeof sourceRefOrGetter == 'function' ? () => sourceRefOrGetter() : () => sourceRefOrGetter.value;
+            this.updateWatchers.set(targetRef, watch([sourceRefOrGetter, reactive(transforms)], () => {
+                // for some reason using [value] in watch callback gives some nonsense type that makes a billion errors
+                let value = getSourceValue();
+                for (let i = 0; i < transforms.length; i++) {
+                    value = transforms[i].apply(value);
+                }
+                targetRef.value = value;
+            }, { immediate: true }));
             // update connection trackers (typing is a bit scuffed still)
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
@@ -121,6 +112,8 @@ export namespace Modulation {
                 // disconnect all targets
                 this.connections.clear();
                 this.transforms.clear();
+                for (const [_, stop] of this.updateWatchers) stop();
+                this.updateWatchers.clear();
                 for (const [target, modMap] of this.connectionTrackers) {
                     const publicTarget = target as any as TargetInternalView<any>;
                     for (const [_, targetKey] of modMap) {
@@ -138,8 +131,11 @@ export namespace Modulation {
                 const modMap = this.connectionTrackers.get(normTarget);
                 if (modMap === undefined) return; // wasn't connected anyway
                 for (const [sourceKey, targetKey] of modMap) {
-                    this.connections.get(sourceKey)!.delete(publicTarget.targets[targetKey]);
-                    this.transforms.delete(publicTarget.targets[targetKey]);
+                    const targetRef = publicTarget.targets[targetKey];
+                    this.connections.get(sourceKey)!.delete(targetRef);
+                    this.transforms.delete(targetRef);
+                    this.updateWatchers.get(targetRef)!();
+                    this.updateWatchers.delete(targetRef);
                     publicTarget.connectionTrackers.delete(targetKey);
                     (normTarget.connectedSources.value as any)[targetKey] = null; // shut up "can only be indexed for reading"
                 }
@@ -147,8 +143,11 @@ export namespace Modulation {
                 return;
             }
             // disconnect just one modulation to a target
-            this.connections.get(sourceKey)!.delete(publicTarget.targets[targetKey]);
-            this.transforms.delete(publicTarget.targets[targetKey]);
+            const targetRef = publicTarget.targets[targetKey!];
+            this.connections.get(sourceKey)!.delete(targetRef);
+            this.transforms.delete(targetRef);
+            this.updateWatchers.get(targetRef)!();
+            this.updateWatchers.delete(targetRef);
             this.connectionTrackers.get(normTarget)?.delete(sourceKey);
             publicTarget.connectionTrackers.delete(targetKey!);
             publicTarget.connectedSources.value[targetKey!] = null;
@@ -159,7 +158,6 @@ export namespace Modulation {
          */
         destroy(): void {
             this.disconnect();
-            this.effectScope.stop();
         }
     }
 

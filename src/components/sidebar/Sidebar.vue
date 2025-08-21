@@ -64,7 +64,7 @@ onUnmounted(() => {
         <input type="checkbox" id="dropdownShadowToggle" v-model="TileEditor.state.dropdownOpen">
         <Transition>
             <div id="sidebarTabs" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs">
-                <label id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)"></label>
+                <label button id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)" tabindex="0"></label>
                 <div id="sidebarTabsList">
                     <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
                     <SidebarTab for="modulators" :image="modulationIcon" title="Edit Modulators"></SidebarTab>
@@ -126,6 +126,7 @@ onUnmounted(() => {
     margin-bottom: 8px;
     border: 4px solid white;
     border-right: none;
+    border-radius: 0px;
     background-color: black;
     cursor: pointer;
     background-image: url(@/img/arrow-left.svg);
@@ -152,6 +153,16 @@ onUnmounted(() => {
     cursor: ew-resize;
     /* fixes random selecting when resizing */
     user-select: none;
+}
+
+#sidebarResize:active::after {
+    content: ' ';
+    /* covers entire screen to keep block cursor interactions while dragging */
+    position: fixed;
+    top: 0px;
+    left: -100vw;
+    width: 200vw;
+    height: 100vh;
 }
 
 .v-enter-from,

@@ -47,6 +47,8 @@ const props = defineProps<{
 }
 
 .sidebarContent {
+    contain: layout size;
+    position: relative;
     padding: 4px 4px;
     transition: 200ms ease transform;
     overflow: auto;

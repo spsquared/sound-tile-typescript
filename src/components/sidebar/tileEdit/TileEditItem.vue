@@ -180,7 +180,8 @@ function deleteTile() {
     background-size: 80% 80%;
 }
 
-.editItemEditButton:hover {
+.editItemEditButton:hover,
+.editItemEditButton:focus-visible {
     background-color: dodgerblue;
 }
 
@@ -188,7 +189,8 @@ function deleteTile() {
     background-image: url(@/img/delete.svg);
 }
 
-.editItemDeleteButton:hover {
+.editItemDeleteButton:hover,
+.editItemDeleteButton:focus-visible {
     background-image: url(@/img/delete-dark.svg);
     background-color: red;
 }

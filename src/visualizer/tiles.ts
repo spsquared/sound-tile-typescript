@@ -1,4 +1,4 @@
-import { Component } from 'vue';
+import { Component, nextTick } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -89,7 +89,7 @@ export class Tile {
 
     /**Deletes the tile and disposes of all resources */
     destroy(): void {
-        if (this.parent !== null) this.parent.removeChild(this);
+        this.parent?.removeChild(this);
     }
 }
 
@@ -124,13 +124,13 @@ export class GroupTile extends Tile {
     }
 
     addChild(tile: Tile): boolean {
-        if (this.children.includes(tile)) return false;
+        if (tile.parent !== null) return false;
         this.children.push(tile);
         tile.parent = this;
         return true;
     }
     insertChildBefore(tile: Tile, current: Tile | number): boolean {
-        if (this.children.includes(tile)) return false;
+        if (tile.parent !== null) return false;
         const index = typeof current == 'number' ? current : this.children.indexOf(current);
         if (index < 0 || index >= this.children.length) return false;
         tile.parent = this;
@@ -138,7 +138,7 @@ export class GroupTile extends Tile {
         return true;
     }
     insertChildAfter(tile: Tile, current: Tile | number): boolean {
-        if (this.children.includes(tile)) return false;
+        if (tile.parent !== null) return false;
         const index = typeof current == 'number' ? current : this.children.indexOf(current);
         if (index < 0 || index >= this.children.length) return false;
         tile.parent = this;
@@ -146,6 +146,7 @@ export class GroupTile extends Tile {
         return true;
     }
     replaceChild(current: Tile | number, replace: Tile): Tile | null {
+        if (replace.parent !== null) return null;
         const index = typeof current == 'number' ? current : this.children.indexOf(current);
         if (index < 0 || index >= this.children.length) return null;
         replace.parent = this;
@@ -247,8 +248,13 @@ export class VisualizerTile extends Tile {
         super();
         this.canvas = document.createElement('canvas');
         this.visualizer = new Visualizer(data ?? createDefaultVisualizerData(), this.canvas);
+        // when dragging/moving tiles, unmount happens immediately and remount happens 1 tick later
+        // nextTick stops visualizer "glitching" (sounds & behavior) when drag & drop used
         this.mountedListeners.add(() => this.visualizer.visible.value = true);
-        this.unmountedListeners.add(() => this.visualizer.visible.value = false);
+        this.unmountedListeners.add(async () => {
+            await nextTick();
+            if (this.element === null) this.visualizer.visible.value = false;
+        });
     }
 
     getSchemaData(): MediaSchema.VisualizerTile {

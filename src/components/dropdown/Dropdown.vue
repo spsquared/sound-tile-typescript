@@ -48,7 +48,7 @@ const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
             <div id="sidebarSpacer"></div>
         </div>
         <Transition>
-            <label id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs"></label>
+            <label button id="dropdownTab" for="dropdownToggle" title="Toggle dropdown (H)" tabindex="0" v-show="!TileEditor.state.hideTabs && !TileEditor.state.idleHideTabs"></label>
         </Transition>
     </div>
 </template>
@@ -96,6 +96,7 @@ const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
     background-color: black;
     border: 4px solid white;
     border-top: 0px;
+    border-radius: 0px;
     cursor: pointer;
     background-image: url(@/img/arrow-down.svg);
     background-position: center;

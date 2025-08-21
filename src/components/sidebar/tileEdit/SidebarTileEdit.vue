@@ -12,9 +12,9 @@ function resetHover() {
     <SidebarContentWrapper tab="edit">
         <template v-slot:header>Edit</template>
         <template v-slot:content>
-            <div class="tileEditUndoControls">
-                <input type="button" class="tileEditUndo" @click="TileEditor.undoLayoutChange()">
-                <input type="button" class="tileEditRedo" @click="TileEditor.redoLayoutChange()">
+            <div id="tileEditUndoControls">
+                <input type="button" id="tileEditUndo" @click="TileEditor.undoLayoutChange()">
+                <input type="button" id="tileEditRedo" @click="TileEditor.redoLayoutChange()">
             </div>
             <TileEditItem :tile="TileEditor.root" root @mouseleave="resetHover"></TileEditItem>
         </template>
@@ -22,7 +22,7 @@ function resetHover() {
 </template>
 
 <style scoped>
-.tileEditUndoControls {
+#tileEditUndoControls {
     position: sticky;
     display: flex;
     flex-direction: row;
@@ -31,8 +31,8 @@ function resetHover() {
     gap: 4px;
 }
 
-.tileEditUndo,
-.tileEditRedo {
+#tileEditUndo,
+#tileEditRedo {
     background-color: #333;
     flex-grow: 1;
     background-size: 100% 100%;
@@ -40,16 +40,16 @@ function resetHover() {
     background-repeat: no-repeat;
 }
 
-.tileEditUndo:hover,
-.tileEditRedo:hover {
+#tileEditUndo:hover,
+#tileEditRedo:hover {
     background-color: #444;
 }
 
-.tileEditUndo {
+#tileEditUndo {
     background-image: url(@/img/undo.svg);
 }
 
-.tileEditRedo {
+#tileEditRedo {
     background-image: url(@/img/redo.svg);
 }
 </style>

@@ -1,4 +1,4 @@
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, watch, watchEffect } from 'vue';
 import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
 import { AsyncLock } from '@/components/scripts/lock';
 import { useIdle } from '@vueuse/core';
@@ -119,6 +119,9 @@ export class TileEditor {
         return root;
     }
 
+    private static readonly flattenedTiles: Set<Tile> = reactive(new Set()) as Set<Tile>;
+    static readonly currentTiles = computed(() => new Set(this.flattenedTiles));
+
     /**Stores layout history separate from tile data - root of history can never be group tile */
     private static readonly undoHistory: Exclude<LayoutHistoryEntry, Tile>[] = [];
     private static readonly redoHistory: Exclude<LayoutHistoryEntry, Tile>[] = [];
@@ -133,6 +136,7 @@ export class TileEditor {
         while (stack.length > 0) {
             const [tile, entry] = stack.pop()!;
             entry.tile.copyProperties(tile);
+            entry.tile.size = tile.size;
             entry.tile.label = tile.label;
             for (const child of tile.children) {
                 if (child instanceof GroupTile) {
@@ -158,10 +162,16 @@ export class TileEditor {
         while (stack.length > 0) {
             const [tile, entry] = stack.pop()!;
             tile.copyProperties(entry.tile);
+            tile.size = entry.tile.size;
             tile.label = entry.tile.label;
             for (const child of entry.children) {
                 if (child instanceof Tile) {
-                    // don't remove from existing parent as everything gets overwritten anyway
+                    // don't use removeChild since it triggers the obsolete group tile removal
+                    if (child.parent !== null) {
+                        const i = child.parent.children.indexOf(child);
+                        if (i >= -1) child.parent.children.splice(i, 1);
+                    }
+                    child.parent = null;
                     tile.addChild(child);
                 } else {
                     const tile2 = new GroupTile();
@@ -182,7 +192,7 @@ export class TileEditor {
         if (this.state.lock.locked || this.state.drag.current !== null) return false;
         this.markLayoutChange();
         this.redoHistory.length = 0;
-        if (tile.parent !== null) tile.parent.removeChild(tile);
+        tile.parent?.removeChild(tile);
         this.state.drag.current = tile;
         this.state.drag.offset = offset ?? { x: 0, y: 0 };
         this.state.drag.size = size ?? { w: 200, h: 150 };
@@ -396,6 +406,7 @@ export class TileEditor {
     static markLayoutChange(): boolean {
         if (this.state.lock.locked || this.state.drag.current !== null) return false;
         this.pushLayoutHistory(this.undoHistory, this.maxLayoutHistory);
+        this.redoHistory.length = 0;
         return true;
     }
     static undoLayoutChange(): boolean {
@@ -434,6 +445,19 @@ export class TileEditor {
                         break;
                 }
             }
+        });
+        watchEffect(() => {
+            // somehow this works perfectly and only updates when there is a layout change
+            this.flattenedTiles.clear();
+            const stack: Tile[] = [this.root];
+            while (stack.length > 0) {
+                const curr = stack.pop()!;
+                if (curr instanceof GroupTile) {
+                    stack.push(...curr.children);
+                }
+                this.flattenedTiles.add(curr);
+            }
+            if (this.state.drag.current !== null) this.flattenedTiles.add(this.state.drag.current);
         });
     }
 }

@@ -18,8 +18,8 @@ document.addEventListener('keydown', (e) => {
     else if (key == 'p' && e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
     // really annoying when pressing space triggers a button or checkbox
     if (key == ' ' && e.target instanceof HTMLElement && e.target.matches('button,input[type=button],input[type=checkbox]')) e.preventDefault();
-    // for some reason enter doesn't trigger checkboxes
-    if (key == 'enter' && e.target instanceof HTMLElement && e.target.matches('input[type=checkbox]')) e.target.click();
+    // for some reason enter doesn't trigger checkboxes (also jank label button)
+    if (key == 'enter' && e.target instanceof HTMLElement && e.target.matches('input[type=checkbox],label[button]')) e.target.click();
 });
 
 // warn leaving page
