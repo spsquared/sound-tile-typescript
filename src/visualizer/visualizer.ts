@@ -235,20 +235,21 @@ export class Visualizer {
             playing: false
         };
     static start(time: number = 0): void {
-        this.time.startTime = Visualizer.audioContext.currentTime - time;
+        this.time.startTime = this.audioContext.currentTime - time;
         this.time.playing = true;
         VisualizerRenderer.playing = true;
         for (const vis of this.instances) {
             if (vis.visible.value) vis.start();
         }
-        Visualizer.audioContext.resume();
+        this.audioContext.resume();
     }
     static stop(): void {
         this.time.playing = false;
         VisualizerRenderer.playing = false;
         for (const vis of this.instances) vis.stop();
-        Visualizer.audioContext.suspend();
+        this.audioContext.suspend();
     }
+    // refs allow reactivity without random refs
     private static readonly _duration: Ref<number> = ref(0);
     private static recalculateDuration(): void {
         let time = 0;
@@ -259,6 +260,21 @@ export class Visualizer {
     }
     static get duration(): number {
         return this._duration.value;
+    }
+    static get playing(): boolean {
+        return this.time.playing;
+    }
+    static {
+        // suspend as not playing initially
+        this.audioContext.suspend();
+        this.audioContext.addEventListener('statechange', () => {
+            // sort of splits playback controls across MediaPlayer and Visualizer classes...
+            const contextPlaying = this.audioContext.state == 'running';
+            if (contextPlaying != this.time.playing) {
+                if (contextPlaying) this.start(this.audioContext.currentTime - this.time.startTime);
+                else this.stop();
+            }
+        });
     }
 
     private static async draw(): Promise<void> {

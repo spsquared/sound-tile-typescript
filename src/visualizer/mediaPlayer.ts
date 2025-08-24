@@ -100,7 +100,7 @@ export class MediaPlayer {
         throttledWatch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
             if (this.playing.value && Visualizer.duration > 0) {
                 if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
-                else Visualizer.start(this.internalTimer.currentTime); // reactivity will run this if above runs
+                else Visualizer.start(this.internalTimer.currentTime); // reactivity runs this with the above line and restarts playback
                 this.wakeLock.request('screen');
             } else if (wasPlaying) {
                 Visualizer.stop();
@@ -109,6 +109,10 @@ export class MediaPlayer {
         }, { throttle: 10, leading: true, trailing: true });
         watch(() => Visualizer.duration, () => {
             if (this.internalTimer.currentTime >= Visualizer.duration) this.setTime(Visualizer.duration);
+        });
+        watch(() => Visualizer.playing, () => {
+            // handles audio context interruptions
+            if (Visualizer.playing != this.playing.value) this.playing.value = Visualizer.playing;
         });
         setInterval(() => this.internalTimer.now = performance.now() / 1000, 20);
     }
