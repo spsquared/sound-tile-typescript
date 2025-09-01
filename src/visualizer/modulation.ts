@@ -1,26 +1,37 @@
-import { computed, ComputedRef, markRaw, reactive, ref, Ref, watch, WatchHandle } from "vue";
+import { ComputedRef, markRaw, reactive, ref, Ref, watch, WatchHandle } from "vue";
 
 export namespace Modulation {
-    type SourcePropertyMap = {
-        [key: string]: RefOrGetter
-    };
-    type TargetPropertyMap = {
-        [key: string]: any
-    };
+    type SourcePropertyMap = Record<string, RefOrGetter>
+    type TargetPropertyMap = Record<string, any>
 
     type RefOrGetter<T = any> = Ref<T> | ComputedRef<T> | (() => T);
     type ExtractRefOrGetterValue<T> = T extends Ref<infer V> ? V : (T extends (() => infer V) ? V : never);
 
     type ValidTargetsForSource<Props extends TargetPropertyMap, T extends RefOrGetter> = {
         [K in keyof Props]: Props[K] extends ExtractRefOrGetterValue<T> ? ExtractRefOrGetterValue<T> extends Props[K] ? K : never : never
-    }[keyof Props] & string;
+    }[keyof Props & string];
+
+    // buh so much redundant information but also performance and encapsulation
+    // probably don't need to protect against random non-ts editing stuff and borking everything since it's just me
+
+    // also I definitely did something horribly wrong and against all typescript laws here
+    // symbol and number types are allowed in properties but you can't use them anyway
 
     /**
      * Modulation source side of controller. Values set to its source refs will be applied to linked targets.
      */
     export class Source<Props extends SourcePropertyMap> {
         /**Source refs that modulate targets */
-        readonly sources: Readonly<Props>;
+        readonly sources: {
+            readonly [K in keyof Props & string]: Props[K]
+        };
+        /**Type identification labels for determining types at runtime */
+        readonly typeLabels: {
+            readonly [K in keyof Props & string]: string
+        };
+        /**Label used for UI purposes */
+        label: string = 'Unnamed Source';
+
         /**Maps sources to their target sets */
         private readonly connections: Map<keyof Props, Set<Ref>> = markRaw(new Map());
         /**Maps target refs to their incoming transforms  */
@@ -38,14 +49,19 @@ export namespace Modulation {
          * @param sources Source refs
          * - Source refs will be the same as the ones in the `sources` property
          * - Using computed refs and getters allows modulation based on external dependencies without additional code
+         * @param typeLabels Optionally label sources to make type requirements in UI elements stricter
+         * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
+         * will be used to determine the type of a source.
          */
-        constructor(sources: Props) {
+        constructor(sources: Props, typeLabels: Partial<Source<Props>['typeLabels']> = {}, label?: string) {
             this.sources = markRaw({ ...sources });
+            this.typeLabels = markRaw({ ...Object.entries(sources).reduce((obj, [k, v]) => (obj[k] = typeof (typeof v == 'function' ? v() : v.value), obj), {} as any), ...typeLabels });
             for (const sourceKey in this.sources) {
                 this.connections.set(sourceKey, new Set());
             }
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
             this.connectedTargets = ref(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
+            if (label !== undefined) this.label = label;
         }
 
         /**
@@ -54,17 +70,21 @@ export namespace Modulation {
          * @param target Modulation target, either a `Modulatable` object or a modulation `Target`
          * @param sourceKey Name of modulation source
          * @param targetKey Name of modulation target
+         * @returns Connection success - failure reasons include existing connections and mismatched types
          */
-        connect<TargetProps extends TargetPropertyMap, Key1 extends keyof Props>(
+        connect<TargetProps extends TargetPropertyMap, Key1 extends keyof Props & string>(
             target: Target<TargetProps> | Modulatable<TargetProps>,
             sourceKey: Key1,
             targetKey: ValidTargetsForSource<TargetProps, Props[Key1]>,
             transforms: Transform<ExtractRefOrGetterValue<Props[Key1]>>[] = []
-        ): void {
+        ): boolean {
             const normTarget = target instanceof Target ? target : target.modulation;
             const publicTarget = normTarget as any as TargetInternalView<TargetProps>;
             // multiple sources to a target doesn't work, also prevents connecting to same thing twice
-            if (publicTarget.connectionTrackers.has(targetKey)) return;
+            if (publicTarget.connectionTrackers.has(targetKey)) return false;
+            // runtime checking of property types (for UI mostly)
+            if (this.typeLabels[sourceKey] !== normTarget.typeLabels[targetKey]) return false;
+            // transform chains require watch function to be here to apply updates to the transforms
             const targetRef = publicTarget.targets[targetKey];
             const sourceRefOrGetter = this.sources[sourceKey];
             this.connections.get(sourceKey)!.add(targetRef);
@@ -83,7 +103,8 @@ export namespace Modulation {
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
             publicTarget.connectionTrackers.set(targetKey, [this, sourceKey]);
             (this.connectedTargets.value[sourceKey] as [Target<any>, string, Transform<any>[]][]).push([normTarget, targetKey, transforms]);
-            publicTarget.connectedSources.value[targetKey] = [this, transforms];
+            publicTarget.connectedSources.value[targetKey] = [this, sourceKey as string, transforms];
+            return true;
         }
 
         /**
@@ -101,12 +122,12 @@ export namespace Modulation {
          * @param sourceKey Name of modulation source
          * @param targetKey Name of modulation target
          */
-        disconnect<TargetProps extends TargetPropertyMap, Key1 extends keyof Props>(target: Target<TargetProps>, sourceKey: Key1, targetKey: ValidTargetsForSource<TargetProps, Props[Key1]>): void;
+        disconnect<TargetProps extends TargetPropertyMap, Key1 extends keyof Props & string>(target: Target<TargetProps>, sourceKey: Key1, targetKey: ValidTargetsForSource<TargetProps, Props[Key1]>): void;
 
         disconnect<TargetProps extends TargetPropertyMap>(
             target?: Target<TargetProps> | Modulatable<TargetProps>,
-            sourceKey?: keyof Props,
-            targetKey?: keyof TargetProps
+            sourceKey?: keyof Props & string,
+            targetKey?: keyof TargetProps & string
         ): void {
             if (target === undefined) {
                 // disconnect all targets
@@ -167,30 +188,42 @@ export namespace Modulation {
     export class Target<Props extends TargetPropertyMap> {
         /**Target refs controlled by sources */
         readonly targets: {
-            readonly [K in keyof Props]: ComputedRef<Props[K]>
+            readonly [K in keyof Props & string]: ComputedRef<Props[K]>
         };
+        /**Type identification labels for determining types at runtime */
+        readonly typeLabels: {
+            readonly [K in keyof Props & string]: string
+        };
+        /**Label used for UI purposes */
+        label: string = 'Unnamed Target';
+
         /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property, also used to enumerate sources */
         private readonly connectionTrackers: Map<keyof Props, [Source<any>, string]> = markRaw(new Map());
 
         /**Reactive record of all sources for this target - if this is edited it's not this class's problem */
         readonly connectedSources: ComputedRef<{
-            readonly [K in keyof Props]: [Source<any>, Transform<Props[K]>[]] | null
+            readonly [K in keyof Props]: [Source<any>, string, Transform<Props[K]>[]] | null
         }>;
 
         /**
          * @param initialValues Initial values for modulated items
+         * @param typeLabels Optionally label sources to make type requirements in UI elements stricter
+         * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
+         * will be used to determine the type of a source.
          */
-        constructor(initialValues: Props) {
+        constructor(initialValues: Props, typeLabels: Partial<Target<Props>['typeLabels']> = {}, label?: string) {
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
             this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
+            this.typeLabels = markRaw({ ...Object.entries(initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
             this.connectedSources = ref(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
+            if (label !== undefined) this.label = label;
         }
 
         /**
          * If a modulation target is connected to a source.
          * @param targetKey Target name
          */
-        connected(targetKey: keyof Props): boolean {
+        connected(targetKey: keyof Props & string): boolean {
             return this.connectionTrackers.has(targetKey);
         }
 
@@ -202,6 +235,18 @@ export namespace Modulation {
         }
     }
 
+    export type Connection<T = any, KeySource extends keyof TargetPropertyMap = string, KeyTarget extends string = string> = {
+        source: Modulation.Source<{
+            [K in KeySource]: RefOrGetter<T>
+        } & SourcePropertyMap>
+        target: Modulation.Target<{
+            [K in KeyTarget]: T
+        } & TargetPropertyMap>
+        sourceKey: KeySource
+        targetKey: KeyTarget
+        transforms: Transform<T>[]
+    }
+
     interface TargetInternalView<Props extends TargetPropertyMap> {
         /**Target refs, internally they are normal refs but are made public as readonly */
         readonly targets: {
@@ -210,7 +255,7 @@ export namespace Modulation {
         readonly connectionTrackers: Map<keyof Props, [Source<any>, any]>
         readonly connectedSources: Ref<{
             // ignoring typing on transforms because TS can't tell that the type of the properties are the same
-            [K in keyof Props]: [Source<any>, Transform<any>[]] | null
+            [K in keyof Props]: [Source<any>, string, Transform<any>[]] | null
         }>;
     }
 
@@ -224,11 +269,6 @@ export namespace Modulation {
         abstract data: unknown;
 
         abstract apply(n: T): T;
-
-        applyRef(ref: RefOrGetter<T>): ComputedRef<T> {
-            const dep = typeof ref == 'function' ? computed(ref) : ref;
-            return computed(() => this.apply(dep.value));
-        }
     }
 
     // constant and linear can technically be just polynomial transforms with 1 and 2 terms,
@@ -298,3 +338,5 @@ export namespace Modulation {
         }
     }
 }
+
+export default Modulation;

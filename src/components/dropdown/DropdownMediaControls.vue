@@ -59,8 +59,8 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime
 <style scoped>
 #mediaControls {
     display: grid;
-    grid-template-columns: 50px 4px 58px 66px 58px min-content 1fr;
     grid-template-rows: 58px 4px 58px;
+    grid-template-columns: 50px 4px 58px 66px 58px min-content 1fr;
     border-left: 4px solid white;
 }
 
@@ -133,6 +133,7 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime
     border-right: 4px solid white;
     justify-content: center;
     align-items: center;
+    user-select: none;
 }
 
 #mediaControlsTimeContainer>span {

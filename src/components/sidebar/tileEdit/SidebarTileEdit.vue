@@ -10,11 +10,11 @@ function resetHover() {
 
 <template>
     <SidebarContentWrapper tab="edit">
-        <template v-slot:header>Edit</template>
+        <template v-slot:header>Tile Tree Editor</template>
         <template v-slot:content>
             <div id="tileEditUndoControls">
-                <input type="button" id="tileEditUndo" @click="TileEditor.undoLayoutChange()">
-                <input type="button" id="tileEditRedo" @click="TileEditor.redoLayoutChange()">
+                <input type="button" id="tileEditUndo" title="Undo layout change" @click="TileEditor.undoLayoutChange()">
+                <input type="button" id="tileEditRedo" title="Redo layout change" @click="TileEditor.redoLayoutChange()">
             </div>
             <TileEditItem :tile="TileEditor.root" root @mouseleave="resetHover"></TileEditItem>
         </template>

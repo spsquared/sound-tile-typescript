@@ -25,8 +25,8 @@ const props = defineProps<{
 .sidebarContentWrapper {
     contain: layout size;
     display: grid;
-    grid-template-columns: 1fr;
     grid-template-rows: min-content 1fr;
+    grid-template-columns: 1fr;
     grid-auto-flow: row;
     position: absolute;
     top: 0px;
@@ -44,6 +44,7 @@ const props = defineProps<{
     font-size: 18px;
     transition: 200ms ease transform;
     text-align: center;
+    user-select: none;
 }
 
 .sidebarContent {

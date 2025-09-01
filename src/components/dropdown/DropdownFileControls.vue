@@ -79,8 +79,8 @@ async function downloadFromCurrent() {
 #fileControls {
     position: relative;
     display: grid;
-    grid-template-columns: 58px;
     grid-template-rows: 58px 4px 48px;
+    grid-template-columns: 58px;
     border-left: 4px solid white;
 }
 

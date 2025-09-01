@@ -79,10 +79,13 @@ export class TileEditor {
 
     /**
      * Root node of current layout on screen, wrapped inside a `Reactive` object.
-     * Because of this `reactive()` wrapper no tiles can have refs or reactive objects inside them:
-     * Watch functions can be used in tiles even though they're not explicitly defining anything as reactive.
+     * Because of this `reactive()` wrapper Vue's automatic ref unwrapping nukes your types and causes unimaginable
+     * pain when refs are used in literally any code that gets referenced within a tile instance.
+     * But also watch functions can be used in tiles.
      */
-    static readonly root: GroupTile = reactive<GroupTile>(new GroupTile()) as GroupTile;
+    static readonly root: GroupTile = reactive(new GroupTile()) as GroupTile;
+    // without the cast ref unwrapping is mostly solved but then everything must be public in every class
+    // literally a tradeoff of shit code or crap code
 
     /**
      * Replace the current layout with a new layout. Consumes the provided tree and returns the root of the new tree.
@@ -448,6 +451,8 @@ export class TileEditor {
         });
         watchEffect(() => {
             // somehow this works perfectly and only updates when there is a layout change
+            // it triggers multiple times but only runs once because vue isnt stupid and defers it
+            // debugger;
             this.flattenedTiles.clear();
             const stack: Tile[] = [this.root];
             while (stack.length > 0) {
@@ -458,6 +463,9 @@ export class TileEditor {
                 this.flattenedTiles.add(curr);
             }
             if (this.state.drag.current !== null) this.flattenedTiles.add(this.state.drag.current);
+        }, {
+            // onTrack: () => console.debug('track flattened tiles'),
+            // onTrigger: () => console.debug('trigger flattened tiles change')
         });
     }
 }

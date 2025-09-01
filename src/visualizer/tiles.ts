@@ -1,4 +1,4 @@
-import { Component, nextTick } from 'vue';
+import { Component, effectScope, EffectScope, nextTick, watch } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -14,7 +14,7 @@ import imageTileImg from '@/img/image-tile.png';
 import { MediaSchema } from './mediaSchema';
 import Visualizer from './visualizer';
 import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
-import { Modulation } from './modulation';
+import Modulation from './modulation';
 
 enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
@@ -41,7 +41,7 @@ export class Tile {
     readonly class: typeof Tile = Tile;
     static { this.registerTile(this); }
 
-    /**ID used by Vue v-for */
+    /**ID used by Vue indexing */
     readonly id: number;
     /**Ref used in components to open window */
     editPaneOpen: boolean = false;
@@ -59,9 +59,13 @@ export class Tile {
     /**Background color of tile */
     backgroundColor: ColorPicker;
 
+    /**Captures tile reactivity scope - note tiles are not guaranteed to be reactive */
+    protected readonly effectScope: EffectScope;
+
     constructor() {
         this.id = Tile.idCounter++;
         this.backgroundColor = new ColorPicker('#000000');
+        this.effectScope = effectScope();
     }
 
     readonly mountedListeners: Set<() => any> = new Set();
@@ -90,6 +94,7 @@ export class Tile {
     /**Deletes the tile and disposes of all resources */
     destroy(): void {
         this.parent?.removeChild(this);
+        this.effectScope.stop();
     }
 }
 
@@ -255,6 +260,7 @@ export class VisualizerTile extends Tile {
             await nextTick();
             if (this.element === null) this.visualizer.visible.value = false;
         });
+        this.effectScope.run(() => watch(() => this.label, () => this.visualizer.modulator.label = this.label, { immediate: true }));
     }
 
     getSchemaData(): MediaSchema.VisualizerTile {
@@ -354,6 +360,11 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
     smoothDrawing: boolean = true;
     /**Position the image center in percentage coordinates of tile boundaries & rotate/scale the image */
     position: { x: number, y: number, rotation: number, scale: number } = { x: 50, y: 50, rotation: 0, scale: 1 };
+
+    constructor() {
+        super();
+        this.effectScope.run(() => watch(() => this.label, () => this.modulation.label = this.label, { immediate: true }));
+    }
 
     getSchemaData(): MediaSchema.ImageTile {
         return {

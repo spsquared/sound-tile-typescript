@@ -5,6 +5,7 @@ import { throttledWatch, useWakeLock } from '@vueuse/core';
 import TileEditor from './editor';
 import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
 import { VisualizerMode } from './visualizerData';
+import Modulation from './modulation';
 
 type MediaPlayerState = {
     current: Media
@@ -137,7 +138,8 @@ export class MediaPlayer {
     const subB = new GroupTile();
     subA.orientation = GroupTile.VERTICAL;
     subA.addChild(new VisualizerTile());
-    subB.addChild(new ImageTile());
+    const img = new ImageTile();
+    subB.addChild(img);
     subB.addChild(new TextTile());
     subA.addChild(subB);
     subA.addChild(new VisualizerTile());
@@ -146,6 +148,7 @@ export class MediaPlayer {
     const visA = new VisualizerTile();
     visA.visualizer.data.mode = VisualizerMode.WAVE_DIRECT;
     visA.size = 2;
+    visA.visualizer.modulator.connect(img, 'peak', 'imgScale', [new Modulation.LinearTransform([0.5, 0.25])]);
     root.addChild(visA);
     const visB = new VisualizerTile();
     visB.visualizer.data.mode = VisualizerMode.CHANNEL_PEAKS;
