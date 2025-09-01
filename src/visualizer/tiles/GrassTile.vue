@@ -30,6 +30,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
             </div>
         </template>
         <template v-slot:options>
+            <div class="grassCoolBackground"></div>
             <TileOptionsSection title="General">
                 <label title="Relative size of tile to sibling tiles">
                     Size
@@ -50,5 +51,32 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
     height: 100%;
     align-items: center;
     justify-content: center;
+}
+
+.grassCoolBackground {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    /*
+    so background: fixed doesnt make it display the background fixed to the viewport
+    or at least not here probably because of some shenanigans in the draggable window
+     */
+    background-image: url(/logo-border.png);
+    background-size: 80px 80px;
+    animation: 10000ms linear grass-tile-cool-background-super-secret-thingy infinite;
+    background-repeat: repeat;
+}
+</style>
+<style>
+@keyframes grass-tile-cool-background-super-secret-thingy {
+    from {
+        background-position: 40px 00px;
+    }
+
+    to {
+        background-position: 120px 160px;
+    }
 }
 </style>
