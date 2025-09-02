@@ -1,7 +1,5 @@
-import {
-    ComputedRef, effectScope, EffectScope, markRaw, MaybeRefOrGetter, reactive, ref, Ref, watch,
-    WatchHandle
-} from 'vue';
+import { ComputedRef, effectScope, EffectScope, markRaw, MaybeRefOrGetter, reactive, ref, Ref, watch, WatchHandle } from 'vue';
+import { Tile } from './tiles';
 
 export namespace Modulation {
     type SourcePropertyMap = Record<string, RefOrGetter>
@@ -37,23 +35,25 @@ export namespace Modulation {
 
         /**Label used for UI purposes */
         label: string = 'Unnamed Source';
+        /**Also used for UI purposes */
+        readonly tile: Tile | null = null;
 
         /**Maps sources to their target sets */
         private readonly connections: Map<keyof Props, Set<Ref>> = markRaw(new Map());
         /**Maps target refs to their incoming transforms  */
-        private readonly transforms: Map<Ref, Transform<any>[]> = new Map();
+        private readonly transforms: Map<Ref, Transform<any>[]> = markRaw(new Map());
         /**Keeps watch handles for updating targets so they can be stopped to avoid resource leaks */
         private readonly updateWatchers: Map<Ref, WatchHandle> = markRaw(new Map());
         /**Helps efficiently disconnect all targets, maps targets to map of source and target properties */
         private readonly connectionTrackers: Map<Target<any>, Map<keyof Props, string>> = markRaw(new Map());
 
+        /**Reactive record of all targets modulated by this source - if this is edited it's not this class's problem */
+        readonly connectedTargets: {
+            readonly [K in keyof Props & string]: readonly [Target<any>, string, Transform<ExtractRefOrGetterValue<Props[K]>>[]][]
+        };
+
         /**Fallback thing and also miscellaneous reactivity scope */
         private readonly effectScope: EffectScope;
-
-        /**Reactive record of all targets modulated by this source - if this is edited it's not this class's problem */
-        readonly connectedTargets: ComputedRef<{
-            readonly [K in keyof Props]: readonly [Target<any>, string, Transform<ExtractRefOrGetterValue<Props[K]>>[]][]
-        }>;
 
         /**
          * @param sources Source refs
@@ -63,14 +63,15 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(sources: Props, typeLabels: Partial<Source<Props>['typeLabels']> = {}, label?: MaybeRefOrGetter<string>) {
+        constructor(sources: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Source<Props>['typeLabels']>, label?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
+            // markRaw blocks automatic ref unwrapping
             this.sources = markRaw({ ...sources });
             this.typeLabels = markRaw({ ...Object.entries(sources).reduce((obj, [k, v]) => (obj[k] = typeof (typeof v == 'function' ? v() : v.value), obj), {} as any), ...typeLabels });
             for (const sourceKey in this.sources) {
                 this.connections.set(sourceKey, new Set());
             }
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
-            this.connectedTargets = ref(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
+            this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
             this.effectScope = effectScope();
             if (label !== undefined) {
                 if (typeof label == 'string') this.label = label;
@@ -79,6 +80,7 @@ export namespace Modulation {
                     watch(label, (v) => rThis.label = v, { immediate: true });
                 });
             }
+            this.tile = tile ?? null;
         }
 
         /**
@@ -119,8 +121,8 @@ export namespace Modulation {
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
             publicTarget.connectionTrackers.set(targetKey, [this, sourceKey]);
-            (this.connectedTargets.value[sourceKey] as [Target<any>, string, Transform<any>[]][]).push([normTarget, targetKey, transforms]);
-            publicTarget.connectedSources.value[targetKey] = [this, sourceKey as string, transforms];
+            (this.connectedTargets[sourceKey] as [Target<any>, string, Transform<any>[]][]).push([normTarget, targetKey, transforms]);
+            publicTarget.connectedSources[targetKey] = [this, sourceKey as string, transforms];
             return true;
         }
 
@@ -156,10 +158,11 @@ export namespace Modulation {
                     const publicTarget = target as any as TargetInternalView<any>;
                     for (const [_, targetKey] of modMap) {
                         publicTarget.connectionTrackers.delete(targetKey);
-                        publicTarget.connectedSources.value[targetKey] = null;
+                        publicTarget.connectedSources[targetKey] = null;
                     }
                 }
                 this.connectionTrackers.clear();
+                for (const key in this.connectedTargets) (this.connectedTargets[key] as any) = [];
                 return;
             }
             const normTarget = target instanceof Target ? target : target.modulation;
@@ -175,7 +178,8 @@ export namespace Modulation {
                     this.updateWatchers.get(targetRef)!();
                     this.updateWatchers.delete(targetRef);
                     publicTarget.connectionTrackers.delete(targetKey);
-                    (normTarget.connectedSources.value as any)[targetKey] = null; // shut up "can only be indexed for reading"
+                    (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t]) => t !== normTarget); // did I mention that I hate this line?
+                    (normTarget.connectedSources as any)[targetKey] = null; // shut up "can only be indexed for reading"
                 }
                 this.connectionTrackers.delete(normTarget);
                 return;
@@ -188,7 +192,8 @@ export namespace Modulation {
             this.updateWatchers.delete(targetRef);
             this.connectionTrackers.get(normTarget)?.delete(sourceKey);
             publicTarget.connectionTrackers.delete(targetKey!);
-            publicTarget.connectedSources.value[targetKey!] = null;
+            (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t, k]) => t !== normTarget || k !== targetKey); // this one's even worse
+            publicTarget.connectedSources[targetKey!] = null;
         }
 
         /**
@@ -214,13 +219,16 @@ export namespace Modulation {
         };
         /**Label used for UI purposes */
         label: string = 'Unnamed Target';
+        /**Also used for UI purposes */
+        readonly tile: Tile | null = null;
 
         /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property, also used to enumerate sources */
         private readonly connectionTrackers: Map<keyof Props, [Source<any>, string]> = markRaw(new Map());
+
         /**Reactive record of all sources for this target - if this is edited it's not this class's problem */
-        readonly connectedSources: ComputedRef<{
-            readonly [K in keyof Props]: [Source<any>, string, Transform<Props[K]>[]] | null
-        }>;
+        readonly connectedSources: {
+            readonly [K in keyof Props & string]: [Source<any>, string, Transform<Props[K]>[]] | null
+        };
 
         /**Fallback thing and also miscellaneous reactivity scope */
         private readonly effectScope: EffectScope;
@@ -231,11 +239,12 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(initialValues: Props, typeLabels: Partial<Target<Props>['typeLabels']> = {}, label?: MaybeRefOrGetter<string>) {
+        constructor(initialValues: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Target<Props>['typeLabels']>, label?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
+            // markRaw prevents automatic ref unwrapping shitting all over the types
             this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
             this.typeLabels = markRaw({ ...Object.entries(initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
-            this.connectedSources = ref(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
+            this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
             this.effectScope = effectScope();
             if (label !== undefined) {
                 if (typeof label == 'string') this.label = label;
@@ -244,6 +253,7 @@ export namespace Modulation {
                     watch(label, (v) => rThis.label = v, { immediate: true });
                 });
             }
+            this.tile = tile ?? null;
         }
 
         /**
@@ -264,15 +274,15 @@ export namespace Modulation {
     }
 
     export type Connection<T = any, KeySource extends keyof TargetPropertyMap = string, KeyTarget extends string = string> = {
-        source: Modulation.Source<{
+        readonly source: Modulation.Source<{
             [K in KeySource]: RefOrGetter<T>
         } & SourcePropertyMap>
-        target: Modulation.Target<{
+        readonly target: Modulation.Target<{
             [K in KeyTarget]: T
         } & TargetPropertyMap>
-        sourceKey: KeySource
-        targetKey: KeyTarget
-        transforms: Transform<T>[]
+        readonly sourceKey: KeySource
+        readonly targetKey: KeyTarget
+        readonly transforms: Transform<T>[]
     }
 
     interface TargetInternalView<Props extends TargetPropertyMap> {
@@ -281,10 +291,10 @@ export namespace Modulation {
             readonly [K in keyof Props]: Ref<Props[K]>
         }
         readonly connectionTrackers: Map<keyof Props, [Source<any>, any]>
-        readonly connectedSources: Ref<{
+        readonly connectedSources: {
             // ignoring typing on transforms because TS can't tell that the type of the properties are the same
             [K in keyof Props]: [Source<any>, string, Transform<any>[]] | null
-        }>;
+        };
     }
 
     export interface Modulatable<Props extends TargetPropertyMap> {

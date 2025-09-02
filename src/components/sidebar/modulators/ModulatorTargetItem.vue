@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const connections = computed<Modulation.Connection[]>(() =>
-    Object.entries(props.target.connectedSources as any as typeof props.target.connectedSources.value).filter(([_, entry]) => entry !== null).map(([targetKey, entry]) => ({
+    Object.entries(props.target.connectedSources).filter(([_, entry]) => entry !== null).map(([targetKey, entry]) => ({
         source: entry![0],
         target: props.target,
         sourceKey: entry![1],

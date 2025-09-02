@@ -261,7 +261,10 @@ export class VisualizerTile extends Tile {
         });
         this.modulator = new Modulation.Source({
             peak: () => this.visualizer.renderer.frameResult.value.approximatePeak
-        }, undefined, () => reactive(this).label); // overhead? should only track label
+        }, {
+            label: () => reactive(this).label,
+            tile: this
+        }); // overhead? should only track label
     }
 
     getSchemaData(): MediaSchema.VisualizerTile {
@@ -353,7 +356,10 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         imgOffsetX: 0,
         imgOffsetY: 0,
         imgRotation: 0
-    }, undefined, () => reactive(this).label);
+    }, {
+        label: () => reactive(this).label,
+        tile: this
+    });
 
     /**Image source, (hopefully) as a data: URL */
     imgSrc: string = '';

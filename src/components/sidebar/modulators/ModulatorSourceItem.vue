@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const connections = computed<Modulation.Connection[]>(() =>
-    Object.entries(props.source.connectedTargets as any as typeof props.source.connectedTargets.value).flatMap(([sourceKey, targets]) => targets.map(([target, targetKey, transforms]) => ({
+    Object.entries(props.source.connectedTargets).flatMap(([sourceKey, targets]) => targets.map(([target, targetKey, transforms]) => ({
         source: props.source,
         target: target,
         sourceKey: sourceKey,

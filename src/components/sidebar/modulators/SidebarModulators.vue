@@ -62,7 +62,7 @@ watch(debouncedTiles, () => {
 // this isnt cumbersome at all
 const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap(({ source }) =>
     // this is the kind of bullshit I have to pull because of ref unwrapping
-    Object.entries(source.connectedTargets as any as typeof source.connectedTargets.value).flatMap(([sourceKey, targets]) =>
+    Object.entries(source.connectedTargets).flatMap(([sourceKey, targets]) =>
         targets.map(([target, targetKey, transforms]) => ({
             source: source,
             target: target,
