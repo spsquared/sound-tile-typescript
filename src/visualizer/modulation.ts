@@ -1,4 +1,7 @@
-import { ComputedRef, markRaw, reactive, ref, Ref, watch, WatchHandle } from "vue";
+import {
+    ComputedRef, effectScope, EffectScope, markRaw, MaybeRefOrGetter, reactive, ref, Ref, watch,
+    WatchHandle
+} from 'vue';
 
 export namespace Modulation {
     type SourcePropertyMap = Record<string, RefOrGetter>
@@ -17,6 +20,8 @@ export namespace Modulation {
     // also I definitely did something horribly wrong and against all typescript laws here
     // symbol and number types are allowed in properties but you can't use them anyway
 
+    // also probably shouldn't have used refs as ref unwrapping causes utter carnage in all sorts of places
+
     /**
      * Modulation source side of controller. Values set to its source refs will be applied to linked targets.
      */
@@ -29,6 +34,7 @@ export namespace Modulation {
         readonly typeLabels: {
             readonly [K in keyof Props & string]: string
         };
+
         /**Label used for UI purposes */
         label: string = 'Unnamed Source';
 
@@ -36,9 +42,13 @@ export namespace Modulation {
         private readonly connections: Map<keyof Props, Set<Ref>> = markRaw(new Map());
         /**Maps target refs to their incoming transforms  */
         private readonly transforms: Map<Ref, Transform<any>[]> = new Map();
+        /**Keeps watch handles for updating targets so they can be stopped to avoid resource leaks */
         private readonly updateWatchers: Map<Ref, WatchHandle> = markRaw(new Map());
         /**Helps efficiently disconnect all targets, maps targets to map of source and target properties */
         private readonly connectionTrackers: Map<Target<any>, Map<keyof Props, string>> = markRaw(new Map());
+
+        /**Fallback thing and also miscellaneous reactivity scope */
+        private readonly effectScope: EffectScope;
 
         /**Reactive record of all targets modulated by this source - if this is edited it's not this class's problem */
         readonly connectedTargets: ComputedRef<{
@@ -53,7 +63,7 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(sources: Props, typeLabels: Partial<Source<Props>['typeLabels']> = {}, label?: string) {
+        constructor(sources: Props, typeLabels: Partial<Source<Props>['typeLabels']> = {}, label?: MaybeRefOrGetter<string>) {
             this.sources = markRaw({ ...sources });
             this.typeLabels = markRaw({ ...Object.entries(sources).reduce((obj, [k, v]) => (obj[k] = typeof (typeof v == 'function' ? v() : v.value), obj), {} as any), ...typeLabels });
             for (const sourceKey in this.sources) {
@@ -61,7 +71,14 @@ export namespace Modulation {
             }
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
             this.connectedTargets = ref(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
-            if (label !== undefined) this.label = label;
+            this.effectScope = effectScope();
+            if (label !== undefined) {
+                if (typeof label == 'string') this.label = label;
+                else this.effectScope.run(() => {
+                    const rThis = reactive(this);
+                    watch(label, (v) => rThis.label = v, { immediate: true });
+                });
+            }
         }
 
         /**
@@ -90,14 +107,14 @@ export namespace Modulation {
             this.connections.get(sourceKey)!.add(targetRef);
             this.transforms.set(targetRef, transforms);
             const getSourceValue: () => ExtractRefOrGetterValue<Props[Key1]> = typeof sourceRefOrGetter == 'function' ? () => sourceRefOrGetter() : () => sourceRefOrGetter.value;
-            this.updateWatchers.set(targetRef, watch([sourceRefOrGetter, reactive(transforms)], () => {
+            this.effectScope.run(() => this.updateWatchers.set(targetRef, watch([sourceRefOrGetter, reactive(transforms)], () => {
                 // for some reason using [value] in watch callback gives some nonsense type that makes a billion errors
                 let value = getSourceValue();
                 for (let i = 0; i < transforms.length; i++) {
                     value = transforms[i].apply(value);
                 }
                 targetRef.value = value;
-            }, { immediate: true }));
+            }, { immediate: true })));
             // update connection trackers (typing is a bit scuffed still)
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
@@ -179,6 +196,7 @@ export namespace Modulation {
          */
         destroy(): void {
             this.disconnect();
+            this.effectScope.stop();
         }
     }
 
@@ -199,11 +217,13 @@ export namespace Modulation {
 
         /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property, also used to enumerate sources */
         private readonly connectionTrackers: Map<keyof Props, [Source<any>, string]> = markRaw(new Map());
-
         /**Reactive record of all sources for this target - if this is edited it's not this class's problem */
         readonly connectedSources: ComputedRef<{
             readonly [K in keyof Props]: [Source<any>, string, Transform<Props[K]>[]] | null
         }>;
+
+        /**Fallback thing and also miscellaneous reactivity scope */
+        private readonly effectScope: EffectScope;
 
         /**
          * @param initialValues Initial values for modulated items
@@ -211,12 +231,19 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(initialValues: Props, typeLabels: Partial<Target<Props>['typeLabels']> = {}, label?: string) {
+        constructor(initialValues: Props, typeLabels: Partial<Target<Props>['typeLabels']> = {}, label?: MaybeRefOrGetter<string>) {
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
             this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
             this.typeLabels = markRaw({ ...Object.entries(initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
             this.connectedSources = ref(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
-            if (label !== undefined) this.label = label;
+            this.effectScope = effectScope();
+            if (label !== undefined) {
+                if (typeof label == 'string') this.label = label;
+                else this.effectScope.run(() => {
+                    const rThis = reactive(this);
+                    watch(label, (v) => rThis.label = v, { immediate: true });
+                });
+            }
         }
 
         /**
@@ -232,6 +259,7 @@ export namespace Modulation {
          */
         destroy(): void {
             for (const [_, [source]] of this.connectionTrackers) source.disconnect(this);
+            this.effectScope.stop();
         }
     }
 

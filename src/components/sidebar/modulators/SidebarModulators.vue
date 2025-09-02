@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, Raw, ref, toRaw, useTemplateRef, watch } from 'vue';
+import { computed, Raw, ref, useTemplateRef, watch } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { ImageTile, Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -18,8 +18,11 @@ const horizontal = computed(() => width.value > 500);
 const debouncedTiles = useDebounce(TileEditor.currentTiles, 100);
 // so the thing I warned about in the TileEditor root tile comment is happening
 // ref unwrapping FUCKS AROUND with MY SHIT and FOR WHAT??? 6 CHARACTERS SAVED WHEN TYPING????
+// not to mention that it DESTROYS type annotations by giving you MASSIVE NESTED OBJECTS full of BULLSHIT
+// instead of just giving you... idk... a CLASS NAME???
 const sourceList = ref<{
     tile: Tile
+    // misleading type here - it's not raw but this is easier than spaghetti reactive type or "any"
     // thanks vue for deleting my private members that are still there and then complaining that they're not there
     source: Raw<Modulation.Source<any>>
 }[]>([]);
@@ -28,9 +31,7 @@ watch(debouncedTiles, () => {
     for (const tile of debouncedTiles.value) {
         if (tile instanceof VisualizerTile) tiles.push({
             tile: tile,
-            // seems useless but this is actually reactive, no wait it's still useless because it becomes reactive 2 femtoseconds later
-            // no wait, js is too slow for that, make that 2 minutes
-            source: toRaw(tile.visualizer.modulator)
+            source: tile.modulator // this is actually reactive because it was pulled out of the reactive root tile
         });
     }
     sourceList.value = tiles;
@@ -50,7 +51,7 @@ watch(debouncedTiles, () => {
     for (const tile of debouncedTiles.value) {
         if (tile instanceof ImageTile) tiles.push({
             tile: tile,
-            target: toRaw(tile.modulation) // fuck you to whoever came up with automatic ref unwrapping
+            target: tile.modulation // also actually reactive but also tiles might not be reactive who knows??????????
         });
     }
     targetList.value = tiles;
@@ -59,13 +60,21 @@ watch(debouncedTiles, () => {
     // onTrigger: () => console.debug('trigger target list change')
 });
 // this isnt cumbersome at all
-const connectionList = computed<Modulation.Connection[]>(() => toRaw(sourceList.value).flatMap(({ source }) => Object.entries((source).connectedTargets.value).flatMap(([sourceKey, targets]) => targets.map(([target, targetKey, transforms]) => ({
-    source: source,
-    target: target,
-    sourceKey: sourceKey,
-    targetKey: targetKey,
-    transforms: transforms
-})))));
+const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap(({ source }) =>
+    // this is the kind of bullshit I have to pull because of ref unwrapping
+    Object.entries(source.connectedTargets as any as typeof source.connectedTargets.value).flatMap(([sourceKey, targets]) =>
+        targets.map(([target, targetKey, transforms]) => ({
+            source: source,
+            target: target,
+            sourceKey: sourceKey,
+            targetKey: targetKey,
+            transforms: transforms
+        }))
+    )
+), {
+    // onTrack: () => console.debug('track connection list'),
+    // onTrigger: () => console.debug('trigger connection list change')
+}); // not as funny as 6 closing parenthesis mixed with a few braces
 
 // need "as Tile" everywhere because of the stupid auto unwrap also obliterating private and protected members
 function setTileHover(tile: Tile) {
@@ -81,17 +90,18 @@ function resetTileHover() {
 <template>
     <!-- probably a lot of performance issues here with all the mapping in reactivity -->
     <!-- also can you tell I've given up writing good code and just spammed toRaw everywhere and something will inevitably break because of that -->
+    <!-- update: no more toRaw spam but instead lots of casting -->
     <SidebarContentWrapper tab="modulators">
         <template v-slot:header>Modulators</template>
         <template v-slot:content>
             <div :id="horizontal ? 'modSplitContainerHorizontal' : 'modSplitContainerVertical'" ref="container">
                 <div id="modSourceContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Sources</div>
-                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile.id" :label="s.source.label" :source="toRaw(s.source)" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
+                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile.id" :label="s.source.label" :source="s.source" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
                 </div>
                 <div id="modTargetContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Targets</div>
-                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile.id" :label="t.target.label" :target="toRaw(t.target)" @mouseenter="setTileHover(t.tile as Tile)"  @mouseleave="resetTileHover"></ModulatorTargetItem>
+                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile.id" :label="t.target.label" :target="t.target" @mouseenter="setTileHover(t.tile as Tile)" @mouseleave="resetTileHover"></ModulatorTargetItem>
                 </div>
                 <div id="modConnectionsContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Connections</div>

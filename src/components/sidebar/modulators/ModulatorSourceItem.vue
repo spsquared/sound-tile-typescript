@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const connections = computed<Modulation.Connection[]>(() =>
-    Object.entries(props.source.connectedTargets.value).flatMap(([sourceKey, targets]) => targets.map(([target, targetKey, transforms]) => ({
+    Object.entries(props.source.connectedTargets as any as typeof props.source.connectedTargets.value).flatMap(([sourceKey, targets]) => targets.map(([target, targetKey, transforms]) => ({
         source: props.source,
         target: target,
         sourceKey: sourceKey,
@@ -21,16 +21,16 @@ const connections = computed<Modulation.Connection[]>(() =>
 
 <template>
     <ModulatorItem :label="props.label" :connections="connections">
-        <!-- idk the vital synthesizer interface knobbly things -->
         <div class="sourceDrag"></div>
     </ModulatorItem>
 </template>
 
 <style scoped>
 .sourceDrag {
-    width: 14px;
-    height: 14px;
-    background-color: #FF0099;
-    border-radius: 50%;
+    width: 32px;
+    height: 24px;
+    background-color: var(--logo-green);
+    border-radius: 6px;
+    cursor: grab;
 }
 </style>

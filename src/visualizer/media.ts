@@ -155,7 +155,7 @@ export class Media implements MediaMetadata {
                         image.imgSrc = curr.image ?? '';
                         image.smoothDrawing = curr.smoothing ?? true;
                         if (curr.imageReactive) {
-                            visualizer.visualizer.modulator.connect(image.modulation, 'peak', 'imgScale', [
+                            visualizer.modulator.connect(image.modulation, 'peak', 'imgScale', [
                                 new Modulation.LinearTransform([(curr.imageReactiveMax ?? 1) - (curr.imageReactiveMin ?? 0), curr.imageReactiveMin ?? 0])
                             ]);
                         }

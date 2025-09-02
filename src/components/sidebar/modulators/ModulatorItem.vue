@@ -14,7 +14,7 @@ const props = defineProps<{
         <div class="modHeaderItems">
             <slot></slot>
         </div>
-        <div class="modConnections">
+        <div class="modConnections" v-if="props.connections.length > 0">
             <ModulatorConnectionEntry v-for="c, i in props.connections" :key="i" :connection="c"></ModulatorConnectionEntry>
         </div>
     </div>
@@ -23,8 +23,9 @@ const props = defineProps<{
 <style scoped>
 .modItem {
     display: grid;
-    grid-template-rows: 20px 1fr;
+    grid-template-rows: 20px;
     grid-template-columns: 1fr min-content;
+    grid-auto-rows: 1fr;
     padding: 4px 4px;
     gap: 4px;
     --mod-item-background-color: #222;
@@ -56,6 +57,6 @@ const props = defineProps<{
     display: flex;
     /* newest at top */
     flex-direction: column-reverse;
-    row-gap: 2px;
+    row-gap: 3px;
 }
 </style>

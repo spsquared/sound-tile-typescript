@@ -81,7 +81,6 @@ export class TileEditor {
      * Root node of current layout on screen, wrapped inside a `Reactive` object.
      * Because of this `reactive()` wrapper Vue's automatic ref unwrapping nukes your types and causes unimaginable
      * pain when refs are used in literally any code that gets referenced within a tile instance.
-     * But also watch functions can be used in tiles.
      */
     static readonly root: GroupTile = reactive(new GroupTile()) as GroupTile;
     // without the cast ref unwrapping is mostly solved but then everything must be public in every class

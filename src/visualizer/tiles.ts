@@ -1,5 +1,9 @@
-import { Component, effectScope, EffectScope, nextTick, watch } from 'vue';
+import { Component, nextTick, reactive } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
+import { MediaSchema } from './mediaSchema';
+import Visualizer from './visualizer';
+import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
+import Modulation from './modulation';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
 import GroupTileComponent from './tiles/GroupTile.vue';
@@ -11,10 +15,6 @@ import blankTileImg from '@/img/blank-tile.png';
 import visualizerTileImg from '@/img/visualizer-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
-import { MediaSchema } from './mediaSchema';
-import Visualizer from './visualizer';
-import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
-import Modulation from './modulation';
 
 enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
@@ -59,13 +59,9 @@ export class Tile {
     /**Background color of tile */
     backgroundColor: ColorPicker;
 
-    /**Captures tile reactivity scope - note tiles are not guaranteed to be reactive */
-    protected readonly effectScope: EffectScope;
-
     constructor() {
         this.id = Tile.idCounter++;
         this.backgroundColor = new ColorPicker('#000000');
-        this.effectScope = effectScope();
     }
 
     readonly mountedListeners: Set<() => any> = new Set();
@@ -94,7 +90,6 @@ export class Tile {
     /**Deletes the tile and disposes of all resources */
     destroy(): void {
         this.parent?.removeChild(this);
-        this.effectScope.stop();
     }
 }
 
@@ -244,6 +239,10 @@ export class VisualizerTile extends Tile {
 
     label: string = VisualizerTile.name;
 
+    readonly modulator: Modulation.Source<{
+        peak: () => number
+    }>;
+
     /**Canvas element maintained by tile instance, as component mount-unmount would create and destroy it */
     readonly canvas: HTMLCanvasElement;
     /**Visualizer instance attached */
@@ -260,7 +259,9 @@ export class VisualizerTile extends Tile {
             await nextTick();
             if (this.element === null) this.visualizer.visible.value = false;
         });
-        this.effectScope.run(() => watch(() => this.label, () => this.visualizer.modulator.label = this.label, { immediate: true }));
+        this.modulator = new Modulation.Source({
+            peak: () => this.visualizer.renderer.frameResult.value.approximatePeak
+        }, undefined, () => reactive(this).label); // overhead? should only track label
     }
 
     getSchemaData(): MediaSchema.VisualizerTile {
@@ -281,10 +282,10 @@ export class VisualizerTile extends Tile {
         return tile;
     }
 
-
     destroy(): void {
         super.destroy();
         this.visualizer.destroy();
+        this.modulator.destroy();
     }
 }
 
@@ -352,7 +353,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         imgOffsetX: 0,
         imgOffsetY: 0,
         imgRotation: 0
-    });
+    }, undefined, () => reactive(this).label);
 
     /**Image source, (hopefully) as a data: URL */
     imgSrc: string = '';
@@ -363,7 +364,6 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
 
     constructor() {
         super();
-        this.effectScope.run(() => watch(() => this.label, () => this.modulation.label = this.label, { immediate: true }));
     }
 
     getSchemaData(): MediaSchema.ImageTile {

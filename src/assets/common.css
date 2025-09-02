@@ -24,6 +24,9 @@ body {
     --input-hover-color: #999;
     --input-border-radius: 4px;
     --input-disabled-color: #555;
+    --logo-red: #d84747;
+    --logo-green: #47d866;
+    --logo-blue: #477fd8;
 }
 
 img {

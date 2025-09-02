@@ -3,7 +3,6 @@
 import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
-import Modulation from './modulation';
 
 if (!('AudioContext' in window)) {
     throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
@@ -38,10 +37,6 @@ export class Visualizer {
     /**Sets if the visualizer is visible/playable */
     readonly visible: Ref<boolean> = ref(false);
 
-    readonly modulator: Modulation.Source<{
-        peak: () => number
-    }>;
-
     private readonly effectScope: EffectScope;
 
     constructor(initData: VisualizerData, canvas: HTMLCanvasElement) {
@@ -51,9 +46,6 @@ export class Visualizer {
         this.gain = Visualizer.audioContext.createGain();
         this.gain.connect(Visualizer.gain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
-        this.modulator = new Modulation.Source({
-            peak: () => this.renderer.frameResult.value.approximatePeak
-        });
         this.effectScope = effectScope();
         this.effectScope.run(() => {
             watch(() => this.data.buffer, async () => {
@@ -220,7 +212,6 @@ export class Visualizer {
         this.stop();
         this.effectScope.stop();
         this.gain.disconnect();
-        this.modulator.destroy();
         Visualizer.instances.delete(this);
         Visualizer.recalculateDuration();
     }

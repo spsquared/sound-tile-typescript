@@ -148,7 +148,7 @@ export class MediaPlayer {
     const visA = new VisualizerTile();
     visA.visualizer.data.mode = VisualizerMode.WAVE_DIRECT;
     visA.size = 2;
-    visA.visualizer.modulator.connect(img, 'peak', 'imgScale', [new Modulation.LinearTransform([0.5, 0.25])]);
+    visA.modulator.connect(img, 'peak', 'imgScale', [new Modulation.LinearTransform([0.5, 0.25])]);
     root.addChild(visA);
     const visB = new VisualizerTile();
     visB.visualizer.data.mode = VisualizerMode.CHANNEL_PEAKS;

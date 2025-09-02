@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const connections = computed<Modulation.Connection[]>(() =>
-    Object.entries(props.target.connectedSources.value).filter(([_, entry]) => entry !== null).map(([targetKey, entry]) => ({
+    Object.entries(props.target.connectedSources as any as typeof props.target.connectedSources.value).filter(([_, entry]) => entry !== null).map(([targetKey, entry]) => ({
         source: entry![0],
         target: props.target,
         sourceKey: entry![1],
@@ -20,7 +20,15 @@ const connections = computed<Modulation.Connection[]>(() =>
 </script>
 
 <template>
-    <ModulatorItem :label="props.label" :connections="connections"></ModulatorItem>
+    <ModulatorItem :label="props.label" :connections="connections">
+        <div class="targetDrop"></div>
+    </ModulatorItem>
 </template>
 
-<style scoped></style>
+<style scoped>
+.targetDrop {
+    width: 32px;
+    height: 24px;
+    background-color: var(--logo-blue);
+    border-radius: 6px;
+}</style>
