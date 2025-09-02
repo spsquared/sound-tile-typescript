@@ -171,7 +171,7 @@ export class GroupTile extends Tile {
                 for (const child of children) child.parent = this;
                 this.children.length = 0;
                 this.children.push(...children);
-                // don't call this.children[0].destroy() as this effectively destroys the tile
+                // don't call this.children[0].destroy() as this destroys the child too
                 this.checkObsolete();
             }
         } else {
@@ -179,8 +179,9 @@ export class GroupTile extends Tile {
             else if (this.children.length == 1) {
                 const parent = this.parent;
                 const child = this.children[0];
+                child.parent = null;
                 parent.replaceChild(this, child);
-                // don't call this.destroy() as this effectively destroys the tile
+                // don't call this.destroy() as this destroys the child too
                 parent.checkObsolete();
             }
         }
