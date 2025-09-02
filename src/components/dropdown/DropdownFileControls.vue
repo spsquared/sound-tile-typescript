@@ -10,8 +10,8 @@ import FileAccess from '@/components/inputs/fileAccess';
 const errorMessageType = ref(false);
 const errorModalOpen = ref(false);
 async function uploadToCurrent() {
-    if (TileEditor.state.lock.locked) return;
-    await TileEditor.state.lock.acquire();
+    if (TileEditor.lock.locked) return;
+    await TileEditor.lock.acquire();
     const files = await FileAccess.openFilePicker({
         id: 'soundtileUploadTilesCurrent',
         types: [{
@@ -27,21 +27,21 @@ async function uploadToCurrent() {
         if (media === null) {
             errorMessageType.value = false;
             errorModalOpen.value = true;
-            TileEditor.state.lock.release();
+            TileEditor.lock.release();
             return;
         }
         MediaPlayer.state.current = media;
     }
-    TileEditor.state.lock.release();
+    TileEditor.lock.release();
 }
 async function downloadFromCurrent() {
-    if (TileEditor.state.lock.locked) return;
-    await TileEditor.state.lock.acquire();
+    if (TileEditor.lock.locked) return;
+    await TileEditor.lock.acquire();
     const buffer = await MediaPlayer.state.current.compress();
     if (buffer === null) {
         errorMessageType.value = true;
         errorModalOpen.value = true;
-        TileEditor.state.lock.release();
+        TileEditor.lock.release();
         return;
     }
     const file = new Blob([buffer], { type: 'application/octet-stream' });
@@ -57,14 +57,14 @@ async function downloadFromCurrent() {
         }],
         suggestedName: `${current.getHours()}-${current.getMinutes()}_${current.getMonth()}-${current.getDay()}-${current.getFullYear()}.soundtile`
     }, file)
-    TileEditor.state.lock.release();
+    TileEditor.lock.release();
 }
 </script>
 
 <template>
     <div id="fileControls">
-        <input type="button" id="tileUpload" title="Load Tiles from computer" @click="uploadToCurrent" :disabled="TileEditor.state.lock.locked">
-        <input type="button" id="tileDownload" title="Save Tiles to computer" @click="downloadFromCurrent" :disabled="TileEditor.state.lock.locked">
+        <input type="button" id="tileUpload" title="Load Tiles from computer" @click="uploadToCurrent" :disabled="TileEditor.lock.locked">
+        <input type="button" id="tileDownload" title="Save Tiles to computer" @click="downloadFromCurrent" :disabled="TileEditor.lock.locked">
     </div>
     <FullscreenModal v-model="errorModalOpen" :title="errorMessageType ? 'Failed to save layout' : 'Failed to load layout'" :mode="ModalMode.NOTIFY" color="red">
         The Sound Tiles failed to {{ errorMessageType ? 'save' : 'load' }}.

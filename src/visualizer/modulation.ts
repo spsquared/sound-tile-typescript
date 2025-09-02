@@ -2,8 +2,8 @@ import { ComputedRef, effectScope, EffectScope, markRaw, MaybeRefOrGetter, react
 import { Tile } from './tiles';
 
 export namespace Modulation {
-    type SourcePropertyMap = Record<string, RefOrGetter>
-    type TargetPropertyMap = Record<string, any>
+    export type SourcePropertyMap = Record<string, RefOrGetter>
+    export type TargetPropertyMap = Record<string, any>
 
     type RefOrGetter<T = any> = Ref<T> | ComputedRef<T> | (() => T);
     type ExtractRefOrGetterValue<T> = T extends Ref<infer V> ? V : (T extends (() => infer V) ? V : never);
@@ -273,7 +273,7 @@ export namespace Modulation {
         }
     }
 
-    export type Connection<T = any, KeySource extends keyof TargetPropertyMap = string, KeyTarget extends string = string> = {
+    export interface Connection<T = any, KeySource extends keyof TargetPropertyMap = string, KeyTarget extends string = string> {
         readonly source: Modulation.Source<{
             [K in KeySource]: RefOrGetter<T>
         } & SourcePropertyMap>

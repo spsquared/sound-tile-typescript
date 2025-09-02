@@ -63,13 +63,13 @@ async function uploadImage() {
                 }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" @load="resizeImage">
             </div>
             <div class="imageUploadCover" v-if="props.tile.imgSrc == ''">
-                <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.state.lock.locked">
+                <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.lock.locked">
             </div>
         </template>
         <template v-slot:options>
             <TileOptionsSection title="General">
                 <label title="Image source">
-                    <input type="button" class="uploadButton" @click="uploadImage" :value="props.tile.imgSrc == '' ? 'Upload image' : 'Replace image'" :disabled="uploadImageDisabled || TileEditor.state.lock.locked">
+                    <input type="button" class="uploadButton" @click="uploadImage" :value="props.tile.imgSrc == '' ? 'Upload image' : 'Replace image'" :disabled="uploadImageDisabled || TileEditor.lock.locked">
                 </label>
                 <label title="Label of tile">
                     Label
@@ -101,9 +101,6 @@ async function uploadImage() {
 
 <style scoped>
 .imageWrapper {
-    position: absolute;
-    top: 0px;
-    left: 0px;
     width: 100%;
     height: 100%;
 }
@@ -123,8 +120,9 @@ async function uploadImage() {
     cursor: move;
 }
 
-.draggableImage:hover {
+.imageWrapper:hover>.draggableImage {
     outline: 1px solid cyan;
+    transform: translate(-50%, -50%);
 }
 
 .imageUploadCover {

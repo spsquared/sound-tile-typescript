@@ -7,7 +7,7 @@ const props = defineProps<{
 }>();
 
 function createTile(e: MouseEvent | TouchEvent) {
-    if (TileEditor.state.drag.current === null) {
+    if (TileEditor.drag.current === null) {
         TileEditor.startDrag(new props.tile(), { x: 100, y: 10 }, { w: 200, h: 150 }, e);
     }
 }

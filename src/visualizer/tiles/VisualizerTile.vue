@@ -93,7 +93,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
         <template v-slot:content>
             <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="visualizerUploadCover" v-if="options.buffer === null">
-                <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" :disabled="uploadSourceDisabled || TileEditor.state.lock.locked">
+                <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
             </div>
         </template>
         <template v-slot:options>
@@ -101,7 +101,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 <div class="optionsRows">
                     <div>
                         <label title="Audio source file">
-                            <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :disabled="uploadSourceDisabled || TileEditor.state.lock.locked">
+                            <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
                         </label>
                         <!-- future - linking multiple tiles to the same source audio -->
                     </div>
@@ -410,9 +410,6 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 </style>
 <style scoped>
 .canvasWrapper {
-    position: absolute;
-    top: 0px;
-    left: 0px;
     width: 100%;
     height: 100%;
 }

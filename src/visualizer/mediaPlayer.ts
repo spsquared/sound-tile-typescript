@@ -122,10 +122,10 @@ export class MediaPlayer {
     static {
         watch(() => this.state.current, async (_session, oldSession) => {
             // put the old tree back into old session
-            await TileEditor.state.lock.acquire();
+            await TileEditor.lock.acquire();
             oldSession.tree = TileEditor.detachRoot();
             this.state.current.tree = TileEditor.attachRoot(this.state.current.tree);
-            TileEditor.state.lock.release();
+            TileEditor.lock.release();
             this.state.mediaDataTabOpen = this.state.current.title.trim().length > 0;
         });
     }

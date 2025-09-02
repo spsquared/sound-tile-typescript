@@ -1,35 +1,9 @@
-import { computed, reactive, watch, watchEffect } from 'vue';
-import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
-import { AsyncLock } from '@/components/scripts/lock';
+import { computed, Prop, reactive, watch, watchEffect } from 'vue';
 import { useIdle } from '@vueuse/core';
+import { AsyncLock } from '@/components/scripts/lock';
 import { matchTextInput } from '@/constants';
-
-type TileEditorState = {
-    dropdownOpen: boolean
-    sidebarOpen: boolean
-    sidebarTab: 'edit' | 'modulators' | 'export' | 'playlist'
-    hideTabs: boolean
-    idleHideTabs: boolean
-    sidebarScreenWidth: number
-    readonly minSidebarWidthPx: number
-    readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } | undefined }
-    treeMode: boolean
-    readonly drag: {
-        current: Tile | null
-        offset: { x: number, y: number }
-        size: { w: number, h: number }
-        drop: {
-            tile: Tile | null
-            insertBefore: boolean
-            createGroup: boolean
-            newGroupVertical: boolean
-        }
-        sidebarDrop: boolean
-    }
-    sidebarIdentifyTile: Tile | null
-    editWindowIdentifyTile: Tile | null
-    lock: AsyncLock
-};
+import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
+import Modulation from './modulation';
 
 /**
  * Layout history references tile data to avoid copying unnecessarily.
@@ -46,7 +20,20 @@ type LayoutHistoryEntry = Exclude<Tile, GroupTile> | {
  */
 export class TileEditor {
     private static readonly idleTracker = useIdle(5000);
-    static readonly state = reactive<TileEditorState>({
+
+    static readonly state: {
+        dropdownOpen: boolean
+        sidebarOpen: boolean
+        sidebarTab: 'edit' | 'modulators' | 'export' | 'playlist'
+        hideTabs: boolean
+        idleHideTabs: boolean
+        sidebarScreenWidth: number
+        readonly minSidebarWidthPx: number
+        readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } | undefined }
+        treeMode: boolean
+        sidebarIdentifyTile: Tile | null
+        editWindowIdentifyTile: Tile | null
+    } = reactive({
         dropdownOpen: true,
         sidebarOpen: false,
         sidebarTab: 'edit',
@@ -56,22 +43,36 @@ export class TileEditor {
         minSidebarWidthPx: 200,
         tileTypes: {},
         treeMode: false,
-        drag: {
-            current: null,
-            offset: { x: 0, y: 0 },
-            size: { w: 0, h: 0 },
-            drop: {
-                tile: null,
-                insertBefore: false,
-                createGroup: false,
-                newGroupVertical: false
-            },
-            sidebarDrop: false
-        },
         sidebarIdentifyTile: null,
-        editWindowIdentifyTile: null,
-        lock: new AsyncLock()
-    }) as TileEditorState; // fixes Vue typing errors
+        editWindowIdentifyTile: null
+    });
+    static readonly drag: {
+        current: Tile | null
+        offset: { x: number, y: number }
+        size: { w: number, h: number }
+        drop: {
+            tile: Tile | null
+            insertBefore: boolean
+            createGroup: boolean
+            newGroupVertical: boolean
+        }
+        sidebarDrop: boolean
+    } = reactive({
+        current: null,
+        offset: { x: 0, y: 0 },
+        size: { w: 0, h: 0 },
+        drop: {
+            tile: null,
+            insertBefore: false,
+            createGroup: false,
+            newGroupVertical: false
+        },
+        sidebarDrop: false
+    });
+    /**Locks changing of layouts and all actions */
+    static readonly lock: AsyncLock = reactive(new AsyncLock()) as AsyncLock;
+    /**Locks actions from starting, typically because another is in progress and may conflict */
+    static readonly actionLock: AsyncLock = reactive(new AsyncLock()) as AsyncLock;
 
     static registerTile(t: typeof Tile, visible: boolean): void {
         this.state.tileTypes[t.id] = { Tile: t, visible: visible };
@@ -190,19 +191,20 @@ export class TileEditor {
         return true;
     }
 
-    static startDrag(tile: Tile, offset?: TileEditorState['drag']['offset'], size?: TileEditorState['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
-        if (this.state.lock.locked || this.state.drag.current !== null) return false;
+    // tile dragging
+    static startDrag(tile: Tile, offset?: typeof TileEditor['drag']['offset'], size?: typeof TileEditor['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
+        if (this.lock.locked || this.drag.current !== null) return false;
         this.markLayoutChange();
         this.redoHistory.length = 0;
         tile.parent?.removeChild(tile);
-        this.state.drag.current = tile;
-        this.state.drag.offset = offset ?? { x: 0, y: 0 };
-        this.state.drag.size = size ?? { w: 200, h: 150 };
+        this.drag.current = tile;
+        this.drag.offset = offset ?? { x: 0, y: 0 };
+        this.drag.size = size ?? { w: 200, h: 150 };
         if (e !== undefined) this.updateDrag(e);
         return true;
     }
     private static updateDrag(e: MouseEvent | TouchEvent): void {
-        if (this.state.drag.current === null) return;
+        if (this.drag.current === null) return;
         const pos = 'touches' in e ? {
             x: e.touches[0]?.clientX ?? 0,
             y: e.touches[0]?.clientY ?? 0
@@ -211,7 +213,7 @@ export class TileEditor {
             y: e.clientY
         };
         // reset
-        this.state.drag.drop.tile = null;
+        this.drag.drop.tile = null;
         // sidebar drag and drop switch
         const sidebarThreshold = window.innerWidth - Math.max(this.state.minSidebarWidthPx, window.innerWidth * this.state.sidebarScreenWidth / 100);
         if (this.state.sidebarOpen && this.state.sidebarTab == 'edit' && pos.x >= sidebarThreshold) {
@@ -222,7 +224,7 @@ export class TileEditor {
     }
     private static updateDragSidebar(mousePos: { x: number, y: number }): void {
         const pos = mousePos;
-        this.state.drag.sidebarDrop = true;
+        this.drag.sidebarDrop = true;
         // sidebar drag-and-drop is simpler since there are no overlapping bounding boxes caused by groups
         // a simple DFS that goes down the tree, creating groups done by hovering over the left half
         // also allows dropping into position for collapsed tiles because no overlaps
@@ -249,14 +251,14 @@ export class TileEditor {
         const rect = currTile.sidebarElements!.handle.getBoundingClientRect();
         const relX = pos.x - rect.left;
         const relY = pos.y - rect.top;
-        this.state.drag.drop.tile = currTile;
-        this.state.drag.drop.createGroup = relX < rect.width / 2;
-        this.state.drag.drop.insertBefore = relY < rect.height / 2;
-        this.state.drag.drop.newGroupVertical = false; // default
+        this.drag.drop.tile = currTile;
+        this.drag.drop.createGroup = relX < rect.width / 2;
+        this.drag.drop.insertBefore = relY < rect.height / 2;
+        this.drag.drop.newGroupVertical = false; // default
     }
     private static updateDragTiles(mousePos: { x: number, y: number }): void {
         const pos = mousePos;
-        this.state.drag.sidebarDrop = false;
+        this.drag.sidebarDrop = false;
         // border implementation leaves gaps between tiles (tiles don't actually have borders)
         const fixBoundingRect = (rect: DOMRect): DOMRect => {
             const rect2 = {
@@ -312,48 +314,48 @@ export class TileEditor {
             const halfBoxHeight = Math.min(12 * Math.log(rect.height + 1), rect.height * 0.6);
             if (relY < halfBoxHeight && relX > halfWidth - halfBoxWidth && relX < halfWidth + halfBoxWidth) {
                 // top box
-                this.state.drag.drop.tile = currTile;
-                this.state.drag.drop.insertBefore = true;
+                this.drag.drop.tile = currTile;
+                this.drag.drop.insertBefore = true;
                 if (relY < halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.VERTICAL) {
-                    this.state.drag.drop.createGroup = false;
+                    this.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.createGroup = true;
-                    this.state.drag.drop.newGroupVertical = true;
+                    this.drag.drop.createGroup = true;
+                    this.drag.drop.newGroupVertical = true;
                 }
             } else if (relY > rect.height - halfBoxHeight && relX && relX > halfWidth - halfBoxWidth && relX < halfWidth + halfBoxWidth) {
                 // bottom box
-                this.state.drag.drop.tile = currTile;
-                this.state.drag.drop.insertBefore = false;
+                this.drag.drop.tile = currTile;
+                this.drag.drop.insertBefore = false;
                 if (relY > rect.height - halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.VERTICAL) {
-                    this.state.drag.drop.createGroup = false;
+                    this.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.createGroup = true;
-                    this.state.drag.drop.newGroupVertical = true;
+                    this.drag.drop.createGroup = true;
+                    this.drag.drop.newGroupVertical = true;
                 }
             } else if (relX < halfBoxWidth && relY > halfHeight - halfBoxHeight && relY < halfHeight + halfBoxHeight) {
                 // left box
-                this.state.drag.drop.tile = currTile;
-                this.state.drag.drop.insertBefore = true;
+                this.drag.drop.tile = currTile;
+                this.drag.drop.insertBefore = true;
                 if (relX < halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.HORIZONTAL) {
-                    this.state.drag.drop.createGroup = false;
+                    this.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.createGroup = true;
-                    this.state.drag.drop.newGroupVertical = false;
+                    this.drag.drop.createGroup = true;
+                    this.drag.drop.newGroupVertical = false;
                 }
             } else if (relX > rect.width - halfBoxWidth && relY > halfHeight - halfBoxHeight && relY < halfHeight + halfBoxHeight) {
                 // right box
-                this.state.drag.drop.tile = currTile;
-                this.state.drag.drop.insertBefore = false;
+                this.drag.drop.tile = currTile;
+                this.drag.drop.insertBefore = false;
                 if (relX > rect.width - halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.HORIZONTAL) {
-                    this.state.drag.drop.createGroup = false;
+                    this.drag.drop.createGroup = false;
                 } else {
-                    this.state.drag.drop.createGroup = true;
-                    this.state.drag.drop.newGroupVertical = false;
+                    this.drag.drop.createGroup = true;
+                    this.drag.drop.newGroupVertical = false;
                 }
             } else if (Math.max(Math.abs(relX - halfWidth), Math.abs(relY - halfHeight)) < Math.min(halfWidth, halfHeight) / 2 && currTile.parent?.orientation === GroupTile.COLLAPSED) {
                 // center box, special case for collapsed groups (append to end)
-                this.state.drag.drop.tile = currTile;
-                this.state.drag.drop.createGroup = false;
+                this.drag.drop.tile = currTile;
+                this.drag.drop.createGroup = false;
             } else if (currTile.parent !== null) {
                 currTile = currTile.parent;
                 continue;
@@ -362,63 +364,64 @@ export class TileEditor {
         }
     }
     static endDrag(): boolean {
-        if (this.state.lock.locked || this.state.drag.current === null) return false;
-        if (this.state.drag.drop.tile === null) {
+        if (this.lock.locked || this.drag.current === null) return false;
+        if (this.drag.drop.tile === null) {
             this.popLayoutHistory(this.undoHistory);
             this.redoHistory.length = 0;
-            this.state.drag.current = null;
+            this.drag.current = null;
             return true;
         }
-        const parent = this.state.drag.drop.tile.parent ?? this.root;
-        if (this.state.drag.drop.createGroup) {
+        const parent = this.drag.drop.tile.parent ?? this.root;
+        if (this.drag.drop.createGroup) {
             const newGroup = new GroupTile();
-            newGroup.size = this.state.drag.drop.tile.size;
-            if (this.state.drag.drop.tile == this.root) {
+            newGroup.size = this.drag.drop.tile.size;
+            if (this.drag.drop.tile == this.root) {
                 // special case for root tile, root has no parent and breaks
                 newGroup.copyProperties(this.root);
-                this.root.orientation = this.state.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
+                this.root.orientation = this.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
                 // more skipping of normal add/remove functions
                 for (const child of this.root.children) child.parent = newGroup;
                 newGroup.children.push(...this.root.children);
                 this.root.children.length = 0;
                 this.root.addChild(newGroup);
-                const insertFn = (this.state.drag.drop.insertBefore ? this.root.insertChildBefore : this.root.insertChildAfter);
-                insertFn.call(this.root, this.state.drag.current, newGroup);
+                const insertFn = (this.drag.drop.insertBefore ? this.root.insertChildBefore : this.root.insertChildAfter);
+                insertFn.call(this.root, this.drag.current, newGroup);
             } else {
                 newGroup.copyProperties(parent);
-                newGroup.orientation = this.state.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
-                parent.replaceChild(this.state.drag.drop.tile, newGroup);
-                newGroup.addChild(this.state.drag.drop.tile);
-                const insertFn = (this.state.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
-                insertFn.call(newGroup, this.state.drag.current, this.state.drag.drop.tile);
+                newGroup.orientation = this.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
+                parent.replaceChild(this.drag.drop.tile, newGroup);
+                newGroup.addChild(this.drag.drop.tile);
+                const insertFn = (this.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
+                insertFn.call(newGroup, this.drag.current, this.drag.drop.tile);
             }
-        } else if (parent.orientation == GroupTile.COLLAPSED && !this.state.drag.sidebarDrop) {
+        } else if (parent.orientation == GroupTile.COLLAPSED && !this.drag.sidebarDrop) {
             // always append to end for collapsed groups except for sidebar drops
-            parent.addChild(this.state.drag.current);
+            parent.addChild(this.drag.current);
         } else {
             // drop target tile can't be root because updateDrag parent orientation check always fails
-            const insertFn = (this.state.drag.drop.insertBefore ? parent.insertChildBefore : parent.insertChildAfter);
-            insertFn.call(parent, this.state.drag.current, this.state.drag.drop.tile);
+            const insertFn = (this.drag.drop.insertBefore ? parent.insertChildBefore : parent.insertChildAfter);
+            insertFn.call(parent, this.drag.current, this.drag.drop.tile);
         }
-        this.state.drag.current = null;
+        this.drag.current = null;
         this.redoHistory.length = 0;
         return true;
     }
 
+    // edit history stack (only for layout changes like through tile drag-and-drop)
     static markLayoutChange(): boolean {
-        if (this.state.lock.locked || this.state.drag.current !== null) return false;
+        if (this.lock.locked || this.drag.current !== null) return false;
         this.pushLayoutHistory(this.undoHistory, this.maxLayoutHistory);
         this.redoHistory.length = 0;
         return true;
     }
     static undoLayoutChange(): boolean {
-        if (this.state.lock.locked || this.state.drag.current !== null || this.undoHistory.length == 0) return false;
+        if (this.lock.locked || this.drag.current !== null || this.undoHistory.length == 0) return false;
         this.pushLayoutHistory(this.redoHistory, this.maxLayoutHistory);
         this.popLayoutHistory(this.undoHistory);
         return true;
     }
     static redoLayoutChange(): boolean {
-        if (this.state.lock.locked || this.state.drag.current !== null || this.redoHistory.length == 0) return false;
+        if (this.lock.locked || this.drag.current !== null || this.redoHistory.length == 0) return false;
         this.pushLayoutHistory(this.undoHistory, this.maxLayoutHistory);
         this.popLayoutHistory(this.redoHistory);
         return true;
@@ -436,7 +439,7 @@ export class TileEditor {
         window.addEventListener('blur', () => this.endDrag());
         // wow the undo stack
         document.addEventListener('keydown', (e) => {
-            if (this.state.lock.locked || this.state.drag.current !== null || matchTextInput(e.target)) return;
+            if (this.lock.locked || this.drag.current !== null || matchTextInput(e.target)) return;
             if (e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey) {
                 switch (e.key.toLowerCase()) {
                     case 'z':
@@ -461,7 +464,7 @@ export class TileEditor {
                 }
                 this.flattenedTiles.add(curr);
             }
-            if (this.state.drag.current !== null) this.flattenedTiles.add(this.state.drag.current);
+            if (this.drag.current !== null) this.flattenedTiles.add(this.drag.current);
         }, {
             // onTrack: () => console.debug('track flattened tiles'),
             // onTrigger: () => console.debug('trigger flattened tiles change')

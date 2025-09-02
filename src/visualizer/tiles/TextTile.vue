@@ -63,7 +63,7 @@ const sanitizedText = computed(() => sanitize(throttledText.value));
                 </div>
             </TileOptionsSection>
             <TileOptionsSection title="Text">
-                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable :disabled="TileEditor.state.lock.locked"></TrixTextEditor>
+                <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable :disabled="TileEditor.lock.locked"></TrixTextEditor>
             </TileOptionsSection>
             <TileOptionsSection title="Modulation">
                 Modulation drag-and-drop UI coming soon!

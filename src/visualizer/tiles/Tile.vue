@@ -41,7 +41,7 @@ onBeforeUnmount(() => {
     for (const cb of props.tile.unmountedListeners) cb();
 });
 
-const destroyDisabled = computed(() => TileEditor.state.lock.locked || TileEditor.root == props.tile || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
+const destroyDisabled = computed(() => TileEditor.lock.locked || TileEditor.root == props.tile || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function dragTile(e: MouseEvent) {
     const rect = tile.value?.getBoundingClientRect();
     TileEditor.startDrag(props.tile, {

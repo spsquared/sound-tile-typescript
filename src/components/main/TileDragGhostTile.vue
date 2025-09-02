@@ -8,10 +8,10 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div v-if="TileEditor.state.drag.drop.tile == props.tile && !TileEditor.state.drag.drop.createGroup && TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+    <div v-if="TileEditor.drag.drop.tile == props.tile && !TileEditor.drag.drop.createGroup && TileEditor.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
     <div class="ghostDropGroup">
         <!-- this part looks jank - handles dropping with group creation -->
-        <div v-if="TileEditor.state.drag.drop.tile == props.tile && TileEditor.state.drag.drop.createGroup && TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+        <div v-if="TileEditor.drag.drop.tile == props.tile && TileEditor.drag.drop.createGroup && TileEditor.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
         <div :class="{
             ghostTile: true,
             ghostTileGroup: props.tile instanceof GroupTile,
@@ -21,16 +21,16 @@ const props = defineProps<{
                 <TileDragGhostTile v-for="child of props.tile.children" :key="child.id" :tile="child"></TileDragGhostTile>
             </template>
         </div>
-        <div v-if="TileEditor.state.drag.drop.tile == props.tile && TileEditor.state.drag.drop.createGroup && !TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+        <div v-if="TileEditor.drag.drop.tile == props.tile && TileEditor.drag.drop.createGroup && !TileEditor.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
     </div>
-    <div v-if="TileEditor.state.drag.drop.tile == props.tile && !TileEditor.state.drag.drop.createGroup && !TileEditor.state.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
+    <div v-if="TileEditor.drag.drop.tile == props.tile && !TileEditor.drag.drop.createGroup && !TileEditor.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>
 </template>
 
 <style scoped>
 .ghostDropGroup {
     box-sizing: border-box;
     display: flex;
-    flex-direction: v-bind("TileEditor.state.drag.drop.newGroupVertical ? 'column' : 'row'");
+    flex-direction: v-bind("TileEditor.drag.drop.newGroupVertical ? 'column' : 'row'");
     flex: v-bind("$props.tile.size");
     flex-basis: 0px;
     gap: 4px;
@@ -60,7 +60,7 @@ const props = defineProps<{
 }
 
 .ghostDropTarget {
-    flex: v-bind("TileEditor.state.drag.current?.size");
+    flex: v-bind("TileEditor.drag.current?.size");
     background-color: #FFF7;
 }
 </style>

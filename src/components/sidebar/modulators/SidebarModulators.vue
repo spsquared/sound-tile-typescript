@@ -173,6 +173,7 @@ function resetTileHover() {
     font-size: 16px;
     text-align: center;
     user-select: none;
+    /* make sure title renders above connection items when they're moving (transforms render on top) */
     z-index: 1;
 }
 

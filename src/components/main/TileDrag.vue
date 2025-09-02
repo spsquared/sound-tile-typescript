@@ -24,19 +24,19 @@ onUnmounted(() => {
 });
 const draggingPos = computed(() => ({
     // account for borders
-    x: mousePos.value.x - TileEditor.state.drag.offset.x - 4,
-    y: mousePos.value.y - TileEditor.state.drag.offset.y - 4
+    x: mousePos.value.x - TileEditor.drag.offset.x - 4,
+    y: mousePos.value.y - TileEditor.drag.offset.y - 4
 }));
 </script>
 
 <template>
-    <div id="tileDragContainer" v-if="TileEditor.state.drag.current !== null">
+    <div id="tileDragContainer" v-if="TileEditor.drag.current !== null">
         <div id="tileDragLayoutPreview">
             <TileDragGhostTile :tile="TileEditor.root"></TileDragGhostTile>
         </div>
         <div id="tileDragTile">
-            <component :is="TileEditor.state.drag.current.class.component" :tile="TileEditor.state.drag.current"></component>
-            <div id="tileDragTileHeader">{{ TileEditor.state.drag.current.label }}</div>
+            <component :is="TileEditor.drag.current.class.component" :tile="TileEditor.drag.current"></component>
+            <div id="tileDragTileHeader">{{ TileEditor.drag.current.label }}</div>
         </div>
     </div>
 </template>
@@ -63,7 +63,7 @@ const draggingPos = computed(() => ({
     width: 100vw;
     height: 100vh;
     border: 4px solid white;
-    opacity: v-bind("TileEditor.state.drag.sidebarDrop ? '0.5' : '1'");
+    opacity: v-bind("TileEditor.drag.sidebarDrop ? '0.5' : '1'");
     transition: 50ms linear opacity;
 }
 
@@ -72,8 +72,8 @@ const draggingPos = computed(() => ({
     position: absolute;
     top: v-bind("draggingPos.y + 'px'");
     left: v-bind("draggingPos.x + 'px'");
-    width: v-bind("TileEditor.state.drag.size.w + 'px'");
-    height: v-bind("TileEditor.state.drag.size.h + 'px'");
+    width: v-bind("TileEditor.drag.size.w + 'px'");
+    height: v-bind("TileEditor.drag.size.h + 'px'");
     border: 4px solid white;
     opacity: 0.5;
     pointer-events: none;
