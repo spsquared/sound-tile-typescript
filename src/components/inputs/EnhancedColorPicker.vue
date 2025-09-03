@@ -26,7 +26,6 @@ function togglePicker() {
     if (recentlyClosed) return;
     props.picker.open = !props.picker.open;
     if (pickerWindow.value !== null && pickerBadge.value !== null && props.picker.open) {
-        // useElementBounding doesn't work for some reason
         const rect = pickerBadge.value.getBoundingClientRect();
         pickerWindow.value.posX = rect.left;
         pickerWindow.value.posY = rect.top - 268;

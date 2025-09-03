@@ -283,7 +283,7 @@ export class Visualizer {
             }
         })();
         document.addEventListener('keydown', (e) => {
-            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.debugInfo = !VisualizerRenderer.debugInfo;
+            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.debugInfo = (VisualizerRenderer.debugInfo + 1) % 3 as any;
         });
     }
 }

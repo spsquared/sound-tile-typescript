@@ -41,7 +41,7 @@ export abstract class VisualizerRenderer {
     }
 
     static playing: boolean = false;
-    static debugInfo: boolean = false;
+    static debugInfo: 0 | 1 | 2 = 0;
 }
 
 /**
@@ -154,7 +154,7 @@ class VisualizerRenderInstance {
     private levelsData: number[] | null = null;
 
     playing: boolean = false;
-    debugInfo: boolean = false;
+    debugInfo: 0 | 1 | 2 = 0;
     private readonly frames: number[] = [];
     private readonly fpsHistory: number[] = [];
     private readonly timingsHistory: number[] = [];
@@ -265,14 +265,15 @@ class VisualizerRenderInstance {
             this.fpsHistory.shift();
         }
         this.fpsHistory.push(this.frames.length);
-        if (this.debugInfo) {
-            if (this.playing) this.printDebugInfo(buffer);
+        if (this.debugInfo > 0) {
+            if (this.playing && this.debugInfo == 2) this.printDebugInfo(buffer);
             this.ctx.resetTransform();
             this.ctx.font = '14px monospace';
-            const minArr = (a: number[]): number => a.reduce((p, c) => Math.min(p, c), 0);
-            const maxArr = (a: number[]): number => a.reduce((p, c) => Math.max(p, c), 0);
+            const minArr = (a: number[]): number => a.reduce((p, c) => Math.min(p, c), a[0]);
+            const maxArr = (a: number[]): number => a.reduce((p, c) => Math.max(p, c), a[0]);
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
+                isInWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
                 `PLAYING: ${this.playing}`,
                 `FPS: ${this.frames.length} (${minArr(this.fpsHistory)} / ${maxArr(this.fpsHistory)} / ${avgArr(this.fpsHistory).toFixed(1)})`,
                 `Timings: ${(endTime - startTime).toFixed(1)}ms (${minArr(this.timingsHistory).toFixed(1)}ms / ${maxArr(this.timingsHistory).toFixed(1)}ms / ${avgArr(this.timingsHistory).toFixed(1)}ms)`,
@@ -529,15 +530,15 @@ class VisualizerRenderInstance {
                 buffer: buffer.slice(0, windowSize),
                 shift: 0
             };
-            if (this.debugInfo) this.debugText.push(`Reset: ${windowSize}`);
+            if (this.debugInfo > 0) this.debugText.push(`Reset: ${windowSize}`);
         }
-        if (this.debugInfo) this.debugText.push(`Previous shift: ${this.corrwaveData.shift}`);
+        if (this.debugInfo == 2) this.debugText.push(`Previous shift: ${this.corrwaveData.shift}`);
         // only correlate when playing, otherwise retain shift
         let bestShift = this.corrwaveData.shift;
         if (this.playing) {
             // approximate lowest error by subtracting shifted window of buffer from smoothed temporal data
             const samples = Math.min(windowSize, this.data.waveOptions.correlation.samples);
-            if (this.debugInfo) this.debugText.push(`Samples: ${samples} / ${this.data.waveOptions.correlation.samples}`);
+            if (this.debugInfo == 2) this.debugText.push(`Samples: ${samples} / ${this.data.waveOptions.correlation.samples}`);
             const debugText: string[] = [];
             let bestError = Infinity;
             let lastShift = Infinity; // prevents calculating the same shift multiple times on edge cases
@@ -550,16 +551,14 @@ class VisualizerRenderInstance {
                 for (let j = 0; j < windowSize; j++) {
                     error += Math.abs(this.corrwaveData.buffer[j] - buffer[shift + j]);
                 }
-                if (this.debugInfo) debugText.push(`${i}/${shift}/${Math.round(error)}`);
+                if (this.debugInfo == 2) debugText.push(`${i}/${shift}/${Math.round(error)}`);
                 if (error < bestError) {
                     bestError = error;
                     bestShift = shift;
                 }
             }
-            if (this.debugInfo) {
-                this.debugText.push('Samples: ' + debugText.join(' '));
-                this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
-            }
+            if (this.debugInfo == 2) this.debugText.push('Samples: ' + debugText.join(' '));
+            if (this.debugInfo > 0) this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
             // gradient descent on lowest sample to minimize error
             let gain = this.data.waveOptions.correlation.gradientDescentGain;
             debugText.length = 0;
@@ -580,7 +579,7 @@ class VisualizerRenderInstance {
                 }
                 // get error for new shift
                 const newShift = Math.min(windowSize, Math.max(0, bestShift + Math.ceil(Math.abs((bestError - adjError) * gain)) * Math.sign(bestError - adjError)));
-                if (this.debugInfo) debugText.push(`${(bestError - adjError).toFixed(2)}/${bestShift}->${newShift}`);
+                if (this.debugInfo == 2) debugText.push(`${(bestError - adjError).toFixed(2)}/${bestShift}->${newShift}`);
                 if (bestShift == newShift) break;
                 let newError = 0;
                 // STOCHASTIC SAMPLING
@@ -593,10 +592,10 @@ class VisualizerRenderInstance {
                 } else {
                     // if it's worse then the gradient descent could be overtuned, automatically reduce gain
                     gain *= 0.8; // again arbitrary
-                    debugText.push(`gain=${gain.toFixed(3)}`);
+                    if (this.debugInfo == 2) debugText.push(`gain=${gain.toFixed(3)}`);
                 }
             }
-            if (this.debugInfo) {
+            if (this.debugInfo > 0) {
                 this.debugText.push('Gradient Descent: ' + debugText.join(' '));
                 this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
             }
@@ -618,7 +617,7 @@ class VisualizerRenderInstance {
             this.spectogramData = new OffscreenCanvas(this.data.freqOptions.spectrogram.historyLength, buffer.length);
             const ctx = this.spectogramData.getContext('2d')!;
             ctx.imageSmoothingEnabled = false;
-            if (this.debugInfo) this.debugText.push(`Reset: ${this.spectogramData.width}x${this.spectogramData.height}`);
+            if (this.debugInfo > 0) this.debugText.push(`Reset: ${this.spectogramData.width}x${this.spectogramData.height}`);
         }
         const spectFrame = this.spectogramData;
         const spectCtx = spectFrame.getContext('2d')!;
@@ -645,7 +644,7 @@ class VisualizerRenderInstance {
                 for (let i = 0; i < freqRange; i++) {
                     buckets[Math.min(maxBucket, Math.floor(buffer[i] * dataScale))].push(i);
                 }
-                if (this.debugInfo) this.debugText.push(`Quantization buckets: ${dataQuantize} - ${buckets.map((v) => v.length).join(', ')}`);
+                if (this.debugInfo == 2) this.debugText.push(`Quantization buckets: ${dataQuantize} - ${buckets.map((v) => v.length).join(', ')}`);
                 // buckets are drawn in consecutive blocks of the same color (probably unnecessary but original had it)
                 if (!altColor) spectCtx.fillStyle = '#FFFFFF';
                 for (let i = 0; i < dataQuantize; i++) {
@@ -662,7 +661,7 @@ class VisualizerRenderInstance {
                     }
                 }
             } else {
-                if (this.debugInfo) this.debugText.push('No quantizing')
+                if (this.debugInfo == 2) this.debugText.push('No quantizing')
                 if (altColor) {
                     for (let i = 0; i < freqRange; i++) {
                         spectCtx.fillStyle = this.colorScale(buffer[i] * scale).hex();
@@ -844,7 +843,7 @@ type RendererMessageData = {
     type: 'draw'
     buffer: Uint8Array | Float32Array | Uint8Array[]
     playing: boolean
-    debug: boolean
+    debug: 0 | 1 | 2
 } | ({
     type: 'drawResponse'
 } & VisualizerRendererFrameResults) | {

@@ -137,7 +137,7 @@ defineExpose({
     height: computed({ get: () => size.h, set: (h) => { size.h = h; fixDragPosition(); } }),
     open: () => open.value = true,
     close: () => open.value = false,
-    focus: bringToTop
+    focus: () => bringToTop()
 });
 const fixPosOnResize = useThrottleFn(fixDragPosition, 100, true, true);
 onMounted(() => window.addEventListener('resize', fixPosOnResize));

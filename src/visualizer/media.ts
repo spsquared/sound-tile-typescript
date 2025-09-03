@@ -200,6 +200,7 @@ export class Media implements MediaMetadata {
                     case 'cp': {
                         const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
                         visualizer.label = 'Channel Peaks Tile';
+                        visualizer.modulator.label = visualizer.label; // outside reactivity, update is manual
                         tile = visualizer;
                         break;
                     }

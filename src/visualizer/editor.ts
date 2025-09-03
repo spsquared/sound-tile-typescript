@@ -1,4 +1,4 @@
-import { computed, Prop, reactive, watch, watchEffect } from 'vue';
+import { computed, reactive, watch, watchEffect } from 'vue';
 import { useIdle } from '@vueuse/core';
 import { AsyncLock } from '@/components/scripts/lock';
 import { matchTextInput } from '@/constants';
