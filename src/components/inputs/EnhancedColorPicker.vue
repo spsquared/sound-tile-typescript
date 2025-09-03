@@ -166,7 +166,6 @@ function removeStop(i: number) {
     border-radius: 0px;
     flex-grow: 1;
     flex-basis: 0px;
-    transition: 50ms linear background-color;
     outline-offset: -1px;
 }
 

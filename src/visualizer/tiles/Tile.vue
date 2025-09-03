@@ -185,7 +185,6 @@ function setIdentifyTile(v: boolean) {
     background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
-    transition: 50ms linear background-color;
     cursor: pointer;
 }
 

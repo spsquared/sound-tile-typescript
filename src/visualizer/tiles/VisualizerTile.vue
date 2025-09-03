@@ -450,10 +450,10 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 }
 
 .optionsGrid>label {
+    grid-row: span 2;
     display: grid;
     grid-template-rows: subgrid;
     grid-template-columns: 1fr;
-    grid-row: span 2;
     align-items: center;
     justify-items: center;
     text-align: center;

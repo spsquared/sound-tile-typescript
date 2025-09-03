@@ -153,7 +153,6 @@ function endWheel() {
     width: var(--thumb-length);
     height: var(--thumb-width);
     border-radius: var(--thumb-radius);
-    transition: 50ms linear background-color;
     background-color: v-bind("$props.color3 ?? 'var(--input-color)'");
     background-image: v-bind('`url("${$props.icon}")`');
     background-position: center;

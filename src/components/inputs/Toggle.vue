@@ -54,7 +54,7 @@ defineExpose({
     height: 12px;
     background-color: v-bind("$props.color1 ?? '#F00'");
     border: var(--border-width) solid white;
-    transition: 0.1s linear background-color;
+    transition: 100ms linear background-color;
     pointer-events: none;
 }
 
@@ -67,7 +67,7 @@ defineExpose({
     height: 22px;
     background-color: v-bind("$props.color3 ?? 'var(--input-color)'");
     border-radius: 4px;
-    transition: 0.1s linear transform;
+    transition: 100ms linear transform;
     transform: translateX(-4px);
     background-image: v-bind('`url("${$props.icon}")`');
     background-position: center;

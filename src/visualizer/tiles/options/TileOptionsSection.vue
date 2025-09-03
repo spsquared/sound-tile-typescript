@@ -45,7 +45,6 @@ const { height } = useElementSize(bodyEl);
     display: flex;
     border-bottom: 4px solid #555;
     background-color: #222;
-    transition: 50ms linear background-color;
     cursor: pointer;
     user-select: none;
 }

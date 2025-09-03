@@ -50,7 +50,6 @@ label[button] {
     border-radius: var(--input-border-radius);
     background-color: var(--input-color);
     color: white;
-    transition: 50ms linear background-color;
     cursor: pointer;
 }
 
