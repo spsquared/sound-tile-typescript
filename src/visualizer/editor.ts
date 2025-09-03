@@ -312,7 +312,14 @@ export class TileEditor {
             const halfHeight = rect.height / 2;
             const halfBoxWidth = Math.min(12 * Math.log(rect.width + 1), rect.width * 0.6);
             const halfBoxHeight = Math.min(12 * Math.log(rect.height + 1), rect.height * 0.6);
-            if (relY < halfBoxHeight && relX > halfWidth - halfBoxWidth && relX < halfWidth + halfBoxWidth) {
+            if (currTile.parent?.orientation === GroupTile.COLLAPSED) {
+                // center box, special case for collapsed groups (and only)
+                if (Math.max(Math.abs(relX - halfWidth), Math.abs(relY - halfHeight)) < Math.min(halfWidth, halfHeight) / 2) {
+                    this.drag.drop.tile = currTile.parent.children[currTile.parent.children.length - 1];
+                    this.drag.drop.insertBefore = false;
+                    this.drag.drop.createGroup = false;
+                }
+            } else if (relY < halfBoxHeight && relX > halfWidth - halfBoxWidth && relX < halfWidth + halfBoxWidth) {
                 // top box
                 this.drag.drop.tile = currTile;
                 this.drag.drop.insertBefore = true;
@@ -352,10 +359,6 @@ export class TileEditor {
                     this.drag.drop.createGroup = true;
                     this.drag.drop.newGroupVertical = false;
                 }
-            } else if (Math.max(Math.abs(relX - halfWidth), Math.abs(relY - halfHeight)) < Math.min(halfWidth, halfHeight) / 2 && currTile.parent?.orientation === GroupTile.COLLAPSED) {
-                // center box, special case for collapsed groups (append to end)
-                this.drag.drop.tile = currTile;
-                this.drag.drop.createGroup = false;
             } else if (currTile.parent !== null) {
                 currTile = currTile.parent;
                 continue;
