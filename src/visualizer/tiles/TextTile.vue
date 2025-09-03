@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useThrottle, useThrottleFn } from '@vueuse/core';
+import { ref, watch } from 'vue';
+import { useThrottleFn } from '@vueuse/core';
 import { sanitize } from '@/components/scripts/htmlSanitize';
 import TileEditor from '../editor';
 import { TextTile } from '../tiles';
@@ -18,8 +18,12 @@ const setText = useThrottleFn((v: string) => {
     props.tile.text = v;
 }, 50);
 
-const throttledText = useThrottle(computed(() => props.tile.text), 100);
-const sanitizedText = computed(() => sanitize(throttledText.value));
+// text still has to be sanitized to avoid XSS through saving payloads in a file
+watch(() => props.tile.text, useThrottleFn(async (dirty) => {
+    const clean = await sanitize(dirty);
+    sanitizedText.value = clean;
+}, 100))
+const sanitizedText = ref('');
 </script>
 
 <template>

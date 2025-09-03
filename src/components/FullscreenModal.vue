@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
-import * as focusTrap from 'focus-trap';
+import { createFocusTrap, FocusTrap } from 'focus-trap';
 import { matchInput } from '@/constants';
 import { AsyncLock } from './scripts/lock';
 
@@ -25,7 +25,7 @@ const emit = defineEmits<{
     (e: 'close', res: boolean): any
 }>();
 
-let ftrap: focusTrap.FocusTrap | undefined = undefined;
+let ftrap: FocusTrap | undefined = undefined;
 function close(res: boolean) {
     open.value = false;
     openLock.release();
@@ -52,7 +52,7 @@ function keydown(e: KeyboardEvent) {
 watch(body, () => {
     // this bit manages focus, depends on template refs
     if (body.value !== null) {
-        ftrap = focusTrap.createFocusTrap(body.value, {
+        ftrap = createFocusTrap(body.value, {
             onDeactivate: () => close(false),
             initialFocus: body.value.querySelector('.modalButton') as HTMLElement
         });
