@@ -143,7 +143,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                                 <option :value="VisualizerMode.CHANNEL_PEAKS">Channel Levels</option>
                             </select>
                         </label>
-                        <label title="FFT window size - larger FFT increases frequency resolution">
+                        <label title="FFT window size - larger FFT increases frequency resolution" v-if="options.mode != VisualizerMode.CHANNEL_PEAKS">
                             FFT
                             <select v-model="options.fftSize">
                                 <option v-for="size in fftSizes" :key="size" :value="size">{{ size }}</option>

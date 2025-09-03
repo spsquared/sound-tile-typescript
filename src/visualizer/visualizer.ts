@@ -60,6 +60,8 @@ export class Visualizer {
                 else this.stop();
             }, { immediate: true });
             watch(this.visible, () => {
+                if (this.visible.value) Visualizer.instances.add(this);
+                else Visualizer.instances.delete(this);
                 Visualizer.recalculateDuration();
                 if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();
                 else this.stop();
@@ -114,7 +116,6 @@ export class Visualizer {
                 }
             });
         });
-        Visualizer.instances.add(this);
     }
 
     private drawing: boolean = false;
@@ -208,7 +209,7 @@ export class Visualizer {
         return this.audioBuffer?.duration ?? 0;
     }
 
-    destroy(): void {
+    destroy: () => void = () => {
         this.stop();
         this.effectScope.stop();
         this.gain.disconnect();
@@ -216,6 +217,7 @@ export class Visualizer {
         Visualizer.recalculateDuration();
     }
 
+    /**All **VISIBLE** instances of visualizers - maintained by the visualizer instances themselves */
     private static readonly instances: Set<Visualizer> = new Set();
     /**Internal timekeeping to synchronize visualizer playback states */
     private static readonly time: {
@@ -229,9 +231,7 @@ export class Visualizer {
         this.time.startTime = this.audioContext.currentTime - time;
         this.time.playing = true;
         VisualizerRenderer.playing = true;
-        for (const vis of this.instances) {
-            if (vis.visible.value) vis.start();
-        }
+        for (const vis of this.instances) vis.start();
         this.audioContext.resume();
     }
     static stop(): void {
@@ -240,12 +240,12 @@ export class Visualizer {
         for (const vis of this.instances) vis.stop();
         this.audioContext.suspend();
     }
-    // refs allow reactivity without random refs
+    // private refs allow reactivity without random refs
     private static readonly _duration: Ref<number> = ref(0);
     private static recalculateDuration(): void {
         let time = 0;
         for (const vis of this.instances) {
-            if (vis.visible.value && vis.duration > time) time = vis.duration;
+            if (vis.duration > time) time = vis.duration;
         }
         this._duration.value = time;
     }
@@ -269,7 +269,7 @@ export class Visualizer {
     }
 
     private static async draw(): Promise<void> {
-        await Promise.all(Array.from(this.instances.values()).filter((v) => v.visible.value).map((v) => v.draw()));
+        await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
     }
 
     static {

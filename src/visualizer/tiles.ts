@@ -177,6 +177,7 @@ export class GroupTile extends Tile {
         } else {
             if (this.children.length == 0) this.destroy();
             else if (this.children.length == 1) {
+                this.parent.copyProperties(this);
                 const parent = this.parent;
                 const child = this.children[0];
                 child.parent = null;
@@ -191,6 +192,7 @@ export class GroupTile extends Tile {
     copyProperties(o: GroupTile) {
         this.orientation = o.orientation;
         this.borderColor.colorData = o.borderColor.colorData;
+        this.backgroundColor.colorData = o.backgroundColor.colorData;
         this.hideBorders = o.hideBorders;
     }
 
