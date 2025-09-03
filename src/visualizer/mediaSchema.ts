@@ -133,9 +133,14 @@ export namespace MediaSchema {
     /**
      * Convert legacy (old Sound Tile) color data into the enhanced color picker format.
      * @param color Color in old format
+     * @param preserveGradientStops Do not "fix" ordering of stops: New gradients have their axes transformed
+     * to match the visualizer's axes, so stop positions must be inverted for the new format. However
+     * "alt color" modes do not apply, so use this option to skip the fix.
+     * @param applyPositionToAlpha The luminance bars mode used to apply alpha as well as the color gradient in "alt color"
+     * mode, however the new mode does not. Use this to multiply stop alphas by their position.
      * @returns Color in new format
      */
-    export function translateLegacyColorData(color: string | LegacyColorData, preserveGradientStops: boolean = false): ColorData {
+    export function translateLegacyColorData(color: string | LegacyColorData, preserveGradientStops: boolean = false, applyPositionToAlpha: boolean = false): ColorData {
         if (typeof color == 'string') {
             return {
                 type: 'solid',
@@ -151,10 +156,11 @@ export namespace MediaSchema {
         } else if (color.mode == 1) {
             // new gradients have the y-axis flipped to match the visualizer y-axis so old gradients are upside-down
             // also includes fix for gradients that technically use undefined behavior (two stops with the same position)
+            const stops = (color.value.type == 1 || preserveGradientStops) ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))).reverse();
             return {
                 type: 'gradient',
                 pattern: (['linear', 'radial', 'conic'] as const)[color.value.type],
-                stops: (color.value.type == 1 || preserveGradientStops) ? color.value.stops.map((([t, c]) => ({ t: t, c: c, a: 1 }))) : color.value.stops.map((([t, c]) => ({ t: 1 - t, c: c, a: 1 }))).reverse(),
+                stops: applyPositionToAlpha ? stops.map((s) => (s.a = s.t, s)) : stops,
                 x: color.value.x,
                 y: 1 - color.value.y,
                 radius: color.value.r,
@@ -197,7 +203,7 @@ export namespace MediaSchema {
             mode: legacyModeTranslator[data.mode] ?? VisualizerMode.FREQ_BAR,
             gain: data?.volume,
             mute: data?.muteOutput,
-            color: translateLegacyColorData(data.color, data.altColor && [0, 1, 8].includes(data.mode)),
+            color: translateLegacyColorData(data.color, data.altColor && [0, 1, 8].includes(data.mode), data.altColor && data.mode == 8),
             color2: translateLegacyColorData(data.color2),
             color2Alpha: data.fillAlpha,
             altColorMode: data.altColor,

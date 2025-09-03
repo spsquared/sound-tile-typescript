@@ -388,7 +388,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         Alpha
                         <StrictNumberInput v-model="options.color2Alpha" :min="0" :max="1" :step="0.01"></StrictNumberInput>
                     </label>
-                    <label title="Apply color pallete using alternative style" v-if="altColorSupportedModes.includes(options.mode)">
+                    <label title="Apply color pallete using alternative style" v-if="altColorSupportedModes.includes(options.mode) && options.color.type == 'gradient'">
                         Alt Color
                         <Toggle v-model="options.altColorMode"></Toggle>
                     </label>
