@@ -210,6 +210,7 @@ export class Visualizer {
     }
 
     destroy: () => void = () => {
+        // weird syntax stops reactive() wrapper somewhere else in the code turning the "this" object into a proxy and borking everything
         this.stop();
         this.effectScope.stop();
         this.gain.disconnect();

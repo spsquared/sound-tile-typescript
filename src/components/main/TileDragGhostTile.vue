@@ -28,6 +28,8 @@ const props = defineProps<{
 
 <style scoped>
 .ghostDropGroup {
+    grid-row: 1;
+    grid-column: 1;
     box-sizing: border-box;
     display: flex;
     flex-direction: v-bind("TileEditor.drag.drop.newGroupVertical ? 'column' : 'row'");
@@ -37,6 +39,8 @@ const props = defineProps<{
 }
 
 .ghostTile {
+    grid-row: 1;
+    grid-column: 1;
     box-sizing: border-box;
     margin: -2px -2px;
     border: 2px solid white;
