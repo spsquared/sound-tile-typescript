@@ -47,7 +47,7 @@ function openChildren() {
 }
 
 function toggleEditTile() {
-    props.tile.editPaneOpen = !props.tile.editPaneOpen;
+    props.tile.editWindowOpen = !props.tile.editWindowOpen;
 }
 
 const destroyDisabled = computed(() => props.root || TileEditor.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);

@@ -59,7 +59,7 @@ async function uploadImage() {
             <div class="imageWrapper" ref="imageWrapper">
                 <img :class="{
                     image: true,
-                    draggableImage: props.tile.editPaneOpen && !inCollapsedGroup
+                    draggableImage: props.tile.editWindowOpen && !inCollapsedGroup
                 }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" @load="resizeImage">
             </div>
             <div class="imageUploadCover" v-if="props.tile.imgSrc == ''">

@@ -44,7 +44,7 @@ export class Tile {
     /**ID used by Vue indexing */
     readonly id: number;
     /**Ref used in components to open window */
-    editPaneOpen: boolean = false;
+    editWindowOpen: boolean = false;
 
     /**DOM element, only exists while mounted (set by component) */
     element: HTMLElement | null = null;

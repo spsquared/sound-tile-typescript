@@ -303,8 +303,9 @@ export namespace Modulation {
 
     /**Allows transformation of modulation values. */
     export abstract class Transform<T> {
-        abstract type: `${any}`;
+        abstract readonly type: `${any}`;
         abstract data: unknown;
+        abstract readonly typeLabel: `${any}`;
 
         abstract apply(n: T): T;
     }
@@ -314,8 +315,9 @@ export namespace Modulation {
 
     /**Applies a constant offset to the value: x + a. */
     export class ConstantOffsetTransform extends Transform<number> {
-        type: 'constant' = 'constant';
+        readonly type: 'constant' = 'constant';
         data: number;
+        readonly typeLabel: 'number' = 'number';
 
         constructor(data?: number) {
             super();
@@ -329,8 +331,9 @@ export namespace Modulation {
 
     /**Applies a linear scale and offset to the value: ax + b . */
     export class LinearTransform extends Transform<number> {
-        type: 'linearScale' = 'linearScale';
+        readonly type: 'linearScale' = 'linearScale';
         data: [number, number];
+        readonly typeLabel: 'number' = 'number';
 
         constructor(data?: [number, number]) {
             super();
@@ -344,8 +347,9 @@ export namespace Modulation {
 
     /**Calculates a polynomial function of any (until fp error borks it) degree: a + bx + cx^2 ... */
     export class PolynomialTransform extends Transform<number> {
-        type: 'polynomial' = 'polynomial';
+        readonly type: 'polynomial' = 'polynomial';
         data: number[];
+        readonly typeLabel: 'number' = 'number';
 
         constructor(data?: number[]) {
             super();
@@ -363,8 +367,9 @@ export namespace Modulation {
 
     /**Calculates an exponential function: a * (b^x) */
     export class ExponentialTransform extends Transform<number> {
-        type: 'exponential' = 'exponential';
+        readonly type: 'exponential' = 'exponential';
         data: [number, number];
+        readonly typeLabel: 'number' = 'number';
 
         constructor(data?: [number, number]) {
             super();

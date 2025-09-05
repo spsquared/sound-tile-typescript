@@ -39,6 +39,8 @@ watch([modKeyElements, () => TileEditor.modulatorDrag.source !== null], () => {
                 hoverIds.push(hoverId);
                 const { isOutside } = useMouseInElement(el);
                 watch(isOutside, (outside) => {
+                    // TODO / WARNING: runtime type checks hasn't been implemented yet!
+                    // you can connect a string source to a number target - but also there's only numbers right now
                     if (modItemComponent.value?.dragOpenDropdown && !outside && !props.target.connected(key)) {
                         // can only start hover over one thing at a time, this is fine
                         // hover counter only handles ending hover

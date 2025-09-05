@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { throttledRef, useElementSize } from '@vueuse/core';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
@@ -66,10 +66,20 @@ function resetLabelScroll() {
     if (label.value !== null && !labelFocused) label.value.scrollLeft = 0;
 }
 
+const editButton = useTemplateRef('editButton');
+const editWindow = useTemplateRef('editWindow');
 function toggleEditTile() {
-    props.tile.editPaneOpen = !props.tile.editPaneOpen;
+    props.tile.editWindowOpen = !props.tile.editWindowOpen;
 }
-onBeforeUnmount(() => props.tile.editPaneOpen = false);
+watch(() => props.tile.editWindowOpen, () => {
+    // positions window when edit window opened by other code
+    if (props.tile.editWindowOpen && editButton.value !== null && editWindow.value !== null) {
+        const rect = editButton.value.getBoundingClientRect();
+        editWindow.value.posX = rect.x;
+        editWindow.value.posY = rect.y - editWindow.value.height - 32;
+    }
+})
+onBeforeUnmount(() => props.tile.editWindowOpen = false);
 
 function setIdentifyTile(v: boolean) {
     TileEditor.state.editWindowIdentifyTile = v ? props.tile : null;
@@ -85,11 +95,9 @@ function setIdentifyTile(v: boolean) {
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
-        <input type="button" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" class="tileEditButton" title="Edit tile options" @click="toggleEditTile">
-        <Transition name="outline">
-            <div class="tileOutline" v-if="TileEditor.state.sidebarIdentifyTile === props.tile || TileEditor.state.editWindowIdentifyTile === props.tile"></div>
-        </Transition>
-        <DraggableWindow v-model="props.tile.editPaneOpen" :title="props.tile.label" :border-color="TileEditor.state.sidebarIdentifyTile === props.tile ? 'cyan' : 'white'" frosted overflow-y="scroll" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
+        <input type="button" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" class="tileEditButton" ref="editButton" title="Edit tile options" @click="toggleEditTile">
+        <div class="tileOutline" v-if="TileEditor.state.sidebarIdentifyTile === props.tile || TileEditor.state.editWindowIdentifyTile === props.tile"></div>
+        <DraggableWindow ref="editWindow" v-model="props.tile.editWindowOpen" :title="props.tile.label" :border-color="TileEditor.state.sidebarIdentifyTile === props.tile ? 'cyan' : 'white'" frosted overflow-y="scroll" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
             <template v-slot:bar>
                 <div class="optionsBarIdentify" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
                     ID
@@ -229,19 +237,8 @@ function setIdentifyTile(v: boolean) {
     height: 100%;
     outline: 4px dashed cyan;
     outline-offset: -4px;
-    transition: 50ms linear opacity;
     pointer-events: none;
     z-index: 100;
-}
-
-.outline-enter-from,
-.outline-leave-to {
-    opacity: 0;
-}
-
-.outline-enter-to,
-.outline-leave-from {
-    opacity: 1;
 }
 
 .optionsBarIdentify {
