@@ -37,8 +37,8 @@ function resetTileHover() {
 </script>
 
 <template>
-    <div class="connectionEntry">
-        <input type="button" class="connectionDelete" @click="disconnect">
+    <div class="connectionEntry" :title="`Edit transforms for connection ${props.connection.source.label} [${props.connection.sourceKey}] > ${props.connection.target.label} [${props.connection.targetKey}]`">
+        <input type="button" class="connectionDelete" title="Disconnect modulation" @click="disconnect">
         <div class="connectionLabel" ref="connectionLabel" @click="openWindow">
             <div>
                 <span v-if="props.type != 'source'">{{ props.connection.source.label + ' ' }}</span>
@@ -56,9 +56,9 @@ function resetTileHover() {
     <div class="connectionDivider"></div>
     <DraggableWindow v-model="windowOpen" ref="transformsWindow" title="Transforms" :min-width="400" :min-height="200" resize-height close-on-click-out>
         <div class="connectionLabel transformsConnectionHeader">
-            <div @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
+            <div :title="`Source: ${props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
             <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
-            <div @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
+            <div :title="`Target: ${props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
         </div>
         <div class="transformsContainer">
             <div class="transformItem" v-for="t, i in props.connection.transforms" :key="i">

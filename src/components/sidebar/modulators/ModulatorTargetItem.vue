@@ -69,7 +69,7 @@ watch(() => globalHoverCounter.size, () => globalHoverCounter.size == 0 ? TileEd
                 targetDrop: true,
                 targetDropAccepting: TileEditor.modulatorDrag.target === props.target && TileEditor.modulatorDrag.targetKey == key,
                 targetDropFull: props.target.connected(key)
-            }" :ref="key"></div>
+            }" :ref="key" :title="props.target.connected(key) ? 'Target is already connected' : 'Drag source here to create a connection'"></div>
         </template>
     </ModulatorItem>
 </template>

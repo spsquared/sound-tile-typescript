@@ -70,8 +70,8 @@ function deleteTile() {
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
-            <div class="editItemDrag" v-if="!destroyDisabled" @mousedown="dragTile"></div>
-            <input type="button" class="editItemEditButton" @click="toggleEditTile">
+            <div class="editItemDrag" v-if="!destroyDisabled" title="Move tile" @mousedown="dragTile"></div>
+            <input type="button" class="editItemEditButton" title="Edit tile options" @click="toggleEditTile">
             <input type="button" class="editItemDeleteButton" title="Delete Tile" @click="deleteTile" :disabled="destroyDisabled">
             <div class="editItemDragDropBar" v-if="TileEditor.drag.current !== null && props.tile === TileEditor.drag.drop.tile"></div>
         </div>

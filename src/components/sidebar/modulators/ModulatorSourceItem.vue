@@ -28,7 +28,7 @@ function startDrag(key: string) {
 <template>
     <ModulatorItem type="source" :label="props.label" :tile="props.source.tile" :connections="connections" :modulation-keys="modKeys">
         <template v-for="key in modKeys" v-slot:[key]>
-            <div class="sourceDrag" @mousedown="startDrag(key)"></div>
+            <div class="sourceDrag" title="Drag to a target to create a connection" @mousedown="startDrag(key)"></div>
         </template>
     </ModulatorItem>
 </template>

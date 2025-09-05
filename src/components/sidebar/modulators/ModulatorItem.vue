@@ -49,9 +49,9 @@ let dropdownIdCounter = 0;
     <div :class="{
         modItem: true,
         modItemIdentify: TileEditor.state.editWindowIdentifyTile === (props.tile ?? 1) /* diff type */
-    }" ref="modItem">
+    }" ref="modItem" :title="props.tile !== null ? `Tile associated with source: ${props.label}` : `Source: ${props.label}`">
         <div class="modLabel">{{ props.label }}</div>
-        <div :class="{ modDragContainer: true, modDragContainerAlwaysOpen: dragOpenDropdown }">
+        <div :class="{ modDragContainer: true, modDragContainerAlwaysOpen: dragOpenDropdown }" title="">
             <div class="modDragDropdown" ref="modDragDropdown">
                 <div class="modDragDropdownBorder"></div>
                 <div class="modDragDropdownHeader">{{ props.type == 'source' ? 'Sources' : 'Targets' }}</div>
@@ -166,6 +166,7 @@ let dropdownIdCounter = 0;
     border-radius: 6px;
     background-color: color-mix(in hsl, var(--mod-drag-color) 80%, black 20%);
     align-content: center;
+    user-select: none;
 }
 
 .modDragDropdownBorder {
