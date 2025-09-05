@@ -38,9 +38,10 @@ const props = defineProps<{
 }
 
 .sidebarHeader {
-    background-color: #333;
+    height: 24px;
     padding: 4px 4px;
     border-bottom: 4px solid white;
+    background-color: #333;
     font-size: 18px;
     transition: 200ms ease transform;
     text-align: center;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, Raw, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, Raw, ref, useTemplateRef, watch } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { ImageTile, Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -15,44 +15,75 @@ const container = useTemplateRef('container');
 const { width } = useElementSize(container);
 const horizontal = computed(() => width.value > 500);
 
-const debouncedTiles = useDebounce(TileEditor.currentTiles, 100);
+let resizingSplit = false;
+let resizingConnections = false;
+function mouseMove(e: MouseEvent) {
+    // if any styling anywhere changes this is all borking
+    if (resizingSplit) {
+        if (horizontal.value) {
+            const width = window.innerWidth * TileEditor.state.sidebarScreenWidth / 100 - 4;
+            splitPaneSize.value = Math.max(0.3, Math.min(0.7, (e.clientX - window.innerWidth + width + 2) / (width)));
+        } else {
+            const height = (window.innerHeight - 40) * (1 - connectionsPaneSize.value) - 4;
+            splitPaneSize.value = Math.max(0.3, Math.min(0.7, (e.clientY - 38) / height));
+        }
+        e.preventDefault();
+    } else if (resizingConnections) {
+        // this one's not perfect but who really cares that much
+        connectionsPaneSize.value = Math.max(0.1, Math.min(0.5, 1 - ((e.clientY - 36) / (window.innerHeight - 36))));
+        e.preventDefault();
+    }
+}
+function beginResizeSplit(e: MouseEvent) {
+    resizingSplit = true;
+    mouseMove(e);
+}
+function beginResizeConnections(e: MouseEvent) {
+    resizingConnections = true;
+    mouseMove(e);
+}
+function endResize() {
+    resizingSplit = false;
+    resizingConnections = false;
+}
+onMounted(() => {
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mouseup', endResize);
+    document.addEventListener('blur', endResize);
+});
+onUnmounted(() => {
+    document.removeEventListener('mousemove', mouseMove);
+    document.removeEventListener('mouseup', endResize);
+    document.removeEventListener('blur', endResize);
+});
+
 // so the thing I warned about in the TileEditor root tile comment is happening
 // ref unwrapping FUCKS AROUND with MY SHIT and FOR WHAT??? 6 CHARACTERS SAVED WHEN TYPING????
 // not to mention that it DESTROYS type annotations by giving you MASSIVE NESTED OBJECTS full of BULLSHIT
 // instead of just giving you... idk... a CLASS NAME???
-const sourceList = ref<{
-    tile: Tile
-    // misleading type here - it's not raw but this is easier than spaghetti reactive type or "any"
-    // thanks vue for deleting my private members that are still there and then complaining that they're not there
-    source: Raw<Modulation.Source<any>>
-}[]>([]);
+
+const debouncedTiles = useDebounce(TileEditor.currentTiles, 100);
+// misleading type here - it's not raw but this is easier than spaghetti reactive type or "any"
+// thanks vue for deleting my private members that are still there and then complaining that they're not there
+const sourceList = ref<Raw<Modulation.Source<any>>[]>([]);
 watch(debouncedTiles, () => {
     const tiles: typeof sourceList.value = [];
     for (const tile of debouncedTiles.value) {
-        if (tile instanceof VisualizerTile) tiles.push({
-            tile: tile,
-            source: tile.modulator // this is actually reactive because it was pulled out of the reactive root tile
-        });
+        if (tile instanceof VisualizerTile) tiles.push(tile.modulator); // this is actually reactive because it was pulled out of the reactive root tile
     }
     sourceList.value = tiles;
 }, {
     // onTrack: () => console.debug('track source list'),
     // onTrigger: () => console.debug('trigger source list change')
 });
-const targetList = ref<{
-    tile: Tile
-    // have to fake rawness because automatic ref unwrapping fucks around with the source class in connectedSources
-    // even though for some fucking reason it's TOTALLY FINE in the code above
-    // NO WAIT, NEVERMIND! PRIVATE MEMBERS ARE SHAFTED BY THE REACTIVE TYPE, IT'S NOT FINE
-    target: Raw<Modulation.Target<any>>
-}[]>([]);
+// have to fake rawness because automatic ref unwrapping fucks around with the source class in connectedSources
+// even though for some fucking reason it's TOTALLY FINE in the code above
+// NO WAIT, NEVERMIND! PRIVATE MEMBERS ARE SHAFTED BY THE REACTIVE TYPE, IT'S NOT FINE
+const targetList = ref<Raw<Modulation.Target<any>>[]>([]);
 watch(debouncedTiles, () => {
     const tiles: typeof targetList.value = [];
     for (const tile of debouncedTiles.value) {
-        if (tile instanceof ImageTile) tiles.push({
-            tile: tile,
-            target: tile.modulation // also actually reactive but also tiles might not be reactive who knows??????????
-        });
+        if (tile instanceof ImageTile) tiles.push(tile.modulation); // also actually reactive but also tiles might not be reactive who knows??????????
     }
     targetList.value = tiles;
 }, {
@@ -60,7 +91,7 @@ watch(debouncedTiles, () => {
     // onTrigger: () => console.debug('trigger target list change')
 });
 // this isnt cumbersome at all
-const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap(({ source }) =>
+const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap((source) =>
     // this is the kind of bullshit I have to pull because of ref unwrapping
     Object.entries(source.connectedTargets).flatMap(([sourceKey, targets]) =>
         targets.map(([target, targetKey, transforms]) => ({
@@ -97,19 +128,19 @@ function resetTileHover() {
             <div :id="horizontal ? 'modSplitContainerHorizontal' : 'modSplitContainerVertical'" ref="container">
                 <div id="modSourceContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Sources</div>
-                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile.id" :label="s.source.label" :source="s.source" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
+                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile?.id ?? s.label" :label="s.label" :source="s" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
                 </div>
                 <div id="modTargetContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Targets</div>
-                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile.id" :label="t.target.label" :target="t.target" @mouseenter="setTileHover(t.tile as Tile)" @mouseleave="resetTileHover"></ModulatorTargetItem>
+                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile?.id ?? t.label" :label="t.label" :target="t" @mouseenter="setTileHover(t.tile as Tile)" @mouseleave="resetTileHover"></ModulatorTargetItem>
                 </div>
                 <div id="modConnectionsContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Connections</div>
                     <!-- using index is temporary but will probably stay forever - there aren't many things being updated anyway -->
                     <ModulatorConnectionItem v-for="c, i in connectionList" :key="i" :index="i" :connection="c"></ModulatorConnectionItem>
                 </div>
-                <div id="modConnectionsResize"></div>
-                <div id="modSplitResize"></div>
+                <div id="modSplitResize" @mousedown="beginResizeSplit"></div>
+                <div id="modConnectionsResize" @mousedown="beginResizeConnections"></div>
             </div>
         </template>
     </SidebarContentWrapper>
@@ -159,7 +190,8 @@ function resetTileHover() {
     flex-direction: column;
     padding: 8px 8px;
     row-gap: 8px;
-    overflow-y: auto;
+    /* sort of have to keep scrollbar gutter because of oscillating stuff */
+    overflow-y: scroll;
 }
 
 .modGroupTitle {
@@ -173,8 +205,8 @@ function resetTileHover() {
     font-size: 16px;
     text-align: center;
     user-select: none;
-    /* make sure title renders above connection items when they're moving (transforms render on top) */
-    z-index: 1;
+    /* make sure title renders above connection items and drag-and-drop dropdowns */
+    z-index: 3;
 }
 
 .modGroupTitle::after {
@@ -208,9 +240,10 @@ function resetTileHover() {
     content: ' ';
     /* another cursor interaction thing (too bad it doesn't work outside of sidebar) */
     position: fixed;
-    top: -100vh;
-    left: -100vw;
-    width: 200vw;
-    height: 200vh;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 601;
 }
 </style>

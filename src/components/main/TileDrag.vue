@@ -1,31 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed } from 'vue';
+import { useMouse } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import TileDragGhostTile from './TileDragGhostTile.vue';
 
-const mousePos = ref({ x: 0, y: 0 });
-function mouseMove(e: MouseEvent) {
-    mousePos.value.x = e.clientX;
-    mousePos.value.y = e.clientY;
-}
-function touchMove(e: TouchEvent) {
-    // no touch tracking
-    const touch = e.touches[0];
-    mousePos.value.x = touch?.clientX ?? 0;
-    mousePos.value.y = touch?.clientY ?? 0;
-}
-onMounted(() => {
-    document.addEventListener('mousemove', mouseMove);
-    document.addEventListener('touchmove', touchMove);
-});
-onUnmounted(() => {
-    document.removeEventListener('mousemove', mouseMove);
-    document.removeEventListener('touchmove', touchMove);
-});
+const mousePos = useMouse();
 const draggingPos = computed(() => ({
     // account for borders
-    x: mousePos.value.x - TileEditor.drag.offset.x - 4,
-    y: mousePos.value.y - TileEditor.drag.offset.y - 4
+    x: mousePos.x.value - TileEditor.drag.offset.x - 4,
+    y: mousePos.y.value - TileEditor.drag.offset.y - 4
 }));
 </script>
 

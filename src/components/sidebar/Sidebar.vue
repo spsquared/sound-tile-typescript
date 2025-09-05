@@ -32,7 +32,7 @@ onUnmounted(() => document.removeEventListener('keydown', keydown));
 let resizing = false;
 function mouseMove(e: MouseEvent) {
     if (!resizing) return;
-    TileEditor.state.sidebarScreenWidth = 100 * (1 - Math.max(0, e.clientX / window.innerWidth));
+    TileEditor.state.sidebarScreenWidth = 100 * (1 - Math.max(0, Math.min(window.innerWidth - TileEditor.state.minSidebarWidthPx, e.clientX - 2) / window.innerWidth));
     e.preventDefault();
 }
 function beginResize(e: MouseEvent) {
@@ -163,6 +163,7 @@ onUnmounted(() => {
     left: -100vw;
     width: 200vw;
     height: 100vh;
+    z-index: 601;
 }
 
 .v-enter-from,

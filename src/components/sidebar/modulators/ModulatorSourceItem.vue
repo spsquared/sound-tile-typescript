@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import ModulatorItem from './ModulatorItem.vue';
 
@@ -17,20 +18,44 @@ const connections = computed<Modulation.Connection[]>(() =>
         transforms: transforms
     })))
 );
+const modKeys = computed(() => Object.keys(props.source.sources));
+
+function startDrag(key: string) {
+    TileEditor.startModulatorDrag(props.source, key);
+}
 </script>
 
 <template>
-    <ModulatorItem :label="props.label" :connections="connections">
-        <div class="sourceDrag"></div>
+    <ModulatorItem type="source" :label="props.label" :tile="props.source.tile" :connections="connections" :modulation-keys="modKeys">
+        <template v-for="key in modKeys" v-slot:[key]>
+            <div class="sourceDrag" @mousedown="startDrag(key)"></div>
+        </template>
     </ModulatorItem>
 </template>
 
 <style scoped>
 .sourceDrag {
-    width: 32px;
-    height: 24px;
+    width: 48px;
+    height: 32px;
+    border-radius: 8px;
     background-color: var(--logo-green);
-    border-radius: 6px;
     cursor: grab;
+    align-content: center;
+    justify-items: center;
+}
+
+.sourceDrag::after {
+    display: block;
+    content: ' ';
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 50%;
+    background-color: color-mix(in hsl, var(--logo-green) 80%, black 20%);
+    transition: 200ms ease min-width, 200ms ease min-height;
+}
+
+.sourceDrag:hover::after {
+    min-width: 24px;
+    min-height: 24px;
 }
 </style>

@@ -1,32 +1,66 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
+import TileEditor from '@/visualizer/editor';
+import { Tile } from '@/visualizer/tiles';
 import Modulation from '@/visualizer/modulation';
 import DraggableWindow from '@/components/DraggableWindow.vue';
 
 const props = defineProps<{
     connection: Modulation.Connection
+    type: 'source' | 'target' | 'standalone'
 }>();
 
 function disconnect() {
-    console.warn('idk');
+    props.connection.source.disconnect(props.connection.target, props.connection.sourceKey, props.connection.targetKey);
 }
 
-// took too much space
+const connectionLabel = useTemplateRef('connectionLabel');
+const transformsWindow = useTemplateRef('transformsWindow');
 const windowOpen = ref(false);
+function openWindow() {
+    windowOpen.value = true;
+    if (connectionLabel.value !== null && transformsWindow.value !== null) {
+        const rect = connectionLabel.value.getBoundingClientRect();
+        transformsWindow.value.height = 250;
+        transformsWindow.value.posX = rect.left - 412; // borders + margin
+        transformsWindow.value.posY = rect.top;
+        transformsWindow.value.focus();
+    }
+}
+
+function setTileHover(tile: Tile | null) {
+    TileEditor.state.editWindowIdentifyTile = tile;
+}
+function resetTileHover() {
+    TileEditor.state.editWindowIdentifyTile = null;
+}
 </script>
 
 <template>
     <div class="connectionEntry">
         <input type="button" class="connectionDelete" @click="disconnect">
-        <div class="connectionLabel" @click="windowOpen = true">
-            <div>{{ reactive(props.connection.source).label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
+        <div class="connectionLabel" ref="connectionLabel" @click="openWindow">
+            <div>
+                <span v-if="props.type != 'source'">{{ props.connection.source.label + ' ' }}</span>
+                <span v-else>This&ensp;</span>
+                <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span>
+            </div>
             <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
-            <div>{{ reactive(props.connection.target).label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
+            <div>
+                <span v-if="props.type != 'target'">{{ props.connection.target.label + ' ' }}</span>
+                <span v-else>This&ensp;</span>
+                <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span>
+            </div>
         </div>
     </div>
     <div class="connectionDivider"></div>
-    <DraggableWindow v-model="windowOpen" title="Transforms" :min-width="200" :min-height="200" resize-width close-on-click-out>
-        <div class="connectionTransforms">
+    <DraggableWindow v-model="windowOpen" ref="transformsWindow" title="Transforms" :min-width="400" :min-height="200" resize-height close-on-click-out>
+        <div class="connectionLabel transformsConnectionHeader">
+            <div @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
+            <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
+            <div @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
+        </div>
+        <div class="transformsContainer">
             <div class="transformItem" v-for="t, i in props.connection.transforms" :key="i">
                 {{ t }}
             </div>
@@ -36,6 +70,7 @@ const windowOpen = ref(false);
 
 <style scoped>
 .connectionEntry {
+    container-type: inline-size;
     --connection-border-radius: 6px;
     display: grid;
     grid-template-rows: 1fr;
@@ -49,34 +84,45 @@ const windowOpen = ref(false);
     grid-column: 1 / 3;
     display: grid;
     grid-template-rows: 1fr;
-    grid-template-columns: 1fr 24px 1fr;
+    grid-template-columns: 1fr min-content 1fr;
     min-height: 20px;
-    align-items: center;
     padding: 2px 4px;
     border-radius: var(--connection-border-radius);
     column-gap: 2px;
+    align-items: center;
     background-color: var(--mod-item-background-color);
     transition: 200ms ease transform;
     user-select: none;
     cursor: pointer;
 }
 
-.connectionEntry:hover>.connectionLabel {
+.connectionEntry:hover>.connectionLabel,
+.connectionDelete:focus-visible+.connectionLabel {
     transform: translateX(-24px);
     background-color: #555;
     border-bottom-color: #777;
 }
 
 .connectionLabel>div {
-    /* text-wrap: nowrap; */
+    min-width: 0px;
+    font-size: 14px;
     text-align: center;
+    /* text-wrap: nowrap; */
     text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .connectionArrow {
     width: 16px;
     height: 16px;
-    margin: 0px 4px;
+    margin: 0px 8px;
+    transition: 100ms ease margin;
+}
+
+@container (width < 300px) {
+    .connectionArrow {
+        margin: 0px 0px;
+    }
 }
 
 .connectionSourceKey {
@@ -100,13 +146,13 @@ const windowOpen = ref(false);
     background-repeat: no-repeat;
 }
 
-.connectionDelete:hover {
+.connectionDelete:hover,
+.connectionDelete:focus-visible {
     background-color: red !important;
     background-image: url(@/img/delete-dark.svg);
 }
 
 .connectionDivider {
-    width: calc(100% - 24px);
     height: 2px;
     margin: 0px 12px;
     background-color: #555;
@@ -116,7 +162,23 @@ const windowOpen = ref(false);
     display: none;
 }
 
-.connectionTransforms {
+.transformsConnectionHeader {
+    margin: 8px 8px;
+    border-bottom: 4px solid #555;
+    background-color: #222;
+    cursor: default;
+}
+
+.transformsConnectionHeader>div {
+    border-radius: 6px;
+}
+
+.transformsConnectionHeader>div:hover {
+    background-color: #333;
+    /* outline: 2px solid cyan; */
+}
+
+.transformsContainer {
     display: flex;
     flex-direction: column;
 }

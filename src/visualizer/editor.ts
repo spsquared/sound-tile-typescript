@@ -69,10 +69,19 @@ export class TileEditor {
         },
         sidebarDrop: false
     });
+    static readonly modulatorDrag: {
+        source: Modulation.Source<any> | null
+        sourceKey: string
+        target: Modulation.Target<any> | null
+        targetKey: string
+    } = reactive({
+        source: null,
+        sourceKey: '',
+        target: null,
+        targetKey: ''
+    });
     /**Locks changing of layouts and all actions */
     static readonly lock: AsyncLock = reactive(new AsyncLock()) as AsyncLock;
-    /**Locks actions from starting, typically because another is in progress and may conflict */
-    static readonly actionLock: AsyncLock = reactive(new AsyncLock()) as AsyncLock;
 
     static registerTile(t: typeof Tile, visible: boolean): void {
         this.state.tileTypes[t.id] = { Tile: t, visible: visible };
@@ -195,11 +204,13 @@ export class TileEditor {
     static startDrag(tile: Tile, offset?: typeof TileEditor['drag']['offset'], size?: typeof TileEditor['drag']['size'], e?: MouseEvent | TouchEvent): boolean {
         if (this.lock.locked || this.drag.current !== null) return false;
         this.markLayoutChange();
+        this.lock.acquire();
         this.redoHistory.length = 0;
         tile.parent?.removeChild(tile);
         this.drag.current = tile;
         this.drag.offset = offset ?? { x: 0, y: 0 };
         this.drag.size = size ?? { w: 200, h: 150 };
+        this.drag.drop.tile = null;
         if (e !== undefined) this.updateDrag(e);
         return true;
     }
@@ -367,7 +378,8 @@ export class TileEditor {
         }
     }
     static endDrag(): boolean {
-        if (this.lock.locked || this.drag.current === null) return false;
+        if (this.drag.current === null) return false;
+        this.lock.release();
         if (this.drag.drop.tile === null) {
             this.popLayoutHistory(this.undoHistory);
             this.redoHistory.length = 0;
@@ -406,7 +418,32 @@ export class TileEditor {
             insertFn.call(parent, this.drag.current, this.drag.drop.tile);
         }
         this.drag.current = null;
+        this.drag.drop.tile = null;
         this.redoHistory.length = 0;
+        return true;
+    }
+
+    // modulator dragging - a bit different as it's less complicated
+    static startModulatorDrag<Props extends Modulation.SourcePropertyMap, Key extends keyof Props & string>(source: Modulation.Source<Props>, key: Key): boolean {
+        if (this.lock.locked || this.modulatorDrag.source !== null) return false;
+        this.lock.acquire();
+        this.modulatorDrag.source = source;
+        this.modulatorDrag.sourceKey = key;
+        this.modulatorDrag.target = null;
+        return true;
+    }
+    static updateModulatorDrag(): void
+    static updateModulatorDrag<Props extends Modulation.TargetPropertyMap, Key extends keyof Props & string>(target: Modulation.Target<Props>, key: Key): void
+    static updateModulatorDrag<Props extends Modulation.TargetPropertyMap, Key extends keyof Props & string>(target?: Modulation.Target<Props>, key?: Key): void {
+        this.modulatorDrag.target = target ?? null;
+        this.modulatorDrag.targetKey = key ?? '';
+    }
+    static endModulatorDrag(): boolean {
+        if (this.modulatorDrag.source === null) return false;
+        this.lock.release();
+        if (this.modulatorDrag.target !== null) this.modulatorDrag.source.connect(this.modulatorDrag.target, this.modulatorDrag.sourceKey, this.modulatorDrag.targetKey);
+        this.modulatorDrag.source = null;
+        this.modulatorDrag.target = null;
         return true;
     }
 
@@ -438,8 +475,8 @@ export class TileEditor {
         watch(() => this.state.sidebarScreenWidth, () => localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
         // this isn't a vue composable, no lifecycle hooks
         document.addEventListener('mousemove', (e) => this.updateDrag(e), { passive: true });
-        document.addEventListener('mouseup', () => this.endDrag());
-        window.addEventListener('blur', () => this.endDrag());
+        document.addEventListener('mouseup', () => (this.endDrag(), this.endModulatorDrag()));
+        window.addEventListener('blur', () => (this.endDrag(), this.endModulatorDrag()));
         // wow the undo stack
         document.addEventListener('keydown', (e) => {
             if (this.lock.locked || this.drag.current !== null || matchTextInput(e.target)) return;

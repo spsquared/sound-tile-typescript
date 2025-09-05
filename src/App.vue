@@ -3,9 +3,10 @@ import { provide, reactive, ref } from 'vue';
 import { copyright, dreamberd, version } from '@/constants';
 import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
 import Dropdown from '@/components/dropdown/Dropdown.vue';
+import Sidebar from '@/components/sidebar/Sidebar.vue';
 import TileRoot from '@/components/main/TileRoot.vue';
 import TileDrag from '@/components/main/TileDrag.vue';
-import Sidebar from '@/components/sidebar/Sidebar.vue';
+import ModulatorDrag from './components/main/ModulatorDrag.vue';
 
 const showAppInfo = ref(false);
 provide('showAppInfoRef', showAppInfo);
@@ -29,9 +30,10 @@ window.addEventListener('error', (e) => {
 
 <template>
     <Dropdown></Dropdown>
+    <Sidebar></Sidebar>
     <TileRoot></TileRoot>
     <TileDrag></TileDrag>
-    <Sidebar></Sidebar>
+    <ModulatorDrag></ModulatorDrag>
     <FullscreenModal :title="`Sound Tile v${version}`" :mode="ModalMode.NOTIFY" v-model="showAppInfo" effect="frost-window">
         <b>{{ copyright }} under GNU GPL 3.0</b>
         <br>

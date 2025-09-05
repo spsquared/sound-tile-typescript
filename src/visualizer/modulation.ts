@@ -261,7 +261,7 @@ export namespace Modulation {
          * @param targetKey Target name
          */
         connected(targetKey: keyof Props & string): boolean {
-            return this.connectionTrackers.has(targetKey);
+            return this.connectedSources[targetKey] !== null;
         }
 
         /**
