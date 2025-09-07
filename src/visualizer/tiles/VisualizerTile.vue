@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, ComputedRef, inject, onMounted, ref, useTemplateRef } from 'vue';
 import { syncRef, throttledWatch, useElementSize } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
@@ -37,6 +37,8 @@ const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
 throttledWatch([canvasWidth, canvasHeight], () => {
     props.tile.visualizer.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
 }, { throttle: 50, immediate: true, leading: true, trailing: true });
+
+const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
 const uploadSourceDisabled = ref(false);
 async function uploadSource() {
@@ -374,7 +376,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 <div class="optionsGrid" style="height: 44px;">
                     <label title="Background color of tile">
                         Background
-                        <EnhancedColorPicker :picker="props.tile.backgroundColor" badge-width="60px"></EnhancedColorPicker>
+                        <EnhancedColorPicker :picker="props.tile.backgroundColor" badge-width="60px" :disabled="inCollapsedGroup"></EnhancedColorPicker>
                     </label>
                     <label title="Visualizer primary color">
                         Primary

@@ -23,7 +23,7 @@ function fudgeBadgeClickClose() {
     setTimeout(() => recentlyClosed = false, 10);
 }
 function togglePicker() {
-    if (recentlyClosed) return;
+    if (props.disabled || recentlyClosed) return;
     props.picker.open = !props.picker.open;
     if (pickerWindow.value !== null && pickerBadge.value !== null && props.picker.open) {
         const rect = pickerBadge.value.getBoundingClientRect();
@@ -66,7 +66,7 @@ function removeStop(i: number) {
 </script>
 
 <template>
-    <input type="button" :class="{ pickerBadge: true, pickerBadgeDisabled: props.disabled }" ref="pickerBadge" @click="togglePicker">
+    <input type="button" class="pickerBadge" ref="pickerBadge" @click="togglePicker" :disabled="props.disabled">
     <DraggableWindow v-model="props.picker.open" ref="pickerWindow" title="Color Picker" close-on-click-out :min-width="240" :min-height="240" @close="fudgeBadgeClickClose">
         <div class="pickerContainer">
             <div class="pickerNav">
@@ -136,12 +136,11 @@ function removeStop(i: number) {
     background-color: black;
     background: v-bind("$props.picker.cssStyle");
     transform: scaleY(-1);
-    cursor: pointer;
     --radial-gradient-size: v-bind("`min(${$props.badgeWidth ?? '44px'}, ${$props.badgeHeight ?? '20px'})`");
 }
 
-.pickerBadgeDisabled {
-    cursor: not-allowed;
+.pickerBadge:disabled {
+    border-color: #555;
 }
 
 .pickerContainer {

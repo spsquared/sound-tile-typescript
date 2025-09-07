@@ -81,7 +81,7 @@ async function uploadImage() {
                 </label>
                 <label title="Background style of tile">
                     Background
-                    <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                    <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
                 </label>
             </TileOptionsSection>
             <TileOptionsSection title="Image">

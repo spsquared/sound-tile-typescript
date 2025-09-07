@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ComputedRef, inject, ref, watch } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
 import { sanitize } from '@/components/scripts/htmlSanitize';
 import TileEditor from '../editor';
@@ -13,6 +13,8 @@ import TrixTextEditor from '@/components/inputs/TrixTextEditor.vue';
 const props = defineProps<{
     tile: TextTile
 }>();
+
+const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
 const setText = useThrottleFn((v: string) => {
     props.tile.text = v;
@@ -49,7 +51,7 @@ const sanitizedText = ref('');
                     <div>
                         <label title="Background style of tile">
                             Background
-                            <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                            <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
                         </label>
                         <label title="Text style">
                             Text

@@ -72,13 +72,19 @@ function toggleEditTile() {
     props.tile.editWindowOpen = !props.tile.editWindowOpen;
 }
 watch(() => props.tile.editWindowOpen, () => {
-    // positions window when edit window opened by other code
-    if (props.tile.editWindowOpen && editButton.value !== null && editWindow.value !== null) {
-        const rect = editButton.value.getBoundingClientRect();
-        editWindow.value.posX = rect.x;
-        editWindow.value.posY = rect.y - editWindow.value.height - 32;
+    // positions window when edit window opened by other code (with fallback if edit button is hidden)
+    if (props.tile.editWindowOpen && editWindow.value !== null) {
+        if (editButton.value !== null) {
+            const rect = editButton.value.getBoundingClientRect();
+            editWindow.value.posX = rect.x;
+            editWindow.value.posY = rect.y - editWindow.value.height - 32;
+        } else if (tile.value !== null) {
+            const rect = tile.value.getBoundingClientRect();
+            editWindow.value.posX = rect.x;
+            editWindow.value.posY = rect.y;
+        }
     }
-})
+});
 onBeforeUnmount(() => props.tile.editWindowOpen = false);
 
 function setIdentifyTile(v: boolean) {
@@ -116,7 +122,7 @@ function setIdentifyTile(v: boolean) {
                         </label>
                         <label class="sectionItem" title="Background color of tile">
                             Background
-                            <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                            <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
                         </label>
                     </TileOptionsSection>
                 </slot>

@@ -60,7 +60,7 @@ const tileOrientation = computed<string>({
                     Hide Borders
                     <Toggle v-model="props.tile.hideBorders"></Toggle>
                 </label>
-                <label v-if="isCollapsed" title="Background style of tile">
+                <label v-if="!inCollapsedGroup && isCollapsed" title="Background style of tile">
                     Background
                     <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
                 </label>
