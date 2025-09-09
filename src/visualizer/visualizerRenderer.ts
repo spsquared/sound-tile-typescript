@@ -804,7 +804,7 @@ class VisualizerRenderInstance {
                     ? this.ctx.createRadialGradient(color.x * width, color.y * height, 0, color.x * width, color.y * height, color.radius * Math.min(width, height))
                     : this.ctx.createConicGradient(angle, color.x * width, color.y * height));
             for (const stop of color.stops) {
-                gradient.addColorStop(stop.t, chroma(stop.c).alpha(stop.a * alpha).hex());
+                gradient.addColorStop(Math.max(0, Math.min(1, stop.t)), chroma(stop.c).alpha(stop.a * alpha).hex());
             }
             return gradient;
         }
@@ -814,7 +814,7 @@ class VisualizerRenderInstance {
         if (color.type == 'solid') {
             return chroma.scale([chroma(color.color).alpha(color.alpha * alpha)]);
         } else if (color.type == 'gradient') {
-            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a * alpha))).domain(color.stops.map((c) => c.t));
+            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a * alpha))).domain(color.stops.map((c) => Math.max(0, Math.min(1, c.t))));
         }
         // idk
         return chroma.scale(['#FFFFFF']);
