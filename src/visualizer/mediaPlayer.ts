@@ -146,7 +146,8 @@ export class MediaPlayer {
     subA.size = 2;
     root.addChild(subA);
     const visA = new VisualizerTile();
-    visA.visualizer.data.mode = VisualizerMode.WAVE_DIRECT;
+    visA.visualizer.data.mode = VisualizerMode.WAVE_CORRELATED;
+    visA.visualizer.data.fftSize = 2048;
     visA.size = 2;
     visA.modulator.connect(img, 'peak', 'imgScale', [new Modulation.LinearTransform([0.5, 0.25])]);
     root.addChild(visA);

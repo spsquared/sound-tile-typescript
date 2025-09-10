@@ -26,6 +26,19 @@ window.addEventListener('error', (e) => {
     errorInfo.colno = e.colno;
     errorInfo.open = true;
 });
+window.addEventListener('unhandledrejection', (e) => {
+    errorInfo.message = 'Unhandled Promise rejection: ' + (() => {
+        if (e.reason != null) {
+            if (e.reason.toString != Object.prototype.toString && typeof e.reason.toString == 'function') return e.reason.toString();
+            return JSON.stringify(e.reason);
+        }
+        return e.reason;
+    })();
+    errorInfo.filename = 'Unknown';
+    errorInfo.lineno = 0;
+    errorInfo.lineno = 0;
+    errorInfo.open = true;
+});
 </script>
 
 <template>
