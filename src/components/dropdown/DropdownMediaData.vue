@@ -223,7 +223,13 @@ function preventScrollIfNotFocus(e: WheelEvent) {
 }
 
 #mdatPlaylist {
-    --scrollbar-size: 8px;
+    --scrollbar-size: 10px;
     --scrollbar-padding: 0px;
+}
+
+@supports (not(selector(::-webkit-scrollbar))) {
+    #mdatPlaylist {
+        scrollbar-width: thin;
+    }
 }
 </style>

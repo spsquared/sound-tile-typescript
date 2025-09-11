@@ -296,7 +296,7 @@ align-justified {
     }
 }
 
-@supports (not (selector(::-webkit-scrollbar))) {
+@supports (not(selector(::-webkit-scrollbar))) {
     * {
         scrollbar-color: #555 #222;
     }
