@@ -5,7 +5,7 @@ import TileEditor from '@/visualizer/editor';
 import DropdownFileControls from './DropdownFileControls.vue';
 import DropdownMediaData from './DropdownMediaData.vue';
 import DropdownMediaControls from './DropdownMediaControls.vue';
-import DropdownEditControls from './DropdownEditControls.vue';
+import DropdownTileSource from './DropdownTileSource.vue';
 
 function keydown(e: KeyboardEvent) {
     if (matchTextInput(e.target)) return;
@@ -43,7 +43,7 @@ const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
             <DropdownFileControls></DropdownFileControls>
             <DropdownMediaData></DropdownMediaData>
             <DropdownMediaControls></DropdownMediaControls>
-            <DropdownEditControls></DropdownEditControls>
+            <DropdownTileSource></DropdownTileSource>
             <input type="checkbox" id="sidebarShadowToggle" v-model="TileEditor.state.sidebarOpen">
             <div id="sidebarSpacer"></div>
         </div>

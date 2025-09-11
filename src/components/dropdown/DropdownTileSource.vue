@@ -128,7 +128,6 @@ const sourceTiles = computed(() => Object.values(TileEditor.state.tileTypes).fil
     overflow-y: clip;
     user-select: none;
     --scrollbar-size: 10px;
-    --scrollbar-padding: 0px;
 }
 
 #tileSourceContainer::-webkit-scrollbar-thumb {
