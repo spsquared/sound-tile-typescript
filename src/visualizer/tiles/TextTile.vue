@@ -24,7 +24,7 @@ const setText = useThrottleFn((v: string) => {
 watch(() => props.tile.text, useThrottleFn(async (dirty) => {
     const clean = await sanitize(dirty);
     sanitizedText.value = clean;
-}, 100))
+}, 100), { immediate: true });
 const sanitizedText = ref('');
 </script>
 
@@ -32,7 +32,7 @@ const sanitizedText = ref('');
     <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template v-slot:content>
             <div class="textContain">
-                <div class="textWrapper"v-html="sanitizedText"></div>
+                <div class="textWrapper" v-html="sanitizedText"></div>
             </div>
         </template>
         <template v-slot:options>
