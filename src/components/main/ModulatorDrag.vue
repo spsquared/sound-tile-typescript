@@ -29,7 +29,7 @@ watch([() => TileEditor.modulatorDrag.target !== null, () => TileEditor.modulato
     height: 100vh;
     user-select: none;
     cursor: grabbing;
-    z-index: 700;
+    z-index: 1100;
 }
 
 #modulatorDragItem {
@@ -39,7 +39,7 @@ watch([() => TileEditor.modulatorDrag.target !== null, () => TileEditor.modulato
     width: 60px;
     height: 60px;
     /* prevents blending in with other logo-green items */
-    background: radial-gradient(circle 30px at 50% 50%, var(--logo-green) 0%, var(--logo-green) 60%, color-mix(in hsl, var(--logo-green) 50%, #0005 50%) 60%, transparent 100%);
+    background: radial-gradient(circle 30px at 50% 50%, var(--logo-green) 0%, var(--logo-green) 60%, color-mix(in hsl, var(--logo-green) 80%, #0005 20%) 60%, transparent 100%);
     border-radius: 50%;
     pointer-events: none;
 }

@@ -34,7 +34,7 @@ const draggingPos = computed(() => ({
     background-color: rgba(0, 0, 0, 0.4);
     user-select: none;
     cursor: grabbing;
-    z-index: 700;
+    z-index: 1100;
 }
 
 #tileDragLayoutPreview {

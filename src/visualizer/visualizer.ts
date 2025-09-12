@@ -223,11 +223,13 @@ export class Visualizer {
     /**Internal timekeeping to synchronize visualizer playback states */
     private static readonly time: {
         startTime: number
+        duration: number
         playing: boolean
-    } = {
-            startTime: 0,
-            playing: false
-        };
+    } = reactive({
+        startTime: 0,
+        duration: 0,
+        playing: false
+    });
     static start(time: number = 0): void {
         this.time.startTime = this.audioContext.currentTime - time;
         this.time.playing = true;
@@ -241,17 +243,15 @@ export class Visualizer {
         for (const vis of this.instances) vis.stop();
         this.audioContext.suspend();
     }
-    // private refs allow reactivity without random refs
-    private static readonly _duration: Ref<number> = ref(0);
     private static recalculateDuration(): void {
         let time = 0;
         for (const vis of this.instances) {
             if (vis.duration > time) time = vis.duration;
         }
-        this._duration.value = time;
+        this.time.duration = time;
     }
     static get duration(): number {
-        return this._duration.value;
+        return this.time.duration;
     }
     static get playing(): boolean {
         return this.time.playing;
