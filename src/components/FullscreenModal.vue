@@ -77,13 +77,7 @@ defineExpose<{
 });
 </script>
 <script lang="ts">
-export const enum ModalMode {
-    NOTIFY,
-    CONFIRM,
-    CONFIRM_WARN,
-    INPUT,
-    INPUT_WARN
-}
+export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input_warn';
 </script>
 
 <template>
@@ -94,22 +88,22 @@ export const enum ModalMode {
                     <h1>{{ props.title }}</h1>
                     <slot :close="close"></slot>
                     <div class="modalButtons">
-                        <span v-if="props.mode == ModalMode.NOTIFY">
+                        <span v-if="props.mode == 'notify'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)">
                         </span>
-                        <span v-else-if="props.mode == ModalMode.CONFIRM">
+                        <span v-else-if="props.mode == 'confirm'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)" style="background-color: green;">
                             <input type="button" value="CANCEL" class="modalButton" @click="close(false)" style="background-color: red;">
                         </span>
-                        <span v-else-if="props.mode == ModalMode.CONFIRM_WARN">
+                        <span v-else-if="props.mode == 'confirm_warn'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)" style="background-color: red;">
                             <input type="button" value="CANCEL" class="modalButton" @click="close(false)">
                         </span>
-                        <span v-else-if="props.mode == ModalMode.INPUT">
+                        <span v-else-if="props.mode == 'input'">
                             <input type="button" value="YES" class="modalButton" @click="close(true)" style="background-color: green;">
                             <input type="button" value="NO" class="modalButton" @click="close(false)" style="background-color: red;">
                         </span>
-                        <span v-else-if="props.mode == ModalMode.INPUT_WARN">
+                        <span v-else-if="props.mode == 'input_warn'">
                             <input type="button" value="YES" class="modalButton" @click="close(true)" style="background-color: red;">
                             <input type="button" value="NO" class="modalButton" @click="close(false)" style="background-color: green;">
                         </span>

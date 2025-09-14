@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { provide, reactive, ref } from 'vue';
 import { copyright, dreamberd, version } from '@/constants';
-import FullscreenModal, { ModalMode } from '@/components/FullscreenModal.vue';
+import FullscreenModal from '@/components/FullscreenModal.vue';
 import Dropdown from '@/components/dropdown/Dropdown.vue';
 import Sidebar from '@/components/sidebar/Sidebar.vue';
 import TileRoot from '@/components/main/TileRoot.vue';
@@ -47,7 +47,7 @@ window.addEventListener('unhandledrejection', (e) => {
     <TileRoot></TileRoot>
     <TileDrag></TileDrag>
     <ModulatorDrag></ModulatorDrag>
-    <FullscreenModal :title="`Sound Tile v${version}`" :mode="ModalMode.NOTIFY" v-model="showAppInfo" effect="frost-window">
+    <FullscreenModal v-model="showAppInfo" :title="`Sound Tile v${version}`" mode="notify" effect="frost-window">
         <b>{{ copyright }} under GNU GPL 3.0</b>
         <br>
         Source code is available on GitHub at
@@ -56,7 +56,7 @@ window.addEventListener('unhandledrejection', (e) => {
         <br>
         <span style="font-size: 8px;">{{ dreamberd }}</span>
     </FullscreenModal>
-    <FullscreenModal title="An Error Occured" :mode="ModalMode.NOTIFY" color="red" v-model="errorInfo.open">
+    <FullscreenModal v-model="errorInfo.open" title="An Error Occured" mode="notify" color="red">
         <div style="color: red;">
             An unexpected error occured:
             <br>
