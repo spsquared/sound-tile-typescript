@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import FullscreenModal from '@/components/FullscreenModal.vue';
 import TileEditor from '@/visualizer/editor';
 import { Media } from '@/visualizer/media';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import FileAccess from '@/components/inputs/fileAccess';
+import { matchTextInput } from '@/constants';
 
 // these file controls operate directly on the tile editor by setting the current media player session
 const errorMessageType = ref(false);
@@ -56,9 +57,21 @@ async function downloadFromCurrent() {
             }
         }],
         suggestedName: `${current.getHours()}-${current.getMinutes()}_${current.getMonth()}-${current.getDay()}-${current.getFullYear()}.soundtile`
-    }, file)
+    }, file);
     TileEditor.lock.release();
 }
+
+function keydown(e: KeyboardEvent) {
+    if (matchTextInput(e.target)) return;
+    const key = e.key.toLowerCase();
+    if (key == 'o' && e.ctrlKey && !e.metaKey && !e.altKey) {
+        uploadToCurrent();
+    } else if (key == 's' && e.ctrlKey && !e.metaKey && !e.altKey) {
+        downloadFromCurrent();
+    }
+}
+onMounted(() => document.addEventListener('keydown', keydown));
+onUnmounted(() => document.removeEventListener('keydown', keydown));
 </script>
 
 <template>

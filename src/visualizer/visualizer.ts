@@ -89,6 +89,7 @@ export class Visualizer {
                     // reset analyzer when audio source changed too
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     this.splitter?.disconnect();
+                    this.splitter = null;
                     this.analyzers.length = 0;
                     const analyzer = Visualizer.audioContext.createAnalyser();
                     this.analyzers.push(analyzer);

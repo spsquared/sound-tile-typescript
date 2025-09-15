@@ -97,6 +97,7 @@ export namespace MediaSchema {
         flippedY?: boolean
         rotated?: boolean
         volume?: number
+        muted?: boolean
         muteOutput?: boolean
     };
     /**Legacy (old Sound Tile) channel peaks mode visualizer options & audio data */
@@ -181,10 +182,10 @@ export namespace MediaSchema {
      */
     export function translateLegacyVisualizerData(data: LegacyVisualizerData | LegacyChannelPeaksData): VisualizerData {
         if ('channelCount' in data) return merge<VisualizerData, DeepPartial<VisualizerData>>(createDefaultVisualizerData(), {
-            buffer: data?.buffer,
+            buffer: data.buffer,
             mode: VisualizerMode.CHANNEL_PEAKS,
-            gain: data?.volume,
-            mute: data?.muteOutput,
+            gain: data.volume,
+            mute: data.muteOutput,
             color: translateLegacyColorData(data.color),
             levelOptions: {
                 channels: data.channelCount,
@@ -199,10 +200,10 @@ export namespace MediaSchema {
             flipY: data.flippedY
         });
         else return merge<VisualizerData, DeepPartial<VisualizerData>>(createDefaultVisualizerData(), {
-            buffer: data?.buffer,
+            buffer: data.buffer,
             mode: legacyModeTranslator[data.mode] ?? VisualizerMode.FREQ_BAR,
-            gain: data?.volume,
-            mute: data?.muteOutput,
+            gain: data.volume,
+            mute: data.muted ?? data.muteOutput,
             color: translateLegacyColorData(data.color, data.altColor && [0, 1, 8].includes(data.mode), data.altColor && data.mode == 8),
             color2: translateLegacyColorData(data.color2),
             color2Alpha: data.fillAlpha,
