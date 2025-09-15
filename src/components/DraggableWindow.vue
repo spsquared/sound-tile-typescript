@@ -152,7 +152,7 @@ let windowIdCounter = 0;
 
 <template>
     <Teleport to="#root">
-        <div class="window" ref="winContainer" v-if="open" :style="dragStyle" @mousedown="bringToTop">
+        <div class="window" ref="winContainer" v-show="open" :style="dragStyle" @mousedown="bringToTop">
             <div class="windowBar" ref="winBar">
                 <span class="windowTitle">{{ props.title }}</span>
                 <slot name="bar"></slot>
