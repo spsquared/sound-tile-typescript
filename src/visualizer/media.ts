@@ -237,6 +237,15 @@ export class Media implements MediaMetadata {
                         tile = new GrassTile();
                         break;
                     }
+                    default: {
+                        const text = tile as TextTile;
+                        text.text = `<align-center><span style="font-size: 6em;">Unknown Tile</span></align-center>`;
+                        text.textColor.colorData = {
+                            type: 'solid',
+                            color: '#FF0000',
+                            alpha: 1
+                        };
+                    }
                 }
                 tile.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
                 tile.size = curr.flex ?? 1;

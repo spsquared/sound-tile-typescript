@@ -211,16 +211,24 @@ export class GroupTile extends Tile {
         super.reconstitute(data, tile);
         tile.orientation = data.orientation;
         tile.borderColor.colorData = data.borderColor;
-        tile.children.push(...data.children.map<Tile>((child) => {
-            const TileConstructor = Tile.tileTypes[child.type];
+        tile.children.push(...data.children.map<Tile>((childData) => {
+            const TileConstructor = Tile.tileTypes[childData.type];
             if (TileConstructor === undefined) {
-                const tile = new TextTile();
-                Tile.reconstitute(child, tile);
-                // TODO: when text tiles actually exist add text
-                return tile;
+                const text = new TextTile();
+                Tile.reconstitute(childData, text);
+                text.text = `<align-center><span style="font-size: 6em;">Unknown Tile</span></align-center>`;
+                text.textColor.colorData = {
+                    type: 'solid',
+                    color: '#FF0000',
+                    alpha: 1
+                };
+                text.parent = tile;
+                return text;
             }
-            return TileConstructor.fromSchemaData(child);
-        }))
+            const child = TileConstructor.fromSchemaData(childData);
+            child.parent = tile;
+            return child;
+        }));
         return tile;
     }
 

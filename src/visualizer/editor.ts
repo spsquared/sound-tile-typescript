@@ -95,6 +95,7 @@ export class TileEditor {
     static readonly root: GroupTile = reactive(new GroupTile()) as GroupTile;
     // without the cast ref unwrapping is mostly solved but then everything must be public in every class
     // literally a tradeoff of shit code or crap code
+    // also reactive proxies absolutely destroy things like sets and arrays
 
     /**
      * Replace the current layout with a new layout. Consumes the provided tree and returns the root of the new tree.
