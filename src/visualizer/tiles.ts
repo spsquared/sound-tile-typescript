@@ -41,6 +41,9 @@ export class Tile {
     readonly class: typeof Tile = Tile;
     static { this.registerTile(this); }
 
+    readonly mountedListeners: Set<() => any> = new Set();
+    readonly unmountedListeners: Set<() => any> = new Set();
+
     /**ID used by Vue indexing */
     readonly id: number;
     /**Ref used in components to open window */
@@ -63,9 +66,6 @@ export class Tile {
         this.id = Tile.idCounter++;
         this.backgroundColor = new ColorPicker('#000000');
     }
-
-    readonly mountedListeners: Set<() => any> = new Set();
-    readonly unmountedListeners: Set<() => any> = new Set();
 
     /**Dehydrate a tile to its data */
     getSchemaData(): MediaSchema.Tile {
@@ -131,7 +131,7 @@ export class GroupTile extends Tile {
     }
     insertChildBefore(tile: Tile, current: Tile | number): boolean {
         if (tile.parent !== null) return false;
-        const index = typeof current == 'number' ? current : this.children.indexOf(current);
+        const index = typeof current == 'number' ? current : this.children.findIndex((t) => t.id == current.id);
         if (index < 0 || index >= this.children.length) return false;
         tile.parent = this;
         this.children.splice(index, 0, tile);
@@ -139,7 +139,7 @@ export class GroupTile extends Tile {
     }
     insertChildAfter(tile: Tile, current: Tile | number): boolean {
         if (tile.parent !== null) return false;
-        const index = typeof current == 'number' ? current : this.children.indexOf(current);
+        const index = typeof current == 'number' ? current : this.children.findIndex((t) => t.id == current.id);
         if (index < 0 || index >= this.children.length) return false;
         tile.parent = this;
         this.children.splice(index + 1, 0, tile);
@@ -147,7 +147,7 @@ export class GroupTile extends Tile {
     }
     replaceChild(current: Tile | number, replace: Tile): Tile | null {
         if (replace.parent !== null) return null;
-        const index = typeof current == 'number' ? current : this.children.indexOf(current);
+        const index = typeof current == 'number' ? current : this.children.findIndex((t) => t.id == current.id);
         if (index < 0 || index >= this.children.length) return null;
         replace.parent = this;
         const old = this.children.splice(index, 1, replace)[0];
@@ -155,7 +155,7 @@ export class GroupTile extends Tile {
         return old;
     }
     removeChild(tile: Tile | number): Tile | null {
-        const index = typeof tile == 'number' ? tile : this.children.indexOf(tile);
+        const index = typeof tile == 'number' ? tile : this.children.findIndex((t) => t.id == tile.id);
         if (index < 0 || index >= this.children.length) return null;
         const old = this.children.splice(index, 1)[0];
         old.parent = null;
@@ -166,7 +166,6 @@ export class GroupTile extends Tile {
         if (this.parent === null) {
             // special case for root, lower tile then becomes root
             if (this.children.length == 1 && this.children[0] instanceof GroupTile) {
-                this.copyProperties(this.children[0]);
                 const children = this.children[0].children;
                 for (const child of children) child.parent = this;
                 this.children.length = 0;
@@ -177,7 +176,6 @@ export class GroupTile extends Tile {
         } else {
             if (this.children.length == 0) this.destroy();
             else if (this.children.length == 1) {
-                this.parent.copyProperties(this);
                 const parent = this.parent;
                 const child = this.children[0];
                 child.parent = null;
