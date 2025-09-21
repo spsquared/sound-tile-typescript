@@ -303,6 +303,7 @@ export namespace Modulation {
 
     /**Allows transformation of modulation values. */
     export abstract class Transform<T> {
+        static transformName: string = 'Generic Transform';
         abstract readonly type: `${any}`;
         abstract data: unknown;
         abstract readonly typeLabel: `${any}`;
@@ -310,11 +311,12 @@ export namespace Modulation {
         abstract apply(n: T): T;
     }
 
-    // constant and linear can technically be just polynomial transforms with 1 and 2 terms,
-    // but it's less for users to have these commonly used ones separate from more advanced options
+    // constant and linear can technically be just polynomial transforms with 2 terms,
+    // but it's less overwhelming for users to have these commonly used ones separate from more advanced options
 
-    /**Applies a constant offset to the value: x + a. */
+    /**Applies a constant offset to the value: `x + a`. */
     export class ConstantOffsetTransform extends Transform<number> {
+        static transformName: string = 'Constant Offset';
         readonly type: 'constant' = 'constant';
         data: number;
         readonly typeLabel: 'number' = 'number';
@@ -329,8 +331,9 @@ export namespace Modulation {
         }
     }
 
-    /**Applies a linear scale and offset to the value: ax + b . */
+    /**Applies a linear scale and offset to the value: `ax + b`. */
     export class LinearTransform extends Transform<number> {
+        static transformName: string = 'Linear Function';
         readonly type: 'linearScale' = 'linearScale';
         data: [number, number];
         readonly typeLabel: 'number' = 'number';
@@ -345,28 +348,35 @@ export namespace Modulation {
         }
     }
 
-    /**Calculates a polynomial function of any (until fp error borks it) degree: a + bx + cx^2 ... */
+    /**Calculates a polynomial function of any (until fp error borks it) degree: `a + bx + cx^2 ...` */
     export class PolynomialTransform extends Transform<number> {
+        static transformName: string = 'Polynomial Function';
         readonly type: 'polynomial' = 'polynomial';
-        data: number[];
+        data: { [key: number]: number };
         readonly typeLabel: 'number' = 'number';
 
-        constructor(data?: number[]) {
+        constructor(data?: PolynomialTransform['data']) {
             super();
-            this.data = data ?? [0, 1];
+            this.data = data ?? { [1]: 1 };
         }
 
         apply(n: number): number {
-            let y = this.data[0] ?? 0;
-            for (let i = 1; i < this.data.length; i++) {
-                y += this.data[i] * (n ** i);
+            // Horner's method (with optimization for stuff like x^1000000)
+            // unfortunately doesn't handle negative exponents... like at all, it just borks
+            const exponents = Object.keys({ [0]: 0, ...this.data }).map(Number).sort((a, b) => b - a);
+            let lastexp = exponents[0] ?? 0;
+            let t = this.data[lastexp] ?? 0;
+            for (let i = 1; i < exponents.length; i++) {
+                t = t * Math.pow(n, lastexp - exponents[i]) + (this.data[exponents[i]] ?? 0);
+                lastexp = exponents[i];
             }
-            return y;
+            return t;
         }
     }
 
-    /**Calculates an exponential function: a * (b^x) */
+    /**Calculates an exponential function: `a * (b^x)` */
     export class ExponentialTransform extends Transform<number> {
+        static transformName: string = 'Exponential Function';
         readonly type: 'exponential' = 'exponential';
         data: [number, number];
         readonly typeLabel: 'number' = 'number';
@@ -380,6 +390,44 @@ export namespace Modulation {
             return this.data[0] * (this.data[1] ** n);
         }
     }
+
+    /**Acts as a "gate" that outputs the input `x` when above/below (determined by `c`) a threshold `a` and otherwise `c`. */
+    export class ThresholdTransform extends Transform<number> {
+        static transformName: string = 'Threshold';
+        readonly type: 'threshold' = 'threshold';
+        data: [number, boolean, number];
+        readonly typeLabel: 'number' = 'number';
+
+        constructor(data?: [number, boolean, number]) {
+            super();
+            this.data = data ?? [0.5, true, 0];
+        }
+
+        apply(n: number): number {
+            return this.data[1] ? (n >= this.data[0] ? n : this.data[2]) : (n <= this.data[0] ? n : this.data[2]);
+        }
+    }
+
+    /**Clamps the input between `a` and `b`, inclusive. */
+    export class ClampTransform extends Transform<number> {
+        static transformName: string = 'Clamp';
+        readonly type: 'clamp' = 'clamp';
+        data: [number, number];
+        readonly typeLabel: 'number' = 'number';
+
+        constructor(data?: [number, number]) {
+            super();
+            this.data = data ?? [0, 1];
+        }
+
+        apply(n: number): number {
+            return Math.max(this.data[0], Math.min(n, this.data[1]));
+        }
+    }
+
+    // compressor transform????
+
+    // literal math transform that uses big math library
 }
 
 export default Modulation;

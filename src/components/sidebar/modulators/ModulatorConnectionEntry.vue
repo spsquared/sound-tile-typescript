@@ -4,6 +4,7 @@ import TileEditor from '@/visualizer/editor';
 import { Tile } from '@/visualizer/tiles';
 import Modulation from '@/visualizer/modulation';
 import DraggableWindow from '@/components/DraggableWindow.vue';
+import ModulatorConnectionTransformItem from './ModulatorConnectionTransformItem.vue';
 
 const props = defineProps<{
     connection: Modulation.Connection
@@ -21,7 +22,7 @@ function openWindow() {
     windowOpen.value = true;
     if (connectionLabel.value !== null && transformsWindow.value !== null) {
         const rect = connectionLabel.value.getBoundingClientRect();
-        transformsWindow.value.height = 250;
+        transformsWindow.value.height = 300;
         transformsWindow.value.posX = rect.left - 412; // borders + margin
         transformsWindow.value.posY = rect.top;
         transformsWindow.value.focus();
@@ -34,6 +35,37 @@ function setTileHover(tile: Tile | null) {
 function resetTileHover() {
     TileEditor.state.editWindowIdentifyTile = null;
 }
+
+const transformAddType = ref(0);
+function addTransform() {
+    const transform = transformClasses[transformAddType.value];
+    // no abstract stuff here its probably fine
+    props.connection.transforms.push(new (transform as any)());
+}
+function moveTransformUp(i: number) {
+    const t = props.connection.transforms[i - 1];
+    props.connection.transforms[i - 1] = props.connection.transforms[i];
+    props.connection.transforms[i] = t;
+}
+function moveTransformDown(i: number) {
+    const t = props.connection.transforms[i + 1];
+    props.connection.transforms[i + 1] = props.connection.transforms[i];
+    props.connection.transforms[i] = t;
+}
+function deleteTransform(i: number) {
+    props.connection.transforms.splice(i, 1);
+}
+</script>
+<script lang="ts">
+// putting this here since its only going to be evaluated once
+const transformClasses: (typeof Modulation.Transform<any>)[] = [
+    Modulation.ConstantOffsetTransform,
+    Modulation.LinearTransform,
+    Modulation.PolynomialTransform,
+    Modulation.ExponentialTransform,
+    Modulation.ThresholdTransform,
+    Modulation.ClampTransform
+];
 </script>
 
 <template>
@@ -55,14 +87,38 @@ function resetTileHover() {
     </div>
     <div class="connectionDivider"></div>
     <DraggableWindow v-model="windowOpen" ref="transformsWindow" title="Transforms" :min-width="400" :min-height="200" resize-height close-on-click-out>
-        <div class="connectionLabel transformsConnectionHeader">
-            <div :title="`Source: ${props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
-            <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
-            <div :title="`Target: ${props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
-        </div>
-        <div class="transformsContainer">
-            <div class="transformItem" v-for="t, i in props.connection.transforms" :key="i">
-                {{ t }}
+        <div class="transformsWindow">
+            <div class="connectionLabel transformsConnectionHeader">
+                <!-- can't put separate lines because it completely destroys the formatting -->
+                <div :title="`Source: ${props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
+                <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
+                <div :title="`Target: ${props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
+            </div>
+            <div class="transformsContainer">
+                <!-- hard-coded inputs and outputs to make clearer the direction of the transform chain -->
+                <div class="transformItem transformItemIO" title="The input value to the transform chain coming from the source">
+                    <div class="transformItemIndex">0</div>
+                    <div class="transformItemIOLabel" style="color: var(--logo-green);">Input</div>
+                    <div class="transformItemIOTag" @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover"></div>
+                </div>
+                <div class="transformItem" v-for="t, i in props.connection.transforms" :key="i">
+                    <div class="transformItemIndex">{{ i + 1 }}</div>
+                    <ModulatorConnectionTransformItem :transform="t"></ModulatorConnectionTransformItem>
+                    <input type="button" class="transformItemMoveUp" @click="moveTransformUp(i)" :disabled="i == 0"></input>
+                    <input type="button" class="transformItemMoveDown" @click="moveTransformDown(i)" :disabled="i == props.connection.transforms.length - 1"></input>
+                    <input type="button" class="transformItemDelete" @click="deleteTransform(i)"></input>
+                </div>
+                <div class="transformItem transformItemIO" title="The output leaving the transform chain to the target">
+                    <div class="transformItemIndex">{{ props.connection.transforms.length + 1 }}</div>
+                    <div class="transformItemIOLabel" style="color: var(--logo-blue);">Output</div>
+                    <div class="transformItemIOTag" @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover"></div>
+                </div>
+            </div>
+            <div class="transformsAddContainer">
+                <select class="transformsAddType" v-model="transformAddType" title="Choose function for modulation transform" v-once>
+                    <option v-for="transform, i in transformClasses" :value="i">{{ transform.transformName }}</option>
+                </select>
+                <input type="button" class="transformsAddButton" value="+" title="Add the chosen transform function" @click="addTransform"></input>
             </div>
         </div>
     </DraggableWindow>
@@ -162,8 +218,20 @@ function resetTileHover() {
     display: none;
 }
 
+.transformsWindow {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: min-content 1fr min-content;
+    grid-template-columns: 1fr;
+    width: 100%;
+    height: 100%;
+    padding: 8px 8px;
+    row-gap: 8px;
+}
+
 .transformsConnectionHeader {
-    margin: 8px 8px;
+    grid-row: 1;
+    grid-column: 1;
     border-bottom: 4px solid #555;
     background-color: #222;
     cursor: default;
@@ -179,7 +247,116 @@ function resetTileHover() {
 }
 
 .transformsContainer {
+    grid-row: 2;
+    grid-column: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0px;
+    padding: 4px 4px;
+    border: 4px solid #555;
+    row-gap: 4px;
+    overflow: auto;
+}
+
+.transformItem {
+    display: grid;
+    grid-template-columns: min-content 1fr 26px;
+    grid-template-rows: 24px 24px 24px;
+    grid-template-areas: "index item move-up" "index item move-down" "index item delete";
+    border: 2px solid white;
+    column-gap: 4px;
+}
+
+.transformItemIndex {
+    grid-area: index;
+    padding-left: 4px;
+    font-size: 18px;
+    align-content: center;
+    text-align: center;
+    user-select: none;
+}
+
+.transformItemMoveUp,
+.transformItemMoveDown,
+.transformItemDelete {
+    width: 26px;
+    height: 24px;
+    border-left: 2px solid white;
+    border-radius: 0px;
+    background-position: center;
+    background-size: 60% 60%;
+    background-repeat: no-repeat;
+}
+
+.transformItemMoveUp {
+    grid-area: move-up;
+    background-image: url(@/img/arrow-up.svg);
+}
+
+.transformItemMoveDown {
+    grid-area: move-down;
+    background-image: url(@/img/arrow-down.svg);
+}
+
+.transformItemDelete {
+    grid-area: delete;
+    border-top: 2px solid white;
+    background-image: url(@/img/delete.svg);
+    background-size: 90% 90%;
+}
+
+.transformItemDelete:hover {
+    background-color: red;
+    background-image: url(@/img/delete-dark.svg);
+}
+
+.transformItemIO {
+    grid-template-rows: 24px;
+    grid-template-areas: "index item tag";
+}
+
+.transformItemIOLabel {
+    grid-area: item;
+    text-align: center;
+    user-select: none;
+}
+
+.transformItemIOTag {
+    grid-area: tag;
+    width: 24px;
+    height: 24px;
+    border-left: 2px solid white;
+    background-color: var(--input-disabled-color);
+    background-image: url(@/img/modulation.svg);
+    background-position: center;
+    background-size: 80% 80%;
+    background-repeat: no-repeat;
+}
+
+.transformItemIOTag:hover {
+    /* outline otherwise goes weird */
+    margin-left: 2px;
+    border-left: none;
+    outline: 2px solid cyan;
+}
+
+.transformsAddContainer {
+    grid-row: 3;
+    grid-column: 1;
+    display: flex;
+    flex-direction: row;
+    column-gap: 4px;
+}
+
+.transformsAddType {
+    text-align: center;
+    flex-grow: 2;
+}
+
+.transformsAddButton {
+    flex-grow: 1;
+    padding: 0px;
+    font-size: 20px;
+    line-height: 1em;
 }
 </style>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import Modulation from '@/visualizer/modulation';
-import ModulatorConnectionEntry from './ModulatorConnectionEntry.vue';
 import { computed, ComputedRef, ref, useTemplateRef, watch } from 'vue';
 import { useElementSize, useMouseInElement } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
+import Modulation from '@/visualizer/modulation';
 import { Tile } from '@/visualizer/tiles';
+import ModulatorConnectionEntry from './ModulatorConnectionEntry.vue';
 
 const props = defineProps<{
     type: 'source' | 'target'
