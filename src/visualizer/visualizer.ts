@@ -143,8 +143,10 @@ export class Visualizer {
                 this.analyzers[0].getByteFrequencyData(data);
                 await this.renderer.draw(data);
                 this.ctx.reset();
-                this.canvas.width = this.renderer.canvas.width;
-                this.canvas.height = this.renderer.canvas.height;
+                if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
+                    this.canvas.width = this.renderer.canvas.width;
+                    this.canvas.height = this.renderer.canvas.height;
+                }
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
         } else if ([VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED].includes(this.data.mode)) {
@@ -154,8 +156,10 @@ export class Visualizer {
                 this.analyzers[0].getFloatTimeDomainData(data);
                 await this.renderer.draw(data);
                 this.ctx.reset();
-                this.canvas.width = this.renderer.canvas.width;
-                this.canvas.height = this.renderer.canvas.height;
+                if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
+                    this.canvas.width = this.renderer.canvas.width;
+                    this.canvas.height = this.renderer.canvas.height;
+                }
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
         } else if (this.data.mode == VisualizerMode.CHANNEL_PEAKS) {
@@ -167,8 +171,10 @@ export class Visualizer {
             }
             await this.renderer.draw(data);
             this.ctx.reset();
-            this.canvas.width = this.renderer.canvas.width;
-            this.canvas.height = this.renderer.canvas.height;
+            if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
+                this.canvas.width = this.renderer.canvas.width;
+                this.canvas.height = this.renderer.canvas.height;
+            }
             this.ctx.drawImage(this.renderer.canvas, 0, 0);
         } else {
             this.ctx.reset();
