@@ -219,6 +219,7 @@ export class Visualizer {
     destroy: () => void = () => {
         // weird syntax stops reactive() wrapper somewhere else in the code turning the "this" object into a proxy and borking everything
         this.stop();
+        this.renderer.destroy();
         this.effectScope.stop();
         this.gain.disconnect();
         Visualizer.instances.delete(this);
