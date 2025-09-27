@@ -131,14 +131,14 @@ watch([() => props.transform.data, polyFocused/*, polyInputMode*/], () => {
                         <span>,</span>
                         <span style="color: var(--logo-green);">x</span>
                         <span>{{ props.transform.data[1] ? '>=' : '<=' }}</span>
-                                <input type="number" v-model="props.transform.data[0]" step="0.1"></input>
+                        <input type="number" v-model="props.transform.data[0]" step="0.1"></input>
                     </div>
                     <div>
                         <input type="number" v-model="props.transform.data[2]" step="0.1"></input>
                         <span>,</span>
                         <span style="color: var(--logo-green);">x</span>
                         <span>{{ props.transform.data[1] ? '<' : '>' }}</span>
-                                <input type="number" v-model="props.transform.data[0]" step="0.1"></input>
+                        <input type="number" v-model="props.transform.data[0]" step="0.1"></input>
                     </div>
                 </div>
             </div>

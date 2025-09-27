@@ -14,7 +14,10 @@ watch([() => TileEditor.modulatorDrag.target !== null, () => TileEditor.modulato
 
 <template>
     <Transition>
-        <div id="modulatorDragContainer" :class="{ dragSuccessful: successfulDrag, dragUnsuccessful: !successfulDrag }" v-if="TileEditor.modulatorDrag.source !== null">
+        <div id="modulatorDragContainer" :class="{
+            dragSuccessful: successfulDrag,
+            dragUnsuccessful: !successfulDrag
+        }" v-if="TileEditor.modulatorDrag.source !== null">
             <div id="modulatorDragItem"></div>
         </div>
     </Transition>

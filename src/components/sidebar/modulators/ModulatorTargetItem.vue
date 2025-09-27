@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, effectScope, reactive, useTemplateRef, watch } from 'vue';
+import { computed, inject, Ref, watch } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import ModulatorItem from './ModulatorItem.vue';
-import { useMouseInElement } from '@vueuse/core';
 
 const props = defineProps<{
     label: string
@@ -22,36 +21,31 @@ const connections = computed<Modulation.Connection[]>(() =>
 const modKeys = computed(() => Object.keys(props.target.targets));
 
 // more js-powered hover
-const modItemComponent = useTemplateRef('modItem');
-const modKeyElements = computed(() => modKeys.value.map((key) => [key, useTemplateRef<HTMLDivElement>(key)] as const)); // no resource leak? should only run once anyway
-// yeets all old mouse detection and gets new ones
-let inefficientEffectScope = effectScope();
-const hoverIds: number[] = [];
-watch([modKeyElements, () => TileEditor.modulatorDrag.source !== null], () => {
-    inefficientEffectScope.stop();
-    for (const i of hoverIds) globalHoverCounter.delete(i);
-    hoverIds.length = 0;
-    if (TileEditor.modulatorDrag.source !== null) {
-        inefficientEffectScope = effectScope();
-        inefficientEffectScope.run(() => {
-            for (const [key, el] of modKeyElements.value) {
-                const hoverId = globalHoverId++;
-                hoverIds.push(hoverId);
-                const { isOutside } = useMouseInElement(el);
-                watch(isOutside, (outside) => {
-                    // TODO / WARNING: runtime type checks hasn't been implemented yet!
-                    // you can connect a string source to a number target - but also there's only numbers right now
-                    if (modItemComponent.value?.dragOpenDropdown && !outside && !props.target.connected(key)) {
-                        // can only start hover over one thing at a time, this is fine
-                        // hover counter only handles ending hover
-                        TileEditor.modulatorDrag.target = props.target;
-                        TileEditor.modulatorDrag.targetKey = key;
-                        globalHoverCounter.add(hoverId);
-                    } else globalHoverCounter.delete(hoverId);
-                });
-            }
-        });
+const hoveredElement = inject<Ref<Element | null>>('sidebarModulatorHoveredElement');
+if (hoveredElement === undefined) throw new Error('ModulatorTargetItem target not placed within SidebarModulators!');
+// function ref because template ref stopped working for some reason, honestly I have no idea the template ref stuff didn't change and it borked
+const modKeyElements: Record<string, HTMLDivElement | null> = {};
+const hoverId = globalHoverId++;
+watch([hoveredElement, () => TileEditor.modulatorDrag.source], () => {
+    if (TileEditor.modulatorDrag.source === null) {
+        globalHoverCounter.delete(hoverId);
+        // clearing of "target" field handled by TileEditor class
+        return;
     }
+    // hover counter tracks entire target items, when no target items are hovered it resets
+    // the item itself will only have one thing hovered at a time anyway, so no point assigning each key an id
+    for (const key in modKeyElements) {
+        const el = modKeyElements[key];
+        if (hoveredElement.value?.isSameNode(el)) {
+            globalHoverCounter.add(hoverId);
+            TileEditor.modulatorDrag.target = props.target;
+            TileEditor.modulatorDrag.targetKey = key;
+            return;
+        }
+    }
+    // no hover found
+    globalHoverCounter.delete(hoverId);
+    if (globalHoverCounter.size == 0) TileEditor.modulatorDrag.target = null;
 });
 </script>
 <script lang="ts">
@@ -59,19 +53,18 @@ watch([modKeyElements, () => TileEditor.modulatorDrag.source !== null], () => {
 // need some sort of global state since vue reactivity lumps all the updates to the end of the tick
 // race conditions bla bla one instance clears the drop target after another instance sets it to itself
 // this bit clears the drop target only when there are 0 items hovered over globally
-const globalHoverCounter = reactive(new Set<number>());
+const globalHoverCounter = new Set<number>();
 let globalHoverId = 0;
-watch(() => globalHoverCounter.size, () => globalHoverCounter.size == 0 ? TileEditor.modulatorDrag.target = null : void 0);
 </script>
 
 <template>
-    <ModulatorItem type="target" ref="modItem" :label="props.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
+    <ModulatorItem type="target" :label="props.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
         <template v-for="key in modKeys" v-slot:[key]>
             <div :class="{
                 targetDrop: true,
                 targetDropAccepting: TileEditor.modulatorDrag.target === props.target && TileEditor.modulatorDrag.targetKey == key,
                 targetDropFull: props.target.connected(key)
-            }" :ref="key" :title="props.target.connected(key) ? 'Target is already connected' : 'Drag source here to create a connection'"></div>
+            }" :ref="(el) => modKeyElements[key] = el as HTMLDivElement | null" :title="props.target.connected(key) ? 'Target is already connected' : 'Drag source here to create a connection'"></div>
         </template>
     </ModulatorItem>
 </template>

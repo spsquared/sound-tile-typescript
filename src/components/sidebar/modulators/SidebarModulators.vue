@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, Raw, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, provide, Raw, ref, useTemplateRef, watch } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { ImageTile, Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -114,6 +114,17 @@ function setTileHover(tile: Tile) {
 function resetTileHover() {
     TileEditor.state.sidebarIdentifyTile = null;
 }
+
+// passing in hovered element for drag-and-drop to get around big div covering the whole screen
+// takes all the elements and then removes the first which is always the dragging thing
+const hoveredElement = ref<Element | null>(null);
+provide('sidebarModulatorHoveredElement', hoveredElement);
+function updateHoveredElements(e: MouseEvent) {
+    if (TileEditor.modulatorDrag.source === null) return;
+    hoveredElement.value = document.elementsFromPoint(e.clientX, e.clientY)[1] ?? null;
+}
+onMounted(() => document.addEventListener('mousemove', updateHoveredElements));
+onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElements));
 
 // TODO: search bar in sources and targets for finding things in larger layouts (it just filters the labels)
 </script>

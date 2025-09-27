@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ComputedRef, ref, useTemplateRef, watch } from 'vue';
-import { useElementSize, useMouseInElement } from '@vueuse/core';
+import { inject, ref, Ref, useTemplateRef, watch } from 'vue';
+import { useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import { Tile } from '@/visualizer/tiles';
@@ -16,51 +16,36 @@ const props = defineProps<{
 
 // targets open drag and drop list when user is dragging a source and any part of the item is hovered over
 const modItem = useTemplateRef('modItem');
-const modDragDropdown = useTemplateRef('modDragDropdown');
-const dropdownId = dropdownIdCounter++;
-const dragOpenDropdown = props.type == 'source' ? ref(false) : (() => {
-    // dont do a bunch of garbage when not dragging (it adds up) also terrible name lol
-    const modItem2 = computed(() => TileEditor.modulatorDrag.source !== null ? modItem.value : null);
-    const modDragDropdown2 = computed(() => TileEditor.modulatorDrag.source !== null ? modDragDropdown.value : null);
-    const { isOutside: outsideA } = useMouseInElement(modItem2);
-    const { isOutside: outsideB } = useMouseInElement(modDragDropdown2);
-    const hovered = computed(() => (!outsideA.value || !outsideB.value) && TileEditor.modulatorDrag.source !== null);
-    watch([hovered, currentOpenDropdown], () => {
-        if (hovered.value) currentOpenDropdown.value ??= dropdownId;
-        else if (currentOpenDropdown.value === dropdownId) currentOpenDropdown.value = null;
+const dragHovering = ref(false);
+if (props.type == 'target') {
+    const hoveredElement = inject<Ref<Element | null>>('sidebarModulatorHoveredElement');
+    if (hoveredElement === undefined) throw new Error('ModulatorItem target not placed within SidebarModulators!');
+    watch([hoveredElement, () => TileEditor.modulatorDrag.source], () => {
+        dragHovering.value = (modItem.value?.contains(hoveredElement.value) ?? false) && TileEditor.modulatorDrag.source !== null;
     });
-    return computed(() => currentOpenDropdown.value == dropdownId);
-})();
-defineExpose({
-    dragOpenDropdown: dragOpenDropdown as ComputedRef<boolean>
-});
+}
 
 const dragItems = useTemplateRef('modDragItems');
 const { height: dragItemsHeight } = useElementSize(dragItems);
-</script>
-<script lang="ts">
-// MORE JANK!!!
-// make sure only one dropdown is open at a time for the drag-and-drop jank
-const currentOpenDropdown = ref<number | null>(null);
-let dropdownIdCounter = 0;
 </script>
 
 <template>
     <div :class="{
         modItem: true,
-        modItemIdentify: TileEditor.state.editWindowIdentifyTile === (props.tile ?? 1) /* diff type */
+        modItemIdentify: TileEditor.state.editWindowIdentifyTile === (props.tile ?? 1), /* diff type */
+        modItemDragHovering: dragHovering
     }" ref="modItem" :title="props.tile !== null ? `Tile associated with source: ${props.label}` : `Source: ${props.label}`">
         <div class="modLabel">{{ props.label }}</div>
-        <div :class="{ modDragContainer: true, modDragContainerAlwaysOpen: dragOpenDropdown }" title="">
+        <div class="modDragContainer" title="">
             <div class="modDragDropdown" ref="modDragDropdown">
-                <div class="modDragDropdownBorder"></div>
-                <div class="modDragDropdownHeader">{{ props.type == 'source' ? 'Sources' : 'Targets' }}</div>
                 <div class="modDragItems" ref="modDragItems">
                     <div v-for="key in props.modulationKeys" class="modDragItem">
                         <div>{{ key }}</div>
                         <slot :name="key"></slot>
                     </div>
                 </div>
+                <div class="modDragDropdownBorder"></div>
+                <div class="modDragDropdownHeader">{{ props.type == 'source' ? 'Sources' : 'Targets' }}</div>
             </div>
             <div class="modDragIcon"></div>
         </div>
@@ -83,7 +68,8 @@ let dropdownIdCounter = 0;
     background-color: var(--mod-item-background-color);
 }
 
-.modItem:hover {
+.modItem:hover,
+.modItemDragHovering {
     --mod-item-background-color: #333;
 }
 
@@ -143,13 +129,13 @@ let dropdownIdCounter = 0;
 }
 
 .modDragContainer:hover,
-.modDragContainerAlwaysOpen {
+.modItemDragHovering>.modDragContainer {
     /* appear above other things */
     z-index: 2;
 }
 
 .modDragContainer:hover>.modDragDropdown,
-.modDragContainerAlwaysOpen>.modDragDropdown {
+.modItemDragHovering>.modDragContainer>.modDragDropdown {
     min-width: var(--mod-dropdown-width);
     min-height: v-bind("dragItemsHeight + 44 + 'px'");
     /* 24px header + 4px border + 8px padding x2 */
@@ -181,6 +167,8 @@ let dropdownIdCounter = 0;
     border-top: none;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
+    /* border is on top (intentionally, so animation looks better) */
+    pointer-events: none;
 }
 
 .modDragItems {
