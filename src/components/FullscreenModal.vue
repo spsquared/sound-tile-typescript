@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue';
+import { Ref, ref, useTemplateRef, watch } from 'vue';
 import { createFocusTrap, FocusTrap } from 'focus-trap';
 import { matchInput } from '@/constants';
 import { AsyncLock } from './scripts/lock';
@@ -63,6 +63,7 @@ watch(body, () => {
 defineExpose<{
     open: () => void
     openAsync: () => Promise<boolean>
+    isOpen: Ref<boolean>
 }>({
     open: () => {
         open.value = true;
@@ -73,7 +74,8 @@ defineExpose<{
         await openLock.acquire();
         openLock.release();
         return result.value;
-    }
+    },
+    isOpen: open
 });
 </script>
 <script lang="ts">

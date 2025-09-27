@@ -31,14 +31,14 @@ async function uploadToCurrent() {
             TileEditor.lock.release();
             return;
         }
-        MediaPlayer.state.current = media;
+        MediaPlayer.media.current = media;
     }
     TileEditor.lock.release();
 }
 async function downloadFromCurrent() {
     if (TileEditor.lock.locked) return;
     await TileEditor.lock.acquire();
-    const buffer = await MediaPlayer.state.current.compress();
+    const buffer = await MediaPlayer.media.current.compress();
     if (buffer === null) {
         errorMessageType.value = true;
         errorModalOpen.value = true;

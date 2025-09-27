@@ -7,29 +7,30 @@ import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
 import { VisualizerMode } from './visualizerData';
 import Modulation from './modulation';
 
-type MediaPlayerState = {
-    current: Media
-    shuffle: boolean
-    loop: boolean
-    volume: number
-    mediaDataTabOpen: boolean
-};
-
 /**
  * Global media controls, coordinates visualizer & controls.
  */
 export class MediaPlayer {
-    static readonly state: MediaPlayerState = reactive<MediaPlayerState>({
-        current: new Media({
-            title: '',
-            subtitle: '',
-            coverArt: defaultCoverArt
-        }),
+    static readonly state: {
+        shuffle: boolean
+        loop: boolean
+        volume: number
+        mediaDataTabOpen: boolean
+    } = reactive({
         shuffle: localStorage.getItem('shuffle') == 'true',
         loop: localStorage.getItem('loop') == 'true',
         volume: Number(localStorage.getItem('volume') ?? '1'),
         mediaDataTabOpen: false
-    }) as MediaPlayerState;
+    });
+    static readonly media = reactive({
+        current: new Media({
+            title: '',
+            subtitle: '',
+            coverArt: defaultCoverArt
+        })
+    }) as {
+        current: Media
+    };
     private static readonly internalTimer = reactive<{
         // setting startTime essentially determines the offset of the audio
         startTime: number
@@ -120,13 +121,13 @@ export class MediaPlayer {
 
     // playlist and session
     static {
-        watch(() => this.state.current, async (_session, oldSession) => {
+        watch(() => this.media.current, async (_session, oldSession) => {
             // put the old tree back into old session
             await TileEditor.lock.acquire();
             oldSession.tree = TileEditor.detachRoot();
-            this.state.current.tree = TileEditor.attachRoot(this.state.current.tree);
+            this.media.current.tree = TileEditor.attachRoot(this.media.current.tree);
             TileEditor.lock.release();
-            this.state.mediaDataTabOpen = this.state.current.title.trim().length > 0;
+            this.state.mediaDataTabOpen = this.media.current.title.trim().length > 0;
         });
     }
 }
@@ -155,7 +156,7 @@ export class MediaPlayer {
     visB.visualizer.data.mode = VisualizerMode.CHANNEL_PEAKS;
     root.addChild(visB);
     root.label = 'Root Group Tile';
-    MediaPlayer.state.current = new Media({
+    MediaPlayer.media.current = new Media({
         title: '',
         subtitle: '',
         coverArt: defaultCoverArt
