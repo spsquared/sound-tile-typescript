@@ -63,7 +63,7 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(sources: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Source<Props>['typeLabels']>, label?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
+        constructor(sources: Props, { typeLabels, labelSource, tile }: { typeLabels?: Partial<Source<Props>['typeLabels']>, labelSource?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
             // markRaw blocks automatic ref unwrapping
             this.sources = markRaw({ ...sources });
             this.typeLabels = markRaw({ ...Object.entries(sources).reduce((obj, [k, v]) => (obj[k] = typeof (typeof v == 'function' ? v() : v.value), obj), {} as any), ...typeLabels });
@@ -73,11 +73,11 @@ export namespace Modulation {
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
             this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
             this.effectScope = effectScope();
-            if (label !== undefined) {
-                if (typeof label == 'string') this.label = label;
+            if (labelSource !== undefined) {
+                if (typeof labelSource == 'string') this.label = labelSource;
                 else this.effectScope.run(() => {
                     const rThis = reactive(this);
-                    watch(label, (v) => rThis.label = v, { immediate: true });
+                    watch(labelSource, (v) => rThis.label = v, { immediate: true });
                 });
             }
             this.tile = tile ?? null;
@@ -239,18 +239,18 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(initialValues: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Target<Props>['typeLabels']>, label?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
+        constructor(initialValues: Props, { typeLabels, labelSource, tile }: { typeLabels?: Partial<Target<Props>['typeLabels']>, labelSource?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
             // markRaw prevents automatic ref unwrapping shitting all over the types
             this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
             this.typeLabels = markRaw({ ...Object.entries(initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
             this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
             this.effectScope = effectScope();
-            if (label !== undefined) {
-                if (typeof label == 'string') this.label = label;
+            if (labelSource !== undefined) {
+                if (typeof labelSource == 'string') this.label = labelSource;
                 else this.effectScope.run(() => {
                     const rThis = reactive(this);
-                    watch(label, (v) => rThis.label = v, { immediate: true });
+                    watch(labelSource, (v) => rThis.label = v, { immediate: true });
                 });
             }
             this.tile = tile ?? null;

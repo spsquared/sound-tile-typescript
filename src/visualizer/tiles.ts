@@ -271,7 +271,7 @@ export class VisualizerTile extends Tile {
         this.modulator = new Modulation.Source({
             peak: () => this.visualizer.renderer.frameResult.value.approximatePeak
         }, {
-            label: () => reactive(this).label,
+            labelSource: () => reactive(this).label,
             tile: this
         }); // overhead? should only track label
     }
@@ -290,6 +290,8 @@ export class VisualizerTile extends Tile {
     }
     protected static reconstitute(data: MediaSchema.VisualizerTile, tile: VisualizerTile): VisualizerTile {
         super.reconstitute(data, tile);
+        // scuffed patch for label reactivity
+        reactive(tile).label = tile.label;
         // if for some reason some tile extends VisualizerTile it'll have to apply visualizer data on its own
         return tile;
     }
@@ -366,7 +368,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         imgOffsetY: 0,
         imgRotation: 0
     }, {
-        label: () => reactive(this).label,
+        labelSource: () => reactive(this).label,
         tile: this
     });
 
