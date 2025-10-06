@@ -3,15 +3,11 @@ An app that lets you visualize music (or other sounds) in tiles.
 
 Like [corrscope](https://github.com/corrscope/corrscope) but different.
 
-Sound Tile runs in the browser (officially hosted at [soundtile.web.app](https://soundtile.web.app)) or as a desktop app (which unlocks more features), and features customizable spectrum analyzers (FFT) and waveform modes.
+Sound Tile is a highly-customizable real-time music visualization app that runs in the browser. It aims to provide flexible layout possibilities for any music visualization need in real time (NO pre-processing!!), featuring spectrum analyzers, waveform correlation (like corrscope), and spectrograms.
 
-**STUFF**:
-* Runs in real-time
-* Multiple drawing styles for spectrum analyzers
-* c o l o r s
-* Realtime waveform correlation
-* Basic text/image placement
-* Also reactive images
+Officially hosted online at ~~[soundtile.web.app](https://soundtile.web.app)~~ (*still the [original Sound Tile](https://github.com/spsquared/sound-tile) until this version reaches stable builds*) with development builds at [soundtile-dev.web.app](https://soundtile-dev.web.app).
+
+There will be a better showcase and tutorial of features in the future, but for now, check out the sites and experiment!
 
 Sample screenshots:
 | | | |
