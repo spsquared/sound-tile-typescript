@@ -7,6 +7,7 @@ import Sidebar from '@/components/sidebar/Sidebar.vue';
 import TileRoot from '@/components/main/TileRoot.vue';
 import TileDrag from '@/components/main/TileDrag.vue';
 import ModulatorDrag from './components/main/ModulatorDrag.vue';
+import TutorialMaster from './components/main/TutorialMaster.vue';
 
 const showAppInfo = ref(false);
 provide('showAppInfoRef', showAppInfo);
@@ -47,6 +48,7 @@ window.addEventListener('unhandledrejection', (e) => {
     <TileRoot></TileRoot>
     <TileDrag></TileDrag>
     <ModulatorDrag></ModulatorDrag>
+    <TutorialMaster></TutorialMaster>
     <FullscreenModal v-model="showAppInfo" :title="`Sound Tile v${version}`" mode="notify" effect="frost-window">
         <b>{{ copyright }} under GNU GPL 3.0</b>
         <br>

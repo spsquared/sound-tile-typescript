@@ -4,14 +4,14 @@ import TileEditor from '@/visualizer/editor';
 </script>
 
 <template>
-    <div class="tileRoot">
+    <div id="tileRoot">
         <GroupTile :tile="TileEditor.root"></GroupTile>
     </div>
-    <div class="tileIdleCover" v-if="TileEditor.state.idleHideTabs"></div>
+    <div id="tileIdleCover" v-if="TileEditor.state.idleHideTabs"></div>
 </template>
 
 <style scoped>
-.tileRoot {
+#tileRoot {
     box-sizing: border-box;
     display: flex;
     position: fixed;
@@ -27,7 +27,7 @@ import TileEditor from '@/visualizer/editor';
     --radial-gradient-size: 50vmax;
 }
 
-.tileIdleCover {
+#tileIdleCover {
     position: fixed;
     top: 0px;
     left: 0px;
