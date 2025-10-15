@@ -271,7 +271,6 @@ export class VisualizerTile extends Tile {
         this.modulator = new Modulation.Source({
             peak: () => this.visualizer.renderer.frameResult.value.approximatePeak
         }, {
-            labelSource: () => reactive(this).label,
             tile: this
         }); // overhead? should only track label
     }
@@ -368,7 +367,6 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         imgOffsetY: 0,
         imgRotation: 0
     }, {
-        labelSource: () => reactive(this).label,
         tile: this
     });
 

@@ -129,6 +129,11 @@ export class MediaPlayer {
             TileEditor.lock.release();
             this.state.mediaDataTabOpen = this.media.current.title.trim().length > 0;
         });
+        watch([() => this.media.current.title, this.media.current.subtitle], () => {
+            const titleTrim = this.media.current.title.trim();
+            const subtitleTrim = this.media.current.subtitle.trim();
+            document.title = `Sound Tile - ${titleTrim.substring(0, 32)}${titleTrim.length > 32 ? '...' : ''}${subtitleTrim.length > 0 ? ' - ' : ''}${subtitleTrim.substring(0, 32)}${subtitleTrim.length > 32 ? '...' : ''}`;
+        });
     }
 }
 

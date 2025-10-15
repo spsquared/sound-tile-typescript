@@ -1,4 +1,4 @@
-import { ComputedRef, effectScope, EffectScope, markRaw, MaybeRefOrGetter, reactive, ref, Ref, watch, WatchHandle } from 'vue';
+import { ComputedRef, effectScope, EffectScope, markRaw, reactive, ref, Ref, watch, WatchHandle } from 'vue';
 import { Tile } from './tiles';
 
 export namespace Modulation {
@@ -59,11 +59,12 @@ export namespace Modulation {
          * @param sources Source refs
          * - Source refs will be the same as the ones in the `sources` property
          * - Using computed refs and getters allows modulation based on external dependencies without additional code
-         * @param typeLabels Optionally label sources to make type requirements in UI elements stricter
+         * @param options Additional options
+         * - `typeLabels` Optionally label sources to make type requirements in UI elements stricter
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(sources: Props, { typeLabels, labelSource, tile }: { typeLabels?: Partial<Source<Props>['typeLabels']>, labelSource?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
+        constructor(sources: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Source<Props>['typeLabels']>, label?: string, tile?: Tile } = { typeLabels: {} }) {
             // markRaw blocks automatic ref unwrapping
             this.sources = markRaw({ ...sources });
             this.typeLabels = markRaw({ ...Object.entries(sources).reduce((obj, [k, v]) => (obj[k] = typeof (typeof v == 'function' ? v() : v.value), obj), {} as any), ...typeLabels });
@@ -73,13 +74,10 @@ export namespace Modulation {
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
             this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
             this.effectScope = effectScope();
-            if (labelSource !== undefined) {
-                if (typeof labelSource == 'string') this.label = labelSource;
-                else this.effectScope.run(() => {
-                    const rThis = reactive(this);
-                    watch(labelSource, (v) => rThis.label = v, { immediate: true });
-                });
-            }
+            if (label !== undefined) this.label = label;
+            if(tile !== undefined) this.effectScope.run(() => {
+                watch(() => reactive(tile).label, (v) => this.label = v, { immediate: true });
+            });
             this.tile = tile ?? null;
         }
 
@@ -239,20 +237,18 @@ export namespace Modulation {
          * (this is entirely for distinguishing types at runtime), if a label is omitted, the `typeof` operator
          * will be used to determine the type of a source.
          */
-        constructor(initialValues: Props, { typeLabels, labelSource, tile }: { typeLabels?: Partial<Target<Props>['typeLabels']>, labelSource?: MaybeRefOrGetter<string>, tile?: Tile } = { typeLabels: {} }) {
+        constructor(initialValues: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Target<Props>['typeLabels']>, label?: string, tile?: Tile } = { typeLabels: {} }) {
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
             // markRaw prevents automatic ref unwrapping shitting all over the types
             this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
             this.typeLabels = markRaw({ ...Object.entries(initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
             this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
             this.effectScope = effectScope();
-            if (labelSource !== undefined) {
-                if (typeof labelSource == 'string') this.label = labelSource;
-                else this.effectScope.run(() => {
-                    const rThis = reactive(this);
-                    watch(labelSource, (v) => rThis.label = v, { immediate: true });
-                });
-            }
+            if (label !== undefined) this.label = label;
+            // adopt tile label
+            if(tile !== undefined) this.effectScope.run(() => {
+                watch(() => reactive(tile).label, (v) => this.label = v, { immediate: true });
+            });
             this.tile = tile ?? null;
         }
 
