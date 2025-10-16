@@ -58,7 +58,7 @@ let globalHoverId = 0;
 </script>
 
 <template>
-    <ModulatorItem type="target" :label="props.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
+    <ModulatorItem type="target" :label="props.target.tile?.label ?? props.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
         <template v-for="key in modKeys" v-slot:[key]>
             <div :class="{
                 targetDrop: true,

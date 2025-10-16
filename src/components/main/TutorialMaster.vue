@@ -164,6 +164,7 @@ function futilelyTryClose(ok: boolean) {
         if (hostageData !== null) TileEditor.attachRoot(hostageData);
         VisualizerRenderer.debugInfo = 0;
         hostageData = null;
+        TileEditor.root.label = 'Warning';
         return;
     } 
     if (ok) message.value = message.value.children[0];
