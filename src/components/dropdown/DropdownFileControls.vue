@@ -18,7 +18,7 @@ async function uploadToCurrent() {
         types: [{
             description: 'Sound Tile Layouts',
             accept: {
-                'application/octet-stream': ['.soundtile']
+                'application/x-soundtile': ['.soundtile']
             }
         }],
         excludeAcceptAllOption: true
@@ -45,7 +45,7 @@ async function downloadFromCurrent() {
         TileEditor.lock.release();
         return;
     }
-    const file = new Blob([buffer], { type: 'application/octet-stream' });
+    const file = new Blob([buffer], { type: 'application/x-soundtile' });
     const current = new Date();
     await FileAccess.saveFilePicker({
         id: 'soundtileDownloadTiles',
@@ -53,7 +53,7 @@ async function downloadFromCurrent() {
         types: [{
             description: 'Sound Tile Layouts',
             accept: {
-                'application/octet-stream': ['.soundtile']
+                'application/x-soundtile': ['.soundtile']
             }
         }],
         suggestedName: `${current.getHours()}-${current.getMinutes()}_${current.getMonth()}-${current.getDay()}-${current.getFullYear()}.soundtile`

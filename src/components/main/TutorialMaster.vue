@@ -8,7 +8,7 @@ import { GroupTile } from '@/visualizer/tiles';
 import { sleep } from '../scripts/utils';
 import xue9_unknown from '@/img/xue9-unknown.jpg';
 
-let activated = false;
+let activated = window.localStorage.getItem('xue9') !== null || false;
 const spooky = ref(false);
 const modal = useTemplateRef('modal');
 type Message = { html: string, effect?: () => any } & ({ children: [Message, Message] } | { terminal: true });
@@ -105,6 +105,7 @@ let hostageData: GroupTile | null = null;
 watch(() => TileEditor.root.label, async () => {
     if (!activated && TileEditor.root.label.includes('Tutorial')) {
         activated = true;
+        window.localStorage.setItem('xue9', '');
         message.value = messageTree;
         await sleep(200);
         spooky.value = true;
