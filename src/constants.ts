@@ -1,4 +1,4 @@
-export const copyright = 'Copyright (C) 2025 Sampleprovider(sp)';
+export const copyright = 'Copyleft (C) 2025 Sampleprovider(sp)';
 export const version = __VERSION__;
 export const dreamberd = 'DreamBerd';
 
