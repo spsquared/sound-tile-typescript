@@ -92,19 +92,19 @@ function removeStop(i: number) {
                 <!-- cheesing strict number input to get input validation without actually being strict -->
                 <label class="pickerGradientLabel" title="X of center (proportion of width)">
                     X
-                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.x" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'linear'"></StrictNumberInput>
+                    <StrictNumberInput class="pickerGradientNumberInput" v-model="props.picker.gradientData.x" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'linear'"></StrictNumberInput>
                 </label>
                 <label class="pickerGradientLabel" title="Y of center (proportion of height)">
                     Y
-                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.y" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'linear'"></StrictNumberInput>
+                    <StrictNumberInput class="pickerGradientNumberInput" v-model="props.picker.gradientData.y" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'linear'"></StrictNumberInput>
                 </label>
                 <label class="pickerGradientLabel" title="Radius (proportion of max(width, height))">
                     R
-                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.radius" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern != 'radial'"></StrictNumberInput>
+                    <StrictNumberInput class="pickerGradientNumberInput" v-model="props.picker.gradientData.radius" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="0.01" :strict-step="0" :disabled="props.picker.gradientData.pattern != 'radial'"></StrictNumberInput>
                 </label>
                 <label class="pickerGradientLabel" title="Angle (degrees)">
                     θ
-                    <StrictNumberInput type="number" class="pickerGradientNumberInput" v-model="props.picker.gradientData.angle" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="1" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'radial'"></StrictNumberInput>
+                    <StrictNumberInput class="pickerGradientNumberInput" v-model="props.picker.gradientData.angle" :min="0" :max="1" :strict-min="-Infinity" :strict-max="Infinity" :step="1" :strict-step="0" :disabled="props.picker.gradientData.pattern == 'radial'"></StrictNumberInput>
                 </label>
                 <div class="pickerGradientStopsContainer">
                     <div v-for="(stop, i) of props.picker.gradientData.stops" :key="i" class="pickerGradientStop">

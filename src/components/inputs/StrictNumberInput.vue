@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
     min?: number
@@ -11,30 +11,38 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (e: 'input', value: number): any
+    (e: 'rawinput', value: number): any
     (e: 'keydown', ev: KeyboardEvent): any
 }>();
 
-const number = defineModel({ default: 0 });
-const displayedValue = ref(number.value);
+const model = defineModel({ default: 0 }); // model value - outside changes always update internal and displayed values
+const value = ref(model.value); // the internal value - always updates model value, only updates displayed on blur
+const displayedValue = ref(model.value); // displayed - only updates internal value
+
+watch(model, (v) => value.value != v && (value.value = v, displayedValue.value = v));
+watch(value, (v) => model.value != v && (model.value = v));
 
 function input() {
     const step = props.strictStep ?? props.step;
     const clamped = Math.max(props.strictMin ?? props.min ?? -Infinity, Math.min(displayedValue.value, props.strictMax ?? props.max ?? Infinity));
     if (step != undefined && step > 0) {
-        number.value = Number((Math.round(clamped / step) * step).toFixed((step.toString().split('.')[1] ?? '').length));
+        value.value = Number((Math.round(clamped / step) * step).toFixed((step.toString().split('.')[1] ?? '').length));
     } else {
-        number.value = clamped;
+        value.value = clamped;
     }
-    emit('input', number.value);
+    emit('input', value.value);
+    emit('rawinput', displayedValue.value);
 }
 function blur() {
-    displayedValue.value = number.value;
+    displayedValue.value = value.value;
+    emit('rawinput', displayedValue.value);
 }
 function keydown(e: KeyboardEvent) {
     emit('keydown', e);
 }
+
 defineExpose({
-    value: number
+    value: value
 });
 </script>
 

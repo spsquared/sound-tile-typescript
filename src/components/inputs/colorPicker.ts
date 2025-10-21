@@ -83,7 +83,6 @@ export class ColorPicker {
         }
         return '#FFFFFF';
     }
-
     get colorData(): ColorData {
         // sort of need these extra "_" (lol face) properties to trigger reactivity when color data changes
         if (this.type == 'solid') {
@@ -103,7 +102,6 @@ export class ColorPicker {
             alpha: 1
         };
     }
-
     set colorData(data: ColorData) {
         this.type = data.type;
         if (data.type == 'solid') {
@@ -116,7 +114,6 @@ export class ColorPicker {
     copyColor(): void {
         clipboard.value = cloneDeep(this.colorData);
     }
-
     pasteColor(): void {
         this.colorData = cloneDeep(clipboard.value);
     }
