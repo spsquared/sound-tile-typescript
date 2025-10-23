@@ -1,5 +1,6 @@
-export const copyright = 'Copyleft (C) 2025 Sampleprovider(sp)';
+export const copyright = 'Copyleft (ɔ) 2025 Sampleprovider(sp)';
 export const version = __VERSION__;
+export const repositoryURL = "https://github.com/spsquared/sound-tile-typescript";
 export const dreamberd = 'DreamBerd';
 
 export const matchInput = (target: EventTarget | null) => target instanceof HTMLElement && target.matches('button,input,textarea,trix-editor');

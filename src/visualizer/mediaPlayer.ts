@@ -1,7 +1,7 @@
 import { computed, ComputedRef, reactive, ref, Ref, watch, WritableComputedRef } from 'vue';
 import { Media, defaultCoverArt } from './media';
 import Visualizer from './visualizer';
-import { throttledWatch, useWakeLock } from '@vueuse/core';
+import { useLocalStorage, useWakeLock } from '@vueuse/core';
 import TileEditor from './editor';
 import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
 import { VisualizerMode } from './visualizerData';
@@ -17,9 +17,10 @@ export class MediaPlayer {
         volume: number
         mediaDataTabOpen: boolean
     } = reactive({
-        shuffle: localStorage.getItem('shuffle') == 'true',
-        loop: localStorage.getItem('loop') == 'true',
-        volume: Number(localStorage.getItem('volume') ?? '1'),
+        // the one time automatic ref unwrapping is good
+        shuffle: useLocalStorage('shuffle', false),
+        loop: useLocalStorage('loop', false),
+        volume: useLocalStorage('volume', 1),
         mediaDataTabOpen: false
     });
     static readonly media = reactive({
@@ -92,14 +93,11 @@ export class MediaPlayer {
 
     // playback
     static {
-        watch(() => this.state.shuffle, () => localStorage.setItem('shuffle', this.state.shuffle + ''));
-        watch(() => this.state.loop, () => localStorage.setItem('loop', this.state.loop + ''));
         watch(() => this.state.volume, () => {
             Visualizer.gain.gain.value = this.state.volume;
-            localStorage.setItem('volume', this.state.volume.toString());
         }, { immediate: true });
         watch(() => this.internalTimer.now, () => this.updateTime());
-        throttledWatch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
+        watch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
             if (this.playing.value && Visualizer.duration > 0) {
                 if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
                 else Visualizer.start(this.internalTimer.currentTime); // reactivity runs this with the above line and restarts playback
@@ -108,7 +106,7 @@ export class MediaPlayer {
                 Visualizer.stop();
                 this.wakeLock.release();
             }
-        }, { throttle: 10, leading: true, trailing: true });
+        });
         watch(() => Visualizer.duration, () => {
             if (this.internalTimer.currentTime >= Visualizer.duration) this.setTime(Visualizer.duration);
         });
