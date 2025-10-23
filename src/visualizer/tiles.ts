@@ -164,8 +164,9 @@ export class GroupTile extends Tile {
     }
     private checkObsolete(): void {
         if (this.parent === null) {
-            // special case for root, lower tile then becomes root
+            // special case for root, make the child root instead
             if (this.children.length == 1 && this.children[0] instanceof GroupTile) {
+                this.copyProperties(this.children[0]);
                 const children = this.children[0].children;
                 for (const child of children) child.parent = this;
                 this.children.length = 0;

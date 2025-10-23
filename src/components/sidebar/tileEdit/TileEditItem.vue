@@ -57,9 +57,7 @@ function dragTile(e: MouseEvent) {
     }
 }
 function deleteTile() {
-    // current undo system isn't advanced enough to store snapshots of modulations, just layout
-    // destroying changes modulations, so can't be stored
-    // TileEditor.markLayoutChange();
+    TileEditor.markLayoutChange();
     props.tile.destroy();
 }
 </script>
