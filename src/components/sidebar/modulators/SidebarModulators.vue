@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, Raw, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { ImageTile, Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -63,32 +63,26 @@ onUnmounted(() => {
 // instead of just giving you... idk... a CLASS NAME???
 
 const debouncedTiles = useDebounce(TileEditor.currentTiles, 100);
-// misleading type here - it's not raw but this is easier than spaghetti reactive type or "any"
 // thanks vue for deleting my private members that are still there and then complaining that they're not there
-const sourceList = ref<Raw<Modulation.Source<any>>[]>([]);
-watch(debouncedTiles, () => {
-    const tiles: typeof sourceList.value = [];
+// ok for some reason this doesn't produce random ref unwrapping bullshit but the previous code using refs and watch functions did???
+const sourceList = computed(() => {
+    const tiles: Modulation.Source<any>[] = [];
     for (const tile of debouncedTiles.value) {
         if (tile instanceof VisualizerTile) tiles.push(tile.modulator); // this is actually reactive because it was pulled out of the reactive root tile
     }
-    sourceList.value = tiles;
-}, {
-    // onTrack: () => console.debug('track source list'),
-    // onTrigger: () => console.debug('trigger source list change')
+    // hard coded non-tile modulators are put at the top of the list
+    return tiles.sort((a, b) => (a.tile?.id ?? -Infinity) - (b.tile?.id ?? -Infinity));
 });
 // have to fake rawness because automatic ref unwrapping fucks around with the source class in connectedSources
 // even though for some fucking reason it's TOTALLY FINE in the code above
 // NO WAIT, NEVERMIND! PRIVATE MEMBERS ARE SHAFTED BY THE REACTIVE TYPE, IT'S NOT FINE
-const targetList = ref<Raw<Modulation.Target<any>>[]>([]);
-watch(debouncedTiles, () => {
-    const tiles: typeof targetList.value = [];
+// somehow its fine now WHAT THE FUCK
+const targetList = computed(() => {
+    const tiles: Modulation.Target<any>[] = [];
     for (const tile of debouncedTiles.value) {
         if (tile instanceof ImageTile) tiles.push(tile.modulation); // also actually reactive but also tiles might not be reactive who knows??????????
     }
-    targetList.value = tiles;
-}, {
-    // onTrack: () => console.debug('track target list'),
-    // onTrigger: () => console.debug('trigger target list change')
+    return tiles.sort((a, b) => (a.tile?.id ?? -Infinity) - (b.tile?.id ?? -Infinity));
 });
 // this isnt cumbersome at all
 const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap((source) =>

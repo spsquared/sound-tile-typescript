@@ -69,7 +69,7 @@ defineExpose({
     border-radius: 4px;
     transition: 100ms linear transform;
     transform: translateX(-4px);
-    background-image: v-bind('`url("${$props.icon}")`');
+    background-image: v-bind('$props.icon !== undefined ? `url("${$props.icon}")` : ``');
     background-position: center;
     background-size: v-bind("iconSize ?? '80% 80%'");
     background-repeat: no-repeat;

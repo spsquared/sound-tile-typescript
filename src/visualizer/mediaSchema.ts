@@ -22,6 +22,7 @@ export namespace MediaSchema {
     };
     /**Visualizer tile schema-layout data - data is partial as files may be missing newer additions */
     export type VisualizerTile = Tile & {
+        // audio buffers are stored outside of tiles and replaced with indices to handle tiles with the same source
         data: DeepPartial<Omit<VisualizerData, 'buffer'>, ColorData> & { buffer: ArrayBuffer | number | null }
     };
     /**Text tile schema-layout data */

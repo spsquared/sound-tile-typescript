@@ -275,7 +275,7 @@ body.red #tileRoot * {
     left: -50%;
     width: 300%;
     background-color: rgba(255, 255, 255, 0.1);
-    background-image: url(./assets/noise.png);
+    background-image: url(@/assets/noise.png);
     background-size: auto;
     opacity: 0.2;
     animation: ss-grain 8s steps(10) infinite;
