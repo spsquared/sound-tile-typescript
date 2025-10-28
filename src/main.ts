@@ -1,4 +1,3 @@
-import '@/assets/fonts.css';
 import '@/assets/common.css';
 
 import '@/components/inputs/trix';
