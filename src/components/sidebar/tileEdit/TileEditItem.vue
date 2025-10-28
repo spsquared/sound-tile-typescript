@@ -64,7 +64,10 @@ function deleteTile() {
 
 <template>
     <div class="editItem">
-        <div :class="{ editItemBar: true, editItemBarIdentify: TileEditor.state.editWindowIdentifyTile === props.tile }" ref="handle" @mouseenter="setHover">
+        <div :class="{
+            editItemBar: true,
+            editItemBarIdentify: TileEditor.state.editWindowIdentifyTile === props.tile
+        }" ref="handle" @mouseenter="setHover">
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>

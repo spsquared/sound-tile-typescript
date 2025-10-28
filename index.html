@@ -3,18 +3,6 @@
 
 <head>
     <meta charset="UTF-8" />
-    <!-- really dumb csp -->
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        script-src 'self';
-        script-src-elem 'self';
-        worker-src 'self' blob:;
-        style-src 'self' 'unsafe-inline';
-        img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg;
-        font-src 'self';
-        frame-src 'self';
-        connect-src 'self';
-        ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="title" content="Sound Tile">
     <meta name="description" content="Tile-based real-time visualizer and music player">
@@ -29,6 +17,9 @@
     <link rel="icon" href="/favicon.png" type="image/png">
     <title>Sound Tile</title>
     <script type="module" src="/src/main.ts"></script>
+    <!-- noticed fonts/logo were loading slow because no SSR -->
+    <link rel="preload" href="/SourceCodePro.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/logo.png" as="image" type="image/png">
 </head>
 
 <body>

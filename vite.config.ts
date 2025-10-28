@@ -54,6 +54,10 @@ export default defineConfig(async () => ({
         https: existsSync('localhost.key') ? {
             key: readFileSync('localhost.key'),
             cert: readFileSync('localhost.crt')
-        } : undefined
+        } : undefined,
+        headers: {
+            // 'content-security-policy': "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg;",
+            // 'cache-control': 'public, max-age=43200'
+        }
     }
 }));

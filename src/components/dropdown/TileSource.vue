@@ -15,7 +15,7 @@ function createTile(e: MouseEvent | TouchEvent) {
 
 <template>
     <div class="tilePreview" @mousedown="createTile" @touchstart.passive="createTile">
-        <img class="tilePreviewImg" :src="props.tile.image">
+        <img class="tilePreviewImg" :src="props.tile.image" alt="">
         <div class="tilePreviewText">New {{ props.tile.name }}</div>
     </div>
 </template>
