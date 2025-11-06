@@ -36,7 +36,7 @@ const { height: dragItemsHeight } = useElementSize(dragItems);
         modItemDragHovering: dragHovering
     }" ref="modItem" :title="props.tile !== null ? `Tile associated with source: ${props.label}` : `Source: ${props.label}`">
         <div class="modLabel">{{ props.label }}</div>
-        <div class="modDragContainer" title="">
+        <div class="modDragContainer">
             <div class="modDragDropdown" ref="modDragDropdown">
                 <div class="modDragItems" ref="modDragItems">
                     <div v-for="key in props.modulationKeys" class="modDragItem">
@@ -47,7 +47,7 @@ const { height: dragItemsHeight } = useElementSize(dragItems);
                 <div class="modDragDropdownBorder"></div>
                 <div class="modDragDropdownHeader">{{ props.type == 'source' ? 'Sources' : 'Targets' }}</div>
             </div>
-            <div class="modDragIcon"></div>
+            <div class="modDragIcon" tabindex="0"></div>
         </div>
         <div class="modConnections" v-if="props.connections.length > 0">
             <ModulatorConnectionEntry v-for="c, i in props.connections" :key="i" :connection="c" :type="props.type"></ModulatorConnectionEntry>
@@ -129,12 +129,14 @@ const { height: dragItemsHeight } = useElementSize(dragItems);
 }
 
 .modDragContainer:hover,
+.modDragContainer:focus-within,
 .modItemDragHovering>.modDragContainer {
     /* appear above other things */
     z-index: 2;
 }
 
 .modDragContainer:hover>.modDragDropdown,
+.modDragContainer:focus-within>.modDragDropdown,
 .modItemDragHovering>.modDragContainer>.modDragDropdown {
     min-width: var(--mod-dropdown-width);
     min-height: v-bind("dragItemsHeight + 44 + 'px'");
