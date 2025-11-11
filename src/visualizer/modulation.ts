@@ -1,5 +1,15 @@
-import { ComputedRef, effectScope, EffectScope, markRaw, reactive, ref, Ref, watch, WatchHandle } from 'vue';
+import { ComputedRef, effectScope, EffectScope, markRaw, reactive, ref, Ref, toRaw, watch, WatchHandle } from 'vue';
 import { Tile } from './tiles';
+
+/**
+ * SPAGHETTI WARNING
+ * SPAGHETTI WARNING
+ * SPAGHETTI WARNING
+ * SPAGHETTI WARNING
+ * SPAGHETTI WARNING
+ * SPAGHETTI WARNING
+ * SPAGHETTI WARNING
+ */
 
 export namespace Modulation {
     export type SourcePropertyMap = Record<string, RefOrGetter>
@@ -75,7 +85,7 @@ export namespace Modulation {
             this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
-            if(tile !== undefined) this.effectScope.run(() => {
+            if (tile !== undefined) this.effectScope.run(() => {
                 watch(() => reactive(tile).label, (v) => this.label = v, { immediate: true });
             });
             this.tile = tile ?? null;
@@ -95,7 +105,7 @@ export namespace Modulation {
             targetKey: ValidTargetsForSource<TargetProps, Props[Key1]>,
             transforms: Transform<ExtractRefOrGetterValue<Props[Key1]>>[] = []
         ): boolean {
-            const normTarget = target instanceof Target ? target : target.modulation;
+            const normTarget = target instanceof Target ? toRaw(target) : toRaw(target.modulation);
             const publicTarget = normTarget as any as TargetInternalView<TargetProps>;
             // multiple sources to a target doesn't work, also prevents connecting to same thing twice
             if (publicTarget.connectionTrackers.has(targetKey)) return false;
@@ -118,9 +128,9 @@ export namespace Modulation {
             // update connection trackers (typing is a bit scuffed still)
             if (!this.connectionTrackers.has(normTarget)) this.connectionTrackers.set(normTarget, new Map());
             this.connectionTrackers.get(normTarget)!.set(sourceKey, targetKey);
-            publicTarget.connectionTrackers.set(targetKey, [this, sourceKey]);
+            publicTarget.connectionTrackers.set(targetKey, [toRaw(this), sourceKey]);
             (this.connectedTargets[sourceKey] as [Target<any>, string, Transform<any>[]][]).push([normTarget, targetKey, transforms]);
-            publicTarget.connectedSources[targetKey] = [this, sourceKey as string, transforms];
+            publicTarget.connectedSources[targetKey] = [toRaw(this), sourceKey as string, transforms];
             return true;
         }
 
@@ -163,7 +173,7 @@ export namespace Modulation {
                 for (const key in this.connectedTargets) (this.connectedTargets[key] as any) = [];
                 return;
             }
-            const normTarget = target instanceof Target ? target : target.modulation;
+            const normTarget = target instanceof Target ? toRaw(target) : toRaw(target.modulation);
             const publicTarget = normTarget as any as TargetInternalView<TargetProps>;
             if (sourceKey === undefined) {
                 // disconnect all modulations to a target
@@ -176,7 +186,7 @@ export namespace Modulation {
                     this.updateWatchers.get(targetRef)!();
                     this.updateWatchers.delete(targetRef);
                     publicTarget.connectionTrackers.delete(targetKey);
-                    (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t]) => t !== normTarget); // did I mention that I hate this line?
+                    (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t]) => toRaw(t) !== normTarget); // did I mention that I hate this line?
                     (normTarget.connectedSources as any)[targetKey] = null; // shut up "can only be indexed for reading"
                 }
                 this.connectionTrackers.delete(normTarget);
@@ -190,7 +200,7 @@ export namespace Modulation {
             this.updateWatchers.delete(targetRef);
             this.connectionTrackers.get(normTarget)?.delete(sourceKey);
             publicTarget.connectionTrackers.delete(targetKey!);
-            (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t, k]) => t !== normTarget || k !== targetKey); // this one's even worse
+            (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t, k]) => toRaw(t) !== normTarget || k !== targetKey); // this one's even worse
             publicTarget.connectedSources[targetKey!] = null;
         }
 
@@ -246,7 +256,7 @@ export namespace Modulation {
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
             // adopt tile label
-            if(tile !== undefined) this.effectScope.run(() => {
+            if (tile !== undefined) this.effectScope.run(() => {
                 watch(() => reactive(tile).label, (v) => this.label = v, { immediate: true });
             });
             this.tile = tile ?? null;

@@ -38,21 +38,22 @@ soundtileMsgpackExtensions.register({
 });
 // scuffed BigInt - 4
 const MAX_127_BYTE_BIGINT = 2n ** (127n * 8n) - 1n;
-console.log(MAX_127_BYTE_BIGINT)
 soundtileMsgpackExtensions.register({
     type: 4,
+    // wait msgpack keeps track of the length of the section anyway so length doesn't need to be encoded
+    // oops
     encode(input: unknown): Uint8Array | null {
         if (typeof input == 'bigint') {
             const n: bigint = input;
             // first bit is sign of bigint (1 negative)
-            const sign = n < 0 ? 0b10000000 : 0;
+            const sign = n < 0n ? 0b10000000 : 0;
             // for bigints smaller than 128 bytes, the last 7 bits are the byte length (with a minimum of 1 byte)
             // for larger bigints, the byte length is 0 and further bytes are used to hold length until a 0 byte is found
-            const absN = sign == 0 ? -n : n;
+            const absN = sign == 0 ? n : -n;
             const size = absN > MAX_127_BYTE_BIGINT ? 0 : ((n: bigint) => {
                 let i = 0;
-                while (n > 0) {
-                    n >> 8n;
+                while (n > 0n) {
+                    n >>= 8n;
                     i++;
                 }
                 return Math.max(i, 1);
@@ -67,16 +68,15 @@ soundtileMsgpackExtensions.register({
             // big loopy thing with a lot of math because we can't access the underlying bytes
             let i = 1;
             let m = absN;
-            while (m > 0) {
-                data[i++] = Number(m & 256n);
-                m >> 8n;
+            while (m > 0n) {
+                data[i++] = Number(m & 0xFFn);
+                m >>= 8n;
             }
             return data;
         }
         return null;
     },
     decode(data: Uint8Array): bigint {
-        console.log(data);
         // extract sign and byte size
         const sign = data[0] & 0b10000000;
         const size = data[0] & 0b01111111;
@@ -86,7 +86,7 @@ soundtileMsgpackExtensions.register({
         }
         let m = 0n;
         for (let i = 1; i <= size; i++) {
-            m = m << 8n + BigInt(data[i]);
+            m = m * 256n + BigInt(data[i]);
         }
         return m * (sign > 0 ? -1n : 1n);
     }
