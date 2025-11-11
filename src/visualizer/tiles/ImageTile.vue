@@ -60,7 +60,9 @@ async function uploadImage() {
                 <img :class="{
                     image: true,
                     draggableImage: props.tile.editWindowOpen && !inCollapsedGroup
-                }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" @load="resizeImage">
+                }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" :style="{
+                    transform: `translate(${modTargets.imgOffsetX.value - 50}%, ${modTargets.imgOffsetY.value - 50}%) rotateZ(${modTargets.imgRotation.value}deg) scale(${modTargets.imgScale.value})`
+                }" @load="resizeImage">
             </div>
             <div class="imageUploadCover" v-if="props.tile.imgSrc == ''">
                 <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.lock.locked">
@@ -112,8 +114,7 @@ async function uploadImage() {
     width: v-bind("imgCss.width");
     height: v-bind("imgCss.height");
     image-rendering: v-bind("$props.tile.smoothDrawing ? 'auto' : 'pixelated'");
-    /* bruh autoformatter LET ME MAKE SEPARATE LINES */
-    transform: translate(v-bind("modTargets.imgOffsetX.value - 50 + '%'"), v-bind("modTargets.imgOffsetY.value - 50 + '%'")) rotateZ(v-bind("modTargets.imgRotation.value + 'deg'")) scale(v-bind("modTargets.imgScale.value"));
+    /* transforms removed since vue spamming querySelectorAll to get all .image elements is very slow */
 }
 
 .draggableImage {
