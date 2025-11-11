@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, Ref, useTemplateRef, watch } from 'vue';
+import { inject, ref, ShallowRef, useTemplateRef, watch } from 'vue';
 import { useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
@@ -18,7 +18,7 @@ const props = defineProps<{
 const modItem = useTemplateRef('modItem');
 const dragHovering = ref(false);
 if (props.type == 'target') {
-    const hoveredElement = inject<Ref<Element | null>>('sidebarModulatorHoveredElement');
+    const hoveredElement = inject<ShallowRef<Element | null>>('sidebarModulatorHoveredElement');
     if (hoveredElement === undefined) throw new Error('ModulatorItem target not placed within SidebarModulators!');
     watch([hoveredElement, () => TileEditor.modulatorDrag.source], () => {
         dragHovering.value = (modItem.value?.contains(hoveredElement.value) ?? false) && TileEditor.modulatorDrag.source !== null;

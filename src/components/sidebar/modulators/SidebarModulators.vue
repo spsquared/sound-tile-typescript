@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplateRef } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { ImageTile, Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -71,7 +71,7 @@ const sourceList = computed(() => {
         if (tile instanceof VisualizerTile) tiles.push(tile.modulator); // this is actually reactive because it was pulled out of the reactive root tile
     }
     // hard coded non-tile modulators are put at the top of the list
-    return tiles.sort((a, b) => (a.tile?.id ?? -Infinity) - (b.tile?.id ?? -Infinity));
+    return tiles.sort((a, b) => ((a.tile?.id ?? 0n) - (b.tile?.id ?? 0n)) < 0 ? -1 : 1);
 });
 // have to fake rawness because automatic ref unwrapping fucks around with the source class in connectedSources
 // even though for some fucking reason it's TOTALLY FINE in the code above
@@ -82,7 +82,7 @@ const targetList = computed(() => {
     for (const tile of debouncedTiles.value) {
         if (tile instanceof ImageTile) tiles.push(tile.modulation); // also actually reactive but also tiles might not be reactive who knows??????????
     }
-    return tiles.sort((a, b) => (a.tile?.id ?? -Infinity) - (b.tile?.id ?? -Infinity));
+    return tiles.sort((a, b) => ((a.tile?.id ?? 0n) - (b.tile?.id ?? 0n)) < 0 ? -1 : 1);
 });
 // this isnt cumbersome at all
 const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap((source) =>
@@ -111,7 +111,7 @@ function resetTileHover() {
 
 // passing in hovered element for drag-and-drop to get around big div covering the whole screen
 // takes all the elements and then removes the first which is always the dragging thing
-const hoveredElement = ref<Element | null>(null);
+const hoveredElement = shallowRef<Element | null>(null);
 provide('sidebarModulatorHoveredElement', hoveredElement);
 function updateHoveredElements(e: MouseEvent) {
     if (TileEditor.modulatorDrag.source === null) return;
@@ -133,11 +133,11 @@ onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElement
             <div :id="horizontal ? 'modSplitContainerHorizontal' : 'modSplitContainerVertical'" ref="container">
                 <div id="modSourceContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Sources</div>
-                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile?.id ?? s.label" :label="s.label" :source="s" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
+                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile?.id.toString() ?? s.label" :label="s.label" :source="s" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
                 </div>
                 <div id="modTargetContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Targets</div>
-                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile?.id ?? t.label" :label="t.label" :target="t" @mouseenter="setTileHover(t.tile as Tile)" @mouseleave="resetTileHover"></ModulatorTargetItem>
+                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile?.id.toString() ?? t.label" :label="t.label" :target="t" @mouseenter="setTileHover(t.tile as Tile)" @mouseleave="resetTileHover"></ModulatorTargetItem>
                 </div>
                 <div id="modConnectionsContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Connections</div>

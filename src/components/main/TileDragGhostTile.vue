@@ -18,7 +18,7 @@ const props = defineProps<{
             ghostTileCollapsed: props.tile instanceof GroupTile && props.tile.orientation == GroupTile.COLLAPSED
         }">
             <template v-if="props.tile instanceof GroupTile">
-                <TileDragGhostTile v-for="child of props.tile.children" :key="child.id" :tile="child"></TileDragGhostTile>
+                <TileDragGhostTile v-for="child of props.tile.children" :key="child.id.toString()" :tile="child"></TileDragGhostTile>
             </template>
         </div>
         <div v-if="TileEditor.drag.drop.tile == props.tile && TileEditor.drag.drop.createGroup && !TileEditor.drag.drop.insertBefore" class="ghostTile ghostDropTarget"></div>

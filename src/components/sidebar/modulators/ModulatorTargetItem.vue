@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, Ref, watch } from 'vue';
+import { computed, inject, ShallowRef, watch } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import ModulatorItem from './ModulatorItem.vue';
@@ -21,7 +21,7 @@ const connections = computed<Modulation.Connection[]>(() =>
 const modKeys = computed(() => Object.keys(props.target.targets));
 
 // more js-powered hover
-const hoveredElement = inject<Ref<Element | null>>('sidebarModulatorHoveredElement');
+const hoveredElement = inject<ShallowRef<Element | null>>('sidebarModulatorHoveredElement');
 if (hoveredElement === undefined) throw new Error('ModulatorTargetItem target not placed within SidebarModulators!');
 // function ref because template ref stopped working for some reason, honestly I have no idea the template ref stuff didn't change and it borked
 const modKeyElements: Record<string, HTMLDivElement | null> = {};

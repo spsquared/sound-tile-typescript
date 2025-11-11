@@ -79,7 +79,7 @@ function deleteTile() {
         <Transition>
             <div class="editItemGroupChildrenWrapper" ref="children" v-if="props.tile instanceof GroupTile" v-show="childrenOpen">
                 <div class="editItemGroupChildren">
-                    <TileEditItem v-for="child of props.tile.children" :key="child.id" :tile="child"></TileEditItem>
+                    <TileEditItem v-for="child of props.tile.children" :key="child.id.toString()" :tile="child"></TileEditItem>
                 </div>
                 <div class="editItemGroupLine"></div>
             </div>

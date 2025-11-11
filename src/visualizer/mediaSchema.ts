@@ -9,6 +9,7 @@ export namespace MediaSchema {
     export type Tile = {
         // type can't be stricter without causing issues for subclasses
         // abstract Tile would break code that relies on instances of arbitrary tiles
+        id: bigint
         type: string
         label: string
         size: number

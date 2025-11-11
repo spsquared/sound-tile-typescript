@@ -1,5 +1,6 @@
 import { Component, nextTick, reactive } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
+import { v7 as uuidV7 } from 'uuid';
 import { MediaSchema } from './mediaSchema';
 import Visualizer from './visualizer';
 import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
@@ -30,7 +31,6 @@ type TileComponentProps = {
  * Blank template superclass for all tiles, defines component and data standardization for all tiles.
  */
 export class Tile {
-    private static idCounter: number = 0;
     protected static readonly tileTypes: { [key: string]: typeof Tile } = {};
     protected static registerTile(tile: typeof Tile) { this.tileTypes[tile.id] = tile; }
 
@@ -44,9 +44,9 @@ export class Tile {
     readonly mountedListeners: Set<() => any> = new Set();
     readonly unmountedListeners: Set<() => any> = new Set();
 
-    /**ID used by Vue indexing */
-    readonly id: number;
-    /**Ref used in components to open window */
+    /**Unique ID of tile */
+    readonly id: bigint;
+    /**State of edit window of tile */
     editWindowOpen: boolean = false;
 
     /**DOM element, only exists while mounted (set by component) */
@@ -63,13 +63,15 @@ export class Tile {
     backgroundColor: ColorPicker;
 
     constructor() {
-        this.id = Tile.idCounter++;
+        const idBuffer = new DataView(uuidV7(undefined, new Uint8Array(16)).buffer);
+        this.id = (idBuffer.getBigUint64(0) << 64n) + idBuffer.getBigUint64(8);
         this.backgroundColor = new ColorPicker('#000000');
     }
 
     /**Dehydrate a tile to its data */
     getSchemaData(): MediaSchema.Tile {
         return cloneDeep({
+            id: this.id,
             type: this.class.id,
             label: this.label,
             size: this.size,
@@ -81,6 +83,7 @@ export class Tile {
         return this.reconstitute(data, new Tile());
     }
     protected static reconstitute(data: MediaSchema.Tile, tile: Tile): Tile {
+        (tile as any).id = data.id; // preserving id
         tile.label = data.label;
         tile.size = data.size;
         tile.backgroundColor.colorData = data.backgroundColor;
@@ -235,7 +238,8 @@ export class GroupTile extends Tile {
 
     destroy(): void {
         super.destroy();
-        for (const child of this.children) child.destroy();
+        // apparently for-of isn't immune to array splicing bug
+        for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
     }
 }
 
