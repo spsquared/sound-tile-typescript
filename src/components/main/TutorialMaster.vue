@@ -11,7 +11,7 @@ import xue9_unknown from '@/img/xue9-unknown.jpg';
 let activated = window.localStorage.getItem('xue9') !== null || false;
 const spooky = ref(false);
 const modal = useTemplateRef('modal');
-type Message = { html: string, effect?: () => any } & ({ children: [Message, Message] } | { terminal: true });
+type Message = { html: string, effect?: () => any } & ({ children: [Message, Message] } | { terminal: true } | { ohno: true });
 const messageTree: Message = (() => {
     const youTriedToLeave2: Message = {
         html: '<span style="color: red">WELL▔YOU DON▋T GET TO🬇🬇!</span>',
@@ -39,9 +39,9 @@ const messageTree: Message = (() => {
                             }
                             window.print();
                             window.print();
-                            for(;;) console.error(new SyntaxError('Unexpected identifier in JSON at position undefined'));
+                            for (;;) console.error(new SyntaxError('Unexpected identifier in JSON at position undefined'));
                         },
-                        terminal: true
+                        ohno: true
                     }
                 ]
             },
@@ -167,7 +167,8 @@ function futilelyTryClose(ok: boolean) {
         hostageData = null;
         TileEditor.root.label = 'Warning';
         return;
-    } 
+    }
+    if ('ohno' in message.value) return;
     if (ok) message.value = message.value.children[0];
     else message.value = message.value.children[1];
     if (message.value.effect !== undefined) message.value.effect();
@@ -176,7 +177,7 @@ function futilelyTryClose(ok: boolean) {
 </script>
 
 <template>
-    <FullscreenModal ref="modal" mode="confirm_warn" effect="frost-screen" title="" @close="futilelyTryClose">
+    <FullscreenModal ref="modal" :mode="'ohno' in message ? 'none' : 'confirm_warn'" effect="frost-screen" title="" @close="futilelyTryClose">
         <div id="xue9-bg"></div>
         <img id="xue9-unknown" :src="xue9_unknown"></img>
         <div id="ss-noise"></div>

@@ -243,7 +243,9 @@ export class GroupTile extends Tile {
     }
 }
 
-export class VisualizerTile extends Tile {
+export class VisualizerTile extends Tile implements Modulation.Modulator<{
+    peak: () => number
+}> {
     static readonly id: string = 'v';
     static readonly component = VisualizerTileComponent;
     static readonly name: string = 'Visualizer Tile';
@@ -253,9 +255,7 @@ export class VisualizerTile extends Tile {
 
     label: string = VisualizerTile.name;
 
-    readonly modulator: Modulation.Source<{
-        peak: () => number
-    }>;
+    readonly modulator;
 
     /**Canvas element maintained by tile instance, as component mount-unmount would create and destroy it */
     readonly canvas: HTMLCanvasElement;
@@ -277,7 +277,7 @@ export class VisualizerTile extends Tile {
             peak: () => this.visualizer.renderer.frameResult.value.approximatePeak
         }, {
             tile: this
-        }); // overhead? should only track label
+        });
     }
 
     getSchemaData(): MediaSchema.VisualizerTile {

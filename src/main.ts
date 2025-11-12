@@ -20,8 +20,3 @@ document.addEventListener('keydown', (e) => {
     // for some reason enter doesn't trigger checkboxes (also jank label button)
     if (key == 'enter' && e.target instanceof HTMLElement && e.target.matches('input[type=checkbox],label[button]')) e.target.click();
 });
-
-// warn leaving page
-// window.addEventListener('beforeunload', (e) => {
-//     e.preventDefault();
-// });

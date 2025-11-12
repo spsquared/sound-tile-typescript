@@ -36,9 +36,9 @@ function resetTileHover() {
     TileEditor.state.editWindowIdentifyTile = null;
 }
 
-const transformAddType = ref(0);
+const transformAddType = ref<keyof typeof Modulation.TransformTypes>('constant');
 function addTransform() {
-    const transform = transformClasses[transformAddType.value];
+    const transform = Modulation.TransformTypes[transformAddType.value];
     // no abstract stuff here its probably fine
     props.connection.transforms.push(new (transform as any)());
 }
@@ -55,17 +55,6 @@ function moveTransformDown(i: number) {
 function deleteTransform(i: number) {
     props.connection.transforms.splice(i, 1);
 }
-</script>
-<script lang="ts">
-// putting this here since its only going to be evaluated once
-const transformClasses: (typeof Modulation.Transform<any>)[] = [
-    Modulation.ConstantOffsetTransform,
-    Modulation.LinearTransform,
-    Modulation.PolynomialTransform,
-    Modulation.ExponentialTransform,
-    Modulation.ThresholdTransform,
-    Modulation.ClampTransform
-];
 </script>
 
 <template>
@@ -116,7 +105,7 @@ const transformClasses: (typeof Modulation.Transform<any>)[] = [
             </div>
             <div class="transformsAddContainer">
                 <select class="transformsAddType" v-model="transformAddType" title="Choose function for modulation transform" v-once>
-                    <option v-for="transform, i in transformClasses" :value="i">{{ transform.transformName }}</option>
+                    <option v-for="transform in Modulation.TransformTypes" :value="transform.type">{{ transform.transformName }}</option>
                 </select>
                 <input type="button" class="transformsAddButton" value="+" title="Add the chosen transform function" @click="addTransform"></input>
             </div>

@@ -329,12 +329,17 @@ export namespace MediaSchema {
     export type SchemaV2 = {
         version: 2
         metadata: {
-            coverArt: string
             title: string
             subtitle: string
+            coverArt: ArrayBuffer
         }
         sources: ArrayBuffer[]
         tree: GroupTile
+        modulations: {
+            source: { id: bigint | 'global', key: string },
+            target: { id: bigint | 'global', key: string },
+            transforms: [string, unknown][]
+        }[]
     };
 
     /**File layouts for all schema versions */

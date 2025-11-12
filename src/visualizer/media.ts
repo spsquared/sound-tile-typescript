@@ -1,6 +1,6 @@
 const msgpack = import('@msgpack/msgpack');
 const fflate = import('fflate');
-import { printStackTrace } from '@/components/scripts/debug';
+import ErrorQueue from '@/errorQueue';
 import { soundtileMsgpackExtensions } from '@/components/scripts/msgpackExtensions';
 import { MediaSchema } from './mediaSchema';
 import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
@@ -38,7 +38,7 @@ export class Media implements MediaMetadata {
     /**
      * Deflate the Media into a compressed Tile layout.
      * @param consume Ignores data preservation and renders audio buffers unusable after compression
-     * @returns Compressed Tile layout, or `null` if an error occured in encoding
+     * @returns Compressed Tile layout, or `null` if an error occurred in encoding
      * (buffers may still be destroyed if `consume` is true!)
      */
     async compress(consume: boolean = false): Promise<ArrayBuffer | null> {
@@ -66,38 +66,57 @@ export class Media implements MediaMetadata {
                     }
                 }
             }
-            // compress all sources
-            await Promise.all(sources.map(async (buffer, i) => {
-                if (webWorkerSupported) {
-                    await new Promise<void>((resolve, reject) => {
-                        gzip(new Uint8Array(buffer), { consume: consume, level: 4 }, (err, data) => {
-                            if (err) reject(err);
-                            else {
-                                sources[i] = data.slice().buffer;
-                                resolve();
-                            }
-                        });
-                    });
-                } else {
-                    sources[i] = gzipSync(new Uint8Array(buffer), { level: 4 }).slice().buffer;
+            // second DFS to get all modulations in the layout by their source
+            const modulations: MediaSchema.SchemaV2['modulations'] = [];
+            const stack2: Tile[] = [this.tree];
+            while (stack2.length > 0) {
+                const curr = stack2.pop()!;
+                if ('modulator' in curr) {
+                    const source = (curr as Modulation.Modulator<any>).modulator;
+                    for (const sourceKey in source.connectedTargets) {
+                        for (const [target, targetKey, transforms] of source.connectedTargets[sourceKey]) {
+                            modulations.push({
+                                source: { id: curr.id, key: sourceKey },
+                                target: { id: target.tile?.id ?? 'global', key: targetKey },
+                                transforms: transforms.map((t) => [t.class.type, t.data])
+                            });
+                        }
+                    }
                 }
-            }));
+                if (curr instanceof GroupTile) stack2.push(...(curr as GroupTile).children);
+            }
+            // compress source buffers and images
+            const compressBuffer: (buffer: ArrayBuffer, cb: (res: ArrayBuffer) => any) => Promise<void> = webWorkerSupported ? (
+                (buffer, cb) => new Promise<void>((resolve, reject) => gzip(new Uint8Array(buffer), { consume: consume, level: 4 }, (err, data) => {
+                    if (err) reject(err);
+                    else (cb(data.slice().buffer), resolve());
+                }))
+            ) : (
+                async (buffer, cb) => cb(gzipSync(new Uint8Array(buffer), { level: 4 }).slice().buffer)
+            );
+            const metadata: MediaSchema.SchemaV2['metadata'] = {
+                title: this.title,
+                subtitle: this.subtitle,
+                coverArt: new Uint8Array(0).buffer
+            };
+            await Promise.all([
+                ...sources.map((buffer, i) => compressBuffer(buffer, (res) => sources[i] = res)),
+                compressBuffer(new TextEncoder().encode(this.coverArt).buffer, (res) => metadata.coverArt = res)
+            ]);
             // msgpack it
             const data: MediaSchema.SchemaV2 = {
                 version: 2,
-                metadata: {
-                    title: this.title,
-                    subtitle: this.subtitle,
-                    coverArt: this.coverArt
-                },
+                metadata: metadata,
                 sources: sources,
-                tree: root
+                tree: root,
+                modulations: modulations
             };
             return encodeMsgpack(data, { extensionCodec: soundtileMsgpackExtensions }).slice().buffer;
         } catch (err) {
             console.error('Failed to compress media');
             console.error(err);
-            printStackTrace();
+            ErrorQueue.error('An error occurred whilst saving the Tiles.', 'Failed to saving Tiles');
+            if (err instanceof Error) ErrorQueue.error(err, 'Save error details');
             return null;
         }
     }
@@ -105,7 +124,7 @@ export class Media implements MediaMetadata {
     /**
      * Inflate a compressed Tile layout to a Media instance.
      * @param file Compressed file data
-     * @returns Media instance, or `null` if an error occured in decoding
+     * @returns Media instance, or `null` if an error occurred in decoding
      */
     static async decompress(file: ArrayBuffer | File): Promise<Media | null> {
         const decodeMsgpackAsync = (await msgpack).decodeAsync;
@@ -118,12 +137,13 @@ export class Media implements MediaMetadata {
         } catch (err) {
             console.error('Failed to decompress media');
             console.error(err);
-            printStackTrace();
+            ErrorQueue.error('An error occurred whilst load the Tiles. Perhaps it was made in a newer Sound Tile version?', 'Failed to load Tiles');
+            if (err instanceof Error) ErrorQueue.error(err, 'Load error details');
             return null;
         }
     }
 
-    private static async decompressV0(data: MediaSchema.SchemaV0): Promise<Media | null> {
+    private static async decompressV0(data: MediaSchema.SchemaV0): Promise<Media> {
         const metaroot = new GroupTile(); // not actually the root
         // tuple of tree node and parent tile - use queue to preserve ordering of children
         const queue: [MediaSchema.LegacyTree, GroupTile][] = [[data.root, metaroot]];
@@ -260,7 +280,7 @@ export class Media implements MediaMetadata {
             coverArt: defaultCoverArt
         }, root);
     }
-    private static async decompressV1(data: MediaSchema.SchemaV1): Promise<Media | null> {
+    private static async decompressV1(data: MediaSchema.SchemaV1): Promise<Media> {
         const { root, metadata } = data;
         const { decompress, decompressSync } = await fflate;
         // mirroring legacy code, decompress all buffers and then run v0 decompression
@@ -289,31 +309,31 @@ export class Media implements MediaMetadata {
         }
         await Promise.all(promises);
         const media = await this.decompressV0({ version: 0, root: root });
-        if (media === null) return null;
         media.title = metadata.title;
         media.subtitle = metadata.subtitle;
         media.coverArt = metadata.image;
         return media;
     }
-    private static async decompressV2(data: MediaSchema.SchemaV2): Promise<Media | null> {
-        const { sources, tree, metadata } = data;
+    private static async decompressV2(data: MediaSchema.SchemaV2): Promise<Media> {
+        const { sources, tree, modulations } = data;
         const { decompress, decompressSync } = await fflate;
-        // decompress all sources first
-        await Promise.all(sources.map(async (buffer, i) => {
-            if (webWorkerSupported) {
-                await new Promise<void>((resolve, reject) => {
-                    decompress(new Uint8Array(buffer), { consume: true }, (err, data) => {
-                        if (err) reject(err);
-                        else {
-                            sources[i] = data.slice().buffer;
-                            resolve();
-                        }
-                    });
-                });
-            } else {
-                sources[i] = decompressSync(new Uint8Array(buffer)).slice().buffer;
-            }
-        }));
+        // decompress source buffers and images
+        const metadata: MediaMetadata = {
+            ...data.metadata,
+            coverArt: ''
+        };
+        const decompressBuffer: (buffer: ArrayBuffer, cb: (res: ArrayBuffer) => any) => Promise<void> = webWorkerSupported ? (
+            (buffer, cb) => new Promise<void>((resolve, reject) => decompress(new Uint8Array(buffer), { consume: true }, (err, data) => {
+                if (err) reject(err);
+                else (cb(data.slice().buffer), resolve());
+            }))
+        ) : (
+            async (buffer, cb) => cb(decompressSync(new Uint8Array(buffer)).slice().buffer)
+        );
+        await Promise.all([
+            ...sources.map((buffer, i) => decompressBuffer(buffer, (res) => sources[i] = res)),
+            decompressBuffer(data.metadata.coverArt, (res) => metadata.coverArt = new TextDecoder().decode(res))
+        ]);
         // re-attach the sources of the visualizers
         const stack: MediaSchema.Tile[] = [tree];
         while (stack.length > 0) {
@@ -324,11 +344,47 @@ export class Media implements MediaMetadata {
                 const v = (curr as MediaSchema.VisualizerTile).data;
                 if (v.buffer instanceof ArrayBuffer || v.buffer === null) continue; // shouldn't be buffer
                 v.buffer = sources[v.buffer] ?? null;
-                if (v.buffer === null) console.warn('Visualizer buffer resolution failed');
+                if (v.buffer === null) console.error('Visualizer buffer resolution failed');
             }
         }
         // tree reconstitution happens in tile code rather than here
         const root = GroupTile.fromSchemaData(tree);
+        // do a DFS to map tiles by their ID and then connect modulators
+        const idToTiles: Map<bigint, Tile> = new Map();
+        const stack2: Tile[] = [root];
+        while (stack2.length > 0) {
+            const curr = stack2.pop()!;
+            if (idToTiles.has(curr.id)) console.warn('Multiple tiles with the same ID in decompression! Or was one tile in multiple places in the layout?');
+            idToTiles.set(curr.id, curr);
+            if (curr instanceof GroupTile) stack2.push(...(curr as GroupTile).children);
+        }
+        for (const { source, target, transforms } of modulations) {
+            if (source.id == 'global' || target.id == 'global') throw new TypeError('Somehow your layout has global modulators before they\'ve been added');
+            const modulatorTile = idToTiles.get(source.id);
+            const modulatableTile = idToTiles.get(target.id);
+            // oh no something went very wrong during the saving process (or there was a massive breaking change!)
+            if (modulatorTile === undefined || !('modulator' in modulatorTile)) {
+                console.error('Modulation source tile not found or not a modulator! Skipping modulation');
+                ErrorQueue.warn('Modulation source tile not found or not a modulator! Skipping this modulation.', 'Modulation Issue');
+                continue;
+            }
+            if (modulatableTile === undefined || !('modulation' in modulatableTile)) {
+                console.error('Modulation target tile not found or not a modulator! Skipping modulation!');
+                ErrorQueue.warn('Modulation target tile not found or not a modulator! Skipping this modulation.', 'Modulation Issue');
+                continue;
+            };
+            const modulator = (modulatorTile as Modulation.Modulator<any>).modulator;
+            const modulation = (modulatableTile as Modulation.Modulatable<any>).modulation;
+            modulator.connect(modulation, source.key, target.key, transforms.map<Modulation.Transform<any> | undefined>(([type, data]) => {
+                const transformClass = Modulation.TransformTypes[type as keyof typeof Modulation.TransformTypes];
+                if (transformClass === undefined) {
+                    console.error('Modulation transform does not exist! Skipping transform!');
+                    ErrorQueue.warn(`Modulation transform "${type}" does not exist! Skipping this transform.`, 'Modulation Issue');
+                    return undefined;
+                }
+                return new transformClass(data as any);
+            }).filter<Modulation.Transform<any>>((v) => v !== undefined));
+        }
         // media
         return new Media(metadata, root);
     }

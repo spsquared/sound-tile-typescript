@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import FullscreenModal from '@/components/FullscreenModal.vue';
+import { onMounted, onUnmounted } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import { Media } from '@/visualizer/media';
 import MediaPlayer from '@/visualizer/mediaPlayer';
@@ -8,8 +7,6 @@ import FileAccess from '@/components/inputs/fileAccess';
 import { matchTextInput } from '@/constants';
 
 // these file controls operate directly on the tile editor by setting the current media player session
-const errorMessageType = ref(false);
-const errorModalOpen = ref(false);
 async function uploadToCurrent() {
     if (TileEditor.lock.locked) return;
     await TileEditor.lock.acquire();
@@ -26,8 +23,6 @@ async function uploadToCurrent() {
     if (files.length == 1) {
         const media = await Media.decompress(files[0]);
         if (media === null) {
-            errorMessageType.value = false;
-            errorModalOpen.value = true;
             TileEditor.lock.release();
             return;
         }
@@ -40,8 +35,6 @@ async function downloadFromCurrent() {
     await TileEditor.lock.acquire();
     const buffer = await MediaPlayer.media.current.compress();
     if (buffer === null) {
-        errorMessageType.value = true;
-        errorModalOpen.value = true;
         TileEditor.lock.release();
         return;
     }
@@ -79,13 +72,6 @@ onUnmounted(() => document.removeEventListener('keydown', keydown));
         <input type="button" id="tileUpload" title="Load Tiles from computer" @click="uploadToCurrent" :disabled="TileEditor.lock.locked">
         <input type="button" id="tileDownload" title="Save Tiles to computer" @click="downloadFromCurrent" :disabled="TileEditor.lock.locked">
     </div>
-    <FullscreenModal v-model="errorModalOpen" :title="errorMessageType ? 'Failed to save layout' : 'Failed to load layout'" mode="notify" color="red">
-        The Sound Tiles failed to {{ errorMessageType ? 'save' : 'load' }}.
-        <span v-if="!errorMessageType">
-            <br>
-            Perhaps this file was made in a newer version of Sound Tile or is corrupted?
-        </span>
-    </FullscreenModal>
 </template>
 
 <style scoped>

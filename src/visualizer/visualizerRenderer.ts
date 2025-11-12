@@ -57,6 +57,10 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
         const workerCanvas = this.canvas.transferControlToOffscreen();
         const cleanData = cloneDeep({ ...this.data, buffer: undefined });
         this.worker.postMessage([workerCanvas, cleanData satisfies VisualizerSettingsData], [workerCanvas]);
+        this.worker.onerror = (e) => {
+            console.error(e.error);
+            throw new Error(`Worker error: ${e.message} (${e.filename} ${e.lineno}:${e.colno})`);
+        }
     }
 
     async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {

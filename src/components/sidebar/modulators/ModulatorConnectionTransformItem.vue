@@ -173,7 +173,7 @@ watch([() => props.transform.data, polyFocused/*, polyInputMode*/], () => {
     <!-- problem: its basically just polynomial transform but better, polynomial will need to get simpler UI -->
     <div class="transformContainer" v-else>
         <p>Could not determine transform type</p>
-        <div>{{ props.transform.type }} {{ props.transform.data }}</div>
+        <div>{{ props.transform.class.type }} {{ props.transform.data }}</div>
     </div>
 </template>
 

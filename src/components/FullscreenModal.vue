@@ -22,7 +22,10 @@ watch([() => props.color, body], () => body.value !== null && (body.value.style.
 
 
 const emit = defineEmits<{
+    (e: 'open'): any
     (e: 'close', res: boolean): any
+    (e: 'open-settled'): any
+    (e: 'close-settled'): any
 }>();
 
 let ftrap: FocusTrap | undefined = undefined;
@@ -36,6 +39,7 @@ watch(open, () => {
     if (open.value) {
         openLock.acquire();
         document.addEventListener('keydown', keydown);
+        emit('open');
     } else {
         ftrap?.deactivate();
         document.removeEventListener('keydown', keydown);
@@ -79,17 +83,17 @@ defineExpose<{
 });
 </script>
 <script lang="ts">
-export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input_warn';
+export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input_warn' | 'none';
 </script>
 
 <template>
     <Teleport to="#root">
-        <Transition>
+        <Transition @after-enter="emit('open-settled')" @after-leave="emit('close-settled')">
             <div :class="{ modalContainer: true, modalContainerFrost: props.effect == 'frost-screen' }" v-if="open">
                 <div :class="{ modalBody: true, modalBodyFrost: props.effect == 'frost-window' }" ref="body">
                     <h1>{{ props.title }}</h1>
                     <slot :close="close"></slot>
-                    <div class="modalButtons">
+                    <div class="modalButtons" v-if="props.mode != 'none'">
                         <span v-if="props.mode == 'notify'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)">
                         </span>

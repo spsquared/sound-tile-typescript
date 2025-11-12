@@ -2,15 +2,8 @@ import { ComputedRef, effectScope, EffectScope, markRaw, reactive, ref, Ref, toR
 import { Tile } from './tiles';
 
 /**
- * SPAGHETTI WARNING
- * SPAGHETTI WARNING
- * SPAGHETTI WARNING
- * SPAGHETTI WARNING
- * SPAGHETTI WARNING
- * SPAGHETTI WARNING
- * SPAGHETTI WARNING
+ * Mostly-abstract modular modulation system.
  */
-
 export namespace Modulation {
     export type SourcePropertyMap = Record<string, RefOrGetter>
     export type TargetPropertyMap = Record<string, any>
@@ -23,12 +16,8 @@ export namespace Modulation {
     }[keyof Props & string];
 
     // buh so much redundant information but also performance and encapsulation
-    // probably don't need to protect against random non-ts editing stuff and borking everything since it's just me
-
     // also I definitely did something horribly wrong and against all typescript laws here
-    // symbol and number types are allowed in properties but you can't use them anyway
-
-    // also probably shouldn't have used refs as ref unwrapping causes utter carnage in all sorts of places
+    // vue keeps coming in and making things proxies which breaks stuff
 
     /**
      * Modulation source side of controller. Values set to its source refs will be applied to linked targets.
@@ -303,16 +292,23 @@ export namespace Modulation {
         };
     }
 
+    /**Helper for standardizing modulation sources */
+    export interface Modulator<Props extends SourcePropertyMap> {
+        readonly modulator: Source<Props>
+    }
+
+    /**Helper for standardizing modulation targets */
     export interface Modulatable<Props extends TargetPropertyMap> {
         readonly modulation: Target<Props>
     }
 
     /**Allows transformation of modulation values. */
     export abstract class Transform<T> {
-        static transformName: string = 'Generic Transform';
-        abstract readonly type: `${any}`;
+        static readonly transformName: string = 'Generic Transform';
+        static readonly type: string;
+        abstract readonly class: typeof Transform<any>;
         abstract data: unknown;
-        abstract readonly typeLabel: `${any}`;
+        abstract readonly typeLabel: string;
 
         abstract apply(n: T): T;
     }
@@ -322,8 +318,9 @@ export namespace Modulation {
 
     /**Applies a constant offset to the value: `x + a`. */
     export class ConstantOffsetTransform extends Transform<number> {
-        static transformName: string = 'Constant Offset';
-        readonly type: 'constant' = 'constant';
+        static readonly transformName: string = 'Constant Offset';
+        static readonly type: 'constant' = 'constant';
+        readonly class: typeof ConstantOffsetTransform = ConstantOffsetTransform;
         data: number;
         readonly typeLabel: 'number' = 'number';
 
@@ -339,8 +336,9 @@ export namespace Modulation {
 
     /**Applies a linear scale and offset to the value: `ax + b`. */
     export class LinearTransform extends Transform<number> {
-        static transformName: string = 'Linear Function';
-        readonly type: 'linearScale' = 'linearScale';
+        static readonly transformName: string = 'Linear Function';
+        static readonly type: 'linearScale' = 'linearScale';
+        readonly class: typeof LinearTransform = LinearTransform;
         data: [number, number];
         readonly typeLabel: 'number' = 'number';
 
@@ -356,8 +354,9 @@ export namespace Modulation {
 
     /**Calculates a polynomial function of any (until fp error borks it) degree: `a + bx + cx^2 ...` */
     export class PolynomialTransform extends Transform<number> {
-        static transformName: string = 'Polynomial Function';
-        readonly type: 'polynomial' = 'polynomial';
+        static readonly transformName: string = 'Polynomial Function';
+        static readonly type: 'polynomial' = 'polynomial';
+        readonly class: typeof PolynomialTransform = PolynomialTransform;
         data: { [key: number]: number };
         readonly typeLabel: 'number' = 'number';
 
@@ -382,8 +381,9 @@ export namespace Modulation {
 
     /**Calculates an exponential function: `a * (b^x)` */
     export class ExponentialTransform extends Transform<number> {
-        static transformName: string = 'Exponential Function';
-        readonly type: 'exponential' = 'exponential';
+        static readonly transformName: string = 'Exponential Function';
+        static readonly type: 'exponential' = 'exponential';
+        readonly class: typeof ExponentialTransform = ExponentialTransform;
         data: [number, number];
         readonly typeLabel: 'number' = 'number';
 
@@ -399,8 +399,9 @@ export namespace Modulation {
 
     /**Acts as a "gate" that outputs the input `x` when above/below (determined by `c`) a threshold `a` and otherwise `c`. */
     export class ThresholdTransform extends Transform<number> {
-        static transformName: string = 'Threshold';
-        readonly type: 'threshold' = 'threshold';
+        static readonly transformName: string = 'Threshold';
+        static readonly type: 'threshold' = 'threshold';
+        readonly class: typeof ThresholdTransform = ThresholdTransform;
         data: [number, boolean, number];
         readonly typeLabel: 'number' = 'number';
 
@@ -416,8 +417,9 @@ export namespace Modulation {
 
     /**Clamps the input between `a` and `b`, inclusive. */
     export class ClampTransform extends Transform<number> {
-        static transformName: string = 'Clamp';
-        readonly type: 'clamp' = 'clamp';
+        static readonly transformName: string = 'Clamp';
+        static readonly type: 'clamp' = 'clamp';
+        readonly class: typeof ClampTransform = ClampTransform;
         data: [number, number];
         readonly typeLabel: 'number' = 'number';
 
@@ -434,6 +436,16 @@ export namespace Modulation {
     // compressor transform????
 
     // literal math transform that uses big math library
+
+    /**Jank way of enumerating all usable transform types */
+    export const TransformTypes = {
+        [ConstantOffsetTransform.type]: ConstantOffsetTransform,
+        [LinearTransform.type]: LinearTransform,
+        [PolynomialTransform.type]: PolynomialTransform,
+        [ExponentialTransform.type]: ExponentialTransform,
+        [ThresholdTransform.type]: ThresholdTransform,
+        [ClampTransform.type]: ClampTransform
+    } as const;
 }
 
 export default Modulation;
