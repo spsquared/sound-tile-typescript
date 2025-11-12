@@ -45,8 +45,15 @@ export class Media implements MediaMetadata {
         const encodeMsgpack = (await msgpack).encode;
         const { gzip, gzipSync } = await fflate;
         try {
+            const metadata: MediaSchema.SchemaV2['metadata'] = {
+                title: this.title,
+                subtitle: this.subtitle,
+                coverArt: new Uint8Array(0).buffer
+            };
             // conversion recursion actually happens in the tile code
             const root: MediaSchema.GroupTile = this.tree.getSchemaData();
+            // image sources will be compressed
+            const imageTiles: Set<MediaSchema.ImageTile> = new Set();
             // move all visualizer sources to reference array, same source buffer will reference same position
             const sources: ArrayBuffer[] = [];
             const stack: MediaSchema.Tile[] = [root];
@@ -64,8 +71,24 @@ export class Media implements MediaMetadata {
                     } else {
                         v.buffer = index;
                     }
+                } else if (curr.type == ImageTile.id) {
+                    imageTiles.add(curr as MediaSchema.ImageTile);
                 }
             }
+            // compress source buffers and images
+            const compressBuffer: (buffer: ArrayBuffer, cb: (res: ArrayBuffer) => any) => Promise<void> = webWorkerSupported ? (
+                (buffer, cb) => new Promise<void>((resolve, reject) => gzip(new Uint8Array(buffer), { consume: consume, level: 4 }, (err, data) => {
+                    if (err) reject(err);
+                    else (cb(data.slice().buffer), resolve());
+                }))
+            ) : (
+                async (buffer, cb) => cb(gzipSync(new Uint8Array(buffer), { level: 4 }).slice().buffer)
+            );
+            await Promise.all([
+                ...sources.map((buffer, i) => compressBuffer(buffer, (res) => sources[i] = res)),
+                compressBuffer(new TextEncoder().encode(this.coverArt).buffer, (res) => metadata.coverArt = res),
+                ...[...imageTiles.values()].map((tile) => compressBuffer(tile.imgSrc, (res) => tile.imgSrc = res))
+            ]);
             // second DFS to get all modulations in the layout by their source
             const modulations: MediaSchema.SchemaV2['modulations'] = [];
             const stack2: Tile[] = [this.tree];
@@ -85,24 +108,6 @@ export class Media implements MediaMetadata {
                 }
                 if (curr instanceof GroupTile) stack2.push(...(curr as GroupTile).children);
             }
-            // compress source buffers and images
-            const compressBuffer: (buffer: ArrayBuffer, cb: (res: ArrayBuffer) => any) => Promise<void> = webWorkerSupported ? (
-                (buffer, cb) => new Promise<void>((resolve, reject) => gzip(new Uint8Array(buffer), { consume: consume, level: 4 }, (err, data) => {
-                    if (err) reject(err);
-                    else (cb(data.slice().buffer), resolve());
-                }))
-            ) : (
-                async (buffer, cb) => cb(gzipSync(new Uint8Array(buffer), { level: 4 }).slice().buffer)
-            );
-            const metadata: MediaSchema.SchemaV2['metadata'] = {
-                title: this.title,
-                subtitle: this.subtitle,
-                coverArt: new Uint8Array(0).buffer
-            };
-            await Promise.all([
-                ...sources.map((buffer, i) => compressBuffer(buffer, (res) => sources[i] = res)),
-                compressBuffer(new TextEncoder().encode(this.coverArt).buffer, (res) => metadata.coverArt = res)
-            ]);
             // msgpack it
             const data: MediaSchema.SchemaV2 = {
                 version: 2,
@@ -317,11 +322,19 @@ export class Media implements MediaMetadata {
     private static async decompressV2(data: MediaSchema.SchemaV2): Promise<Media> {
         const { sources, tree, modulations } = data;
         const { decompress, decompressSync } = await fflate;
-        // decompress source buffers and images
         const metadata: MediaMetadata = {
             ...data.metadata,
             coverArt: ''
         };
+        // gather image tiles for decompression
+        const imageTiles: Set<MediaSchema.ImageTile> = new Set();
+        const stack: MediaSchema.Tile[] = [tree];
+        while (stack.length > 0) {
+            const curr = stack.pop()!;
+            if (curr.type == GroupTile.id) stack.push(...(curr as MediaSchema.GroupTile).children);
+            else if (curr.type == ImageTile.id) imageTiles.add(curr as MediaSchema.ImageTile);
+        }
+        // decompress source buffers and images
         const decompressBuffer: (buffer: ArrayBuffer, cb: (res: ArrayBuffer) => any) => Promise<void> = webWorkerSupported ? (
             (buffer, cb) => new Promise<void>((resolve, reject) => decompress(new Uint8Array(buffer), { consume: true }, (err, data) => {
                 if (err) reject(err);
@@ -332,10 +345,11 @@ export class Media implements MediaMetadata {
         );
         await Promise.all([
             ...sources.map((buffer, i) => decompressBuffer(buffer, (res) => sources[i] = res)),
-            decompressBuffer(data.metadata.coverArt, (res) => metadata.coverArt = new TextDecoder().decode(res))
+            decompressBuffer(data.metadata.coverArt, (res) => metadata.coverArt = new TextDecoder().decode(res)),
+            ...[...imageTiles.values()].map((tile) => decompressBuffer(tile.imgSrc, (res) => tile.imgSrc = res))
         ]);
         // re-attach the sources of the visualizers
-        const stack: MediaSchema.Tile[] = [tree];
+        stack.push(tree); // stack empty
         while (stack.length > 0) {
             const curr = stack.pop()!;
             if (curr.type == GroupTile.id) {

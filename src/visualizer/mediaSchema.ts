@@ -34,7 +34,7 @@ export namespace MediaSchema {
     };
     /**Image tile schema-layout data */
     export type ImageTile = Tile & {
-        imgSrc: string
+        imgSrc: ArrayBuffer
         smoothDrawing: boolean
     };
     /**Grass tile schema-layout data */

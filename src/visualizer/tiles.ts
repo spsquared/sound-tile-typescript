@@ -390,7 +390,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         return {
             ...super.getSchemaData(),
             ...cloneDeep<Omit<MediaSchema.ImageTile, keyof MediaSchema.Tile>>({
-                imgSrc: this.imgSrc,
+                imgSrc: new TextEncoder().encode(this.imgSrc).buffer,
                 smoothDrawing: this.smoothDrawing
             })
         } as MediaSchema.ImageTile;
@@ -400,7 +400,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
     }
     protected static reconstitute(data: MediaSchema.ImageTile, tile: ImageTile): ImageTile {
         super.reconstitute(data, tile);
-        tile.imgSrc = data.imgSrc;
+        tile.imgSrc = new TextDecoder().decode(data.imgSrc);
         tile.smoothDrawing = data.smoothDrawing;
         return tile;
     }
