@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplateRef } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
-import { ImageTile, Tile, VisualizerTile } from '@/visualizer/tiles';
+import { Tile } from '@/visualizer/tiles';
 import Modulation from '@/visualizer/modulation';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import ModulatorSourceItem from './ModulatorSourceItem.vue';
@@ -68,7 +68,7 @@ const debouncedTiles = useDebounce(TileEditor.currentTiles, 100);
 const sourceList = computed(() => {
     const tiles: Modulation.Source<any>[] = [];
     for (const tile of debouncedTiles.value) {
-        if (tile instanceof VisualizerTile) tiles.push(tile.modulator); // this is actually reactive because it was pulled out of the reactive root tile
+        if ('modulator' in tile) tiles.push((tile as Modulation.Modulator<any>).modulator); // this is actually reactive because it was pulled out of the reactive root tile
     }
     // hard coded non-tile modulators are put at the top of the list
     return tiles.sort((a, b) => ((a.tile?.id ?? 0n) - (b.tile?.id ?? 0n)) < 0 ? -1 : 1);
@@ -80,7 +80,7 @@ const sourceList = computed(() => {
 const targetList = computed(() => {
     const tiles: Modulation.Target<any>[] = [];
     for (const tile of debouncedTiles.value) {
-        if (tile instanceof ImageTile) tiles.push(tile.modulation); // also actually reactive but also tiles might not be reactive who knows??????????
+        if ('modulation' in tile) tiles.push((tile as Modulation.Modulatable<any>).modulation); // also actually reactive but also tiles might not be reactive who knows??????????
     }
     return tiles.sort((a, b) => ((a.tile?.id ?? 0n) - (b.tile?.id ?? 0n)) < 0 ? -1 : 1);
 });

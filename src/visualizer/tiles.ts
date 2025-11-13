@@ -275,9 +275,7 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
         });
         this.modulator = new Modulation.Source({
             peak: () => this.visualizer.renderer.frameResult.value.approximatePeak
-        }, {
-            tile: this
-        });
+        }, { tile: this });
     }
 
     getSchemaData(): MediaSchema.VisualizerTile {
@@ -307,7 +305,11 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     }
 }
 
-export class TextTile extends Tile {
+export class TextTile extends Tile implements Modulation.Modulatable<{
+    textScale: number
+    textOffsetX: number
+    textOffsetY: number
+}> {
     static readonly id: string = 't';
     static readonly component = TextTileComponent;
     static readonly name: string = 'Text Tile';
@@ -316,6 +318,12 @@ export class TextTile extends Tile {
     static { this.registerTile(this); }
 
     label: string = TextTile.name;
+
+    readonly modulation = new Modulation.Target({
+        textScale: 1,
+        textOffsetX: 0,
+        textOffsetY: 0
+    }, { tile: this });
 
     /**Text HTML of tile */
     text: string = '<align-center><span style="font-size: 2em;">Text Here</span></align-align-center>';
@@ -371,9 +379,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         imgOffsetX: 0,
         imgOffsetY: 0,
         imgRotation: 0
-    }, {
-        tile: this
-    });
+    }, { tile: this });
 
     /**Image source, (hopefully) as a data: URL */
     imgSrc: string = '';

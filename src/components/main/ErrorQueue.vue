@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ErrorQueue } from './errorQueue';
-import FullscreenModal from './components/FullscreenModal.vue';
+import ErrorQueue from '@/errorQueue';
+import FullscreenModal from '../FullscreenModal.vue';
 import { ref, useTemplateRef, watch } from 'vue';
 
 const colorMap = {

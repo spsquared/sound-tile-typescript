@@ -1,7 +1,7 @@
 const msgpack = import('@msgpack/msgpack');
 const fflate = import('fflate');
 import ErrorQueue from '@/errorQueue';
-import { soundtileMsgpackExtensions } from '@/components/scripts/msgpackExtensions';
+import { soundtileMsgpackExtensions } from '@/components/msgpackExtensions';
 import { MediaSchema } from './mediaSchema';
 import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
 import { VisualizerMode } from './visualizerData';

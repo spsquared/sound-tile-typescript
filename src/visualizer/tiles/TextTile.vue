@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, ref, watch } from 'vue';
 import { useThrottleFn } from '@vueuse/core';
-import { sanitize } from '@/components/scripts/htmlSanitize';
+import { sanitize } from '@/components/htmlSanitize';
 import TileEditor from '../editor';
 import { TextTile } from '../tiles';
 import Tile from './Tile.vue';
@@ -13,6 +13,7 @@ import TrixTextEditor from '@/components/inputs/TrixTextEditor.vue';
 const props = defineProps<{
     tile: TextTile
 }>();
+const modTargets = computed(() => props.tile.modulation.targets);
 
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
@@ -32,7 +33,9 @@ const sanitizedText = ref('');
     <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template v-slot:content>
             <div class="textContain">
-                <div class="textWrapper" v-html="sanitizedText"></div>
+                <div class="textWrapper" :style="{
+                    transform: `translate(${modTargets.textOffsetX.value}%, ${modTargets.textOffsetY.value}%) scale(${modTargets.textScale.value})`
+                }" v-html="sanitizedText"></div>
             </div>
         </template>
         <template v-slot:options>

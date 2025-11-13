@@ -1,6 +1,6 @@
 import { computed, reactive, watch, watchEffect } from 'vue';
 import { useIdle } from '@vueuse/core';
-import { AsyncLock } from '@/components/scripts/lock';
+import { AsyncLock } from '@/components/lock';
 import { matchTextInput } from '@/constants';
 import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
 import Modulation from './modulation';

@@ -2,7 +2,7 @@
 import { Ref, ref, useTemplateRef, watch } from 'vue';
 import { createFocusTrap, FocusTrap } from 'focus-trap';
 import { matchInput } from '@/constants';
-import { AsyncLock } from './scripts/lock';
+import { AsyncLock } from './lock';
 
 const props = defineProps<{
     title: string

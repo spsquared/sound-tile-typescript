@@ -8,7 +8,7 @@ import TileRoot from '@/components/main/TileRoot.vue';
 import TileDrag from '@/components/main/TileDrag.vue';
 import ModulatorDrag from './components/main/ModulatorDrag.vue';
 import TutorialMaster from './components/main/TutorialMaster.vue';
-import ErrorQueue from './ErrorQueue.vue';
+import ErrorQueue from './components/main/ErrorQueue.vue';
 
 const showAppInfo = ref(false);
 provide('showAppInfoRef', showAppInfo);

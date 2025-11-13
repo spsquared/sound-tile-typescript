@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import Modulation from '@/visualizer/modulation';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
-import polynomial from '@/components/scripts/simplePolynomial';
+import polynomial from '@/components/inputs/simplePolynomial';
 
 const props = defineProps<{
     transform: Modulation.Transform<any>

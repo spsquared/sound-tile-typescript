@@ -1,5 +1,5 @@
 import { merge } from 'lodash-es'; // hopefully tree-shakeable
-import { DeepPartial } from '@/components/scripts/utils';
+import { DeepPartial } from '@/components/utils';
 import { ColorData } from '@/components/inputs/colorPicker';
 import { createDefaultVisualizerData, VisualizerData, VisualizerMode } from './visualizerData';
 import { GroupTile as GroupTileInstance } from './tiles';
