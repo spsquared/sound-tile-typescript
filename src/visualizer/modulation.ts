@@ -434,6 +434,8 @@ export namespace Modulation {
     }
 
     // compressor transform????
+    // smoothing transform
+    // delay transform - keeps a queue of a certain number of calls to "apply"
 
     // literal math transform that uses big math library
 

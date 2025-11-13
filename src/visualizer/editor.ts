@@ -24,7 +24,7 @@ export class TileEditor {
     static readonly state: {
         dropdownOpen: boolean
         sidebarOpen: boolean
-        sidebarTab: 'edit' | 'modulators' | 'export' | 'playlist'
+        sidebarTab: 'edit' | 'sources' | 'modulators' | 'export' | 'playlist'
         hideTabs: boolean
         idleHideTabs: boolean
         sidebarScreenWidth: number

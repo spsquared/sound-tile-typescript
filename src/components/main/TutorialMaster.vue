@@ -103,7 +103,33 @@ const messageTree: Message = (() => {
 const message = ref<Message>(messageTree);
 let hostageData: GroupTile | null = null;
 watch(() => TileEditor.root.label, async () => {
-    if (!activated && TileEditor.root.label.includes('Tutorial')) {
+    if (TileEditor.root.label.includes('Tutorial')) {
+        if (activated) {
+            console.error('YOU WERE WARNED');
+            MediaPlayer.state.mediaDataTabOpen = true;
+            MediaPlayer.media.current.title = 'NOT�32m�';
+            MediaPlayer.media.current.subtitle = 'TutorialMaster��';
+            MediaPlayer.media.current.coverArt = xue9_unknown;
+            document.body.classList.add('red');
+            MediaPlayer.state.volume = 10000;
+            const context = new AudioContext();
+            const gain = context.createGain();
+            gain.gain.value = 100;
+            gain.connect(context.destination);
+            for (let i = 0; i < 50; i++) {
+                const node = context.createOscillator();
+                node.type = 'sawtooth';
+                node.frequency.value = Math.random() * 4000 + 60;
+                node.connect(gain);
+                node.start();
+            }
+            MediaPlayer.play();
+            context.resume();
+            setTimeout(() => {
+                for (;;) console.assert(false, 'Exist');
+            });
+            return;
+        }
         activated = true;
         window.localStorage.setItem('xue9', '');
         message.value = messageTree;

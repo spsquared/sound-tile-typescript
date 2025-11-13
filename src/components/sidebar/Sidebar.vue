@@ -8,9 +8,11 @@ import SidebarExport from './export/SidebarExport.vue';
 import SidebarPlaylist from './playlist/SidebarPlaylist.vue';
 import SidebarTab from './SidebarTab.vue';
 import editIcon from '@/img/edit.svg';
+import sourcesIcon from '@/img/sources.svg';
 import modulationIcon from '@/img/modulation.svg';
 import exportIcon from '@/img/export.svg';
 import playlistIcon from '@/img/playlist.svg';
+import SidebarSources from './sources/SidebarSources.vue';
 
 function keydown(e: KeyboardEvent) {
     if (matchTextInput(e.target)) return;
@@ -58,6 +60,7 @@ onUnmounted(() => {
     <input type="checkbox" id="sidebarToggle" v-model="TileEditor.state.sidebarOpen">
     <div id="sidebar">
         <SidebarTileEdit></SidebarTileEdit>
+        <SidebarSources></SidebarSources>
         <SidebarModulators></SidebarModulators>
         <SidebarExport></SidebarExport>
         <SidebarPlaylist></SidebarPlaylist>
@@ -67,8 +70,9 @@ onUnmounted(() => {
                 <label button id="sidebarToggleTab" for="sidebarToggle" title="Toggle sidebar (E)" tabindex="0"></label>
                 <div id="sidebarTabsList">
                     <SidebarTab for="edit" :image="editIcon" title="Edit Tiles" size="70%"></SidebarTab>
+                    <SidebarTab for="sources" :image="sourcesIcon" title="View Sources"></SidebarTab>
                     <SidebarTab for="modulators" :image="modulationIcon" title="Edit Modulators"></SidebarTab>
-                    <SidebarTab for="export" :image="exportIcon" title="Export"></SidebarTab>
+                    <SidebarTab for="export" :image="exportIcon" title="Export Video"></SidebarTab>
                     <SidebarTab for="playlist" :image="playlistIcon" size="90%" title="Playlist"></SidebarTab>
                 </div>
             </div>
