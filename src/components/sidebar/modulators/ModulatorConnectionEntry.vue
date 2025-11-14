@@ -57,17 +57,17 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
 </script>
 
 <template>
-    <div class="connectionEntry" :title="`Edit transforms for connection ${props.connection.source.label} [${props.connection.sourceKey}] > ${props.connection.target.label} [${props.connection.targetKey}]`">
+    <div class="connectionEntry" :title="`Edit transforms for connection ${props.connection.source.tile?.label ?? props.connection.source.label} [${props.connection.sourceKey}] > ${props.connection.target.tile?.label ?? props.connection.target.label} [${props.connection.targetKey}]`">
         <input type="button" class="connectionDelete" title="Disconnect modulation" @click="disconnect">
         <div class="connectionLabel" ref="connectionLabel" @click="openWindow">
             <div>
-                <span v-if="props.type != 'source'">{{ props.connection.source.label + ' ' }}</span>
+                <span v-if="props.type != 'source'">{{ props.connection.source.tile?.label ?? props.connection.source.label + ' ' }}</span>
                 <span v-else>This&ensp;</span>
                 <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span>
             </div>
             <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
             <div>
-                <span v-if="props.type != 'target'">{{ props.connection.target.label + ' ' }}</span>
+                <span v-if="props.type != 'target'">{{ props.connection.target.tile?.label ?? props.connection.target.label + ' ' }}</span>
                 <span v-else>This&ensp;</span>
                 <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span>
             </div>
@@ -77,10 +77,15 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
     <DraggableWindow v-model="windowOpen" ref="transformsWindow" title="Transforms" :min-width="400" :min-height="200" resize-height close-on-click-out>
         <div class="transformsWindow">
             <div class="connectionLabel transformsConnectionHeader">
-                <!-- can't put separate lines because it completely destroys the formatting -->
-                <div :title="`Source: ${props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setIdentifyTile(props.connection.source.tile, true)" @mouseleave="setIdentifyTile(props.connection.source.tile, false)">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
+                <div :title="`Source: ${props.connection.source.tile?.label ?? props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setIdentifyTile(props.connection.source.tile, true)" @mouseleave="setIdentifyTile(props.connection.source.tile, false)">
+                    {{ props.connection.source.tile?.label ?? props.connection.source.label }}
+                    <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span>
+                </div>
                 <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
-                <div :title="`Target: ${props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setIdentifyTile(props.connection.target.tile, true)" @mouseleave="setIdentifyTile(props.connection.target.tile, false)">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
+                <div :title="`Target: ${props.connection.target.tile?.label ?? props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setIdentifyTile(props.connection.target.tile, true)" @mouseleave="setIdentifyTile(props.connection.target.tile, false)">
+                    {{ props.connection.target.tile?.label ?? props.connection.target.label }}
+                    <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span>
+                </div>
             </div>
             <div class="transformsContainer">
                 <!-- hard-coded inputs and outputs to make clearer the direction of the transform chain -->
