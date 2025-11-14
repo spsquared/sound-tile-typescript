@@ -30,7 +30,6 @@ export class TileEditor {
         sidebarScreenWidth: number
         readonly minSidebarWidthPx: number
         readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } | undefined }
-        treeMode: boolean
         sidebarIdentifyTile: Tile | null
         editWindowIdentifyTile: Tile | null
     } = reactive({
@@ -42,7 +41,6 @@ export class TileEditor {
         sidebarScreenWidth: Number(localStorage.getItem('sidebarScreenWidth') ?? 25),
         minSidebarWidthPx: 200,
         tileTypes: {},
-        treeMode: false,
         sidebarIdentifyTile: null,
         editWindowIdentifyTile: null
     });
