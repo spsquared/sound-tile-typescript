@@ -126,9 +126,12 @@ export class MediaPlayer {
             this.state.mediaDataTabOpen = this.media.current.title.trim().length > 0;
         });
         watch([() => this.media.current.title, () => this.media.current.subtitle], () => {
-            const titleTrim = this.media.current.title.trim();
-            const subtitleTrim = this.media.current.subtitle.trim();
-            document.title = `Sound Tile - ${titleTrim.substring(0, 32)}${titleTrim.length > 32 ? '...' : ''}${subtitleTrim.length > 0 ? ' - ' : ''}${subtitleTrim.substring(0, 32)}${subtitleTrim.length > 32 ? '...' : ''}`;
+            const nowPlaying = [
+                this.media.current.title.trim(),
+                this.media.current.subtitle.trim()
+            ].map((s) => s.length > 32 ? s.substring(0, 32) + '...': s).filter((s) => s.length > 0).join(' - ');
+            const title = [nowPlaying, 'Sound Title'].filter((s) => s.length > 0).join(' | ');
+            document.title = title;
         });
     }
 }
