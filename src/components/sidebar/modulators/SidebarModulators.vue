@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplateRef } from 'vue';
-import { useDebounce, useElementSize } from '@vueuse/core';
+import { debouncedWatch, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import ModulatorSourceItem from './ModulatorSourceItem.vue';
 import ModulatorTargetItem from './ModulatorTargetItem.vue';
 import ModulatorConnectionItem from './ModulatorConnectionItem.vue';
+import { Tile } from '@/visualizer/tiles';
 
 const splitPaneSize = ref(0.5);
 const connectionsPaneSize = ref(0.25);
@@ -61,7 +62,14 @@ onUnmounted(() => {
 // not to mention that it DESTROYS type annotations by giving you MASSIVE NESTED OBJECTS full of BULLSHIT
 // instead of just giving you... idk... a CLASS NAME???
 
-const debouncedTiles = useDebounce(TileEditor.currentTiles, 100);
+// update UI only when visible and when tiles settled
+const debouncedTiles = ref<Set<Tile>>(new Set());
+debouncedWatch([
+    () => TileEditor.state.sidebarOpen && TileEditor.state.sidebarTab == 'modulators',
+    TileEditor.currentTiles
+], ([isVisible]) => {
+    if (isVisible) debouncedTiles.value = TileEditor.currentTiles.value;
+}, { debounce: 100, deep: false });
 // thanks vue for deleting my private members that are still there and then complaining that they're not there
 // ok for some reason this doesn't produce random ref unwrapping bullshit but the previous code using refs and watch functions did???
 const sourceList = computed(() => {

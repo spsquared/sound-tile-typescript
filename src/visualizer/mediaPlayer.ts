@@ -93,9 +93,7 @@ export class MediaPlayer {
 
     // playback
     static {
-        watch(() => this.state.volume, () => {
-            Visualizer.gain.gain.value = this.state.volume;
-        }, { immediate: true });
+        watch(() => this.state.volume, () => Visualizer.gain.gain.value = this.state.volume, { immediate: true });
         watch(() => this.internalTimer.now, () => this.updateTime());
         watch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
             if (this.playing.value && Visualizer.duration > 0) {
