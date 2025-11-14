@@ -5,7 +5,6 @@ import Modulation from '@/visualizer/modulation';
 import ModulatorItem from './ModulatorItem.vue';
 
 const props = defineProps<{
-    label: string
     target: Modulation.Target<any>
 }>();
 
@@ -58,7 +57,7 @@ let globalHoverId = 0;
 </script>
 
 <template>
-    <ModulatorItem type="target" :label="props.target.tile?.label ?? props.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
+    <ModulatorItem type="target" :label="props.target.tile?.label ?? props.target.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
         <template v-for="key in modKeys" v-slot:[key]>
             <div :class="{
                 targetDrop: true,

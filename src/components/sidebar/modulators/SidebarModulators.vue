@@ -2,7 +2,6 @@
 import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplateRef } from 'vue';
 import { useDebounce, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
-import { Tile } from '@/visualizer/tiles';
 import Modulation from '@/visualizer/modulation';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import ModulatorSourceItem from './ModulatorSourceItem.vue';
@@ -101,14 +100,6 @@ const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.
     // onTrigger: () => console.debug('trigger connection list change')
 }); // not as funny as 6 closing parenthesis mixed with a few braces
 
-// need "as Tile" everywhere because of the stupid auto unwrap also obliterating private and protected members
-function setTileHover(tile: Tile) {
-    TileEditor.state.sidebarIdentifyTile = tile;
-}
-function resetTileHover() {
-    TileEditor.state.sidebarIdentifyTile = null;
-}
-
 // passing in hovered element for drag-and-drop to get around big div covering the whole screen
 // takes all the elements and then removes the first which is always the dragging thing
 const hoveredElement = shallowRef<Element | null>(null);
@@ -133,11 +124,11 @@ onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElement
             <div :id="horizontal ? 'modSplitContainerHorizontal' : 'modSplitContainerVertical'" ref="container">
                 <div id="modSourceContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Sources</div>
-                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile?.id.toString() ?? s.label" :label="s.label" :source="s" @mouseenter="setTileHover(s.tile as Tile)" @mouseleave="resetTileHover"></ModulatorSourceItem>
+                    <ModulatorSourceItem v-for="s in sourceList" :key="s.tile?.id.toString() ?? s.label" :source="s"></ModulatorSourceItem>
                 </div>
                 <div id="modTargetContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Targets</div>
-                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile?.id.toString() ?? t.label" :label="t.label" :target="t" @mouseenter="setTileHover(t.tile as Tile)" @mouseleave="resetTileHover"></ModulatorTargetItem>
+                    <ModulatorTargetItem v-for="t in targetList" :key="t.tile?.id.toString() ?? t.label" :target="t"></ModulatorTargetItem>
                 </div>
                 <div id="modConnectionsContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Connections</div>

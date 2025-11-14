@@ -30,8 +30,8 @@ export class TileEditor {
         sidebarScreenWidth: number
         readonly minSidebarWidthPx: number
         readonly tileTypes: { [key: string]: { Tile: typeof Tile, visible: boolean } | undefined }
-        sidebarIdentifyTile: Tile | null
-        editWindowIdentifyTile: Tile | null
+        identifyTilesSidebar: Set<Tile>
+        identifyTilesLayout: Set<Tile>
     } = reactive({
         dropdownOpen: true,
         sidebarOpen: false,
@@ -41,8 +41,8 @@ export class TileEditor {
         sidebarScreenWidth: Number(localStorage.getItem('sidebarScreenWidth') ?? 25),
         minSidebarWidthPx: 200,
         tileTypes: {},
-        sidebarIdentifyTile: null,
-        editWindowIdentifyTile: null
+        identifyTilesSidebar: new Set() as any, // wHY auToMATIc rEf unWRAPPING SUCKS I FUCKING HATE IT
+        identifyTilesLayout: new Set() as any
     });
     static readonly drag: {
         current: Tile | null

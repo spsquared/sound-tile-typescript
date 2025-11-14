@@ -27,19 +27,25 @@ if (props.type == 'target') {
 
 const dragItems = useTemplateRef('modDragItems');
 const { height: dragItemsHeight } = useElementSize(dragItems);
+
+function setIdentifyTile(v: boolean) {
+    if (props.tile === null) return;
+    if (v) TileEditor.state.identifyTilesSidebar.add(props.tile);
+    else TileEditor.state.identifyTilesSidebar.delete(props.tile);
+}
 </script>
 
 <template>
     <div :class="{
         modItem: true,
-        modItemIdentify: TileEditor.state.editWindowIdentifyTile === (props.tile ?? 1), /* diff type */
+        modItemIdentify: props.tile !== null && TileEditor.state.identifyTilesLayout.has(props.tile),
         modItemDragHovering: dragHovering
-    }" ref="modItem" :title="props.tile !== null ? `Tile associated with source: ${props.label}` : `Source: ${props.label}`">
+    }" ref="modItem" :title="props.tile !== null ? `Tile associated with source: ${props.label}` : `Source: ${props.label}`" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
         <div class="modLabel">{{ props.label }}</div>
         <div class="modDragContainer">
             <div class="modDragDropdown" ref="modDragDropdown">
                 <div class="modDragItems" ref="modDragItems">
-                    <div v-for="key in props.modulationKeys" class="modDragItem">
+                    <div class="modDragItem" v-for="key in props.modulationKeys">
                         <div>{{ key }}</div>
                         <slot :name="key"></slot>
                     </div>

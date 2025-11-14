@@ -2,10 +2,6 @@
 import TileEditor from '@/visualizer/editor';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import TileEditItem from './TileEditItem.vue';
-
-function resetHover() {
-    TileEditor.state.sidebarIdentifyTile = null;
-}
 </script>
 
 <template>
@@ -16,7 +12,7 @@ function resetHover() {
                 <input type="button" id="tileEditUndo" title="Undo layout change" @click="TileEditor.undoLayoutChange()">
                 <input type="button" id="tileEditRedo" title="Redo layout change" @click="TileEditor.redoLayoutChange()">
             </div>
-            <TileEditItem :tile="TileEditor.root" root @mouseleave="resetHover"></TileEditItem>
+            <TileEditItem :tile="TileEditor.root" root></TileEditItem>
         </template>
     </SidebarContentWrapper>
 </template>

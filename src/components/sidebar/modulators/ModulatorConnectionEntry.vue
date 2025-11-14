@@ -29,13 +29,6 @@ function openWindow() {
     }
 }
 
-function setTileHover(tile: Tile | null) {
-    TileEditor.state.editWindowIdentifyTile = tile;
-}
-function resetTileHover() {
-    TileEditor.state.editWindowIdentifyTile = null;
-}
-
 const transformAddType = ref<keyof typeof Modulation.TransformTypes>('constant');
 function addTransform() {
     const transform = Modulation.TransformTypes[transformAddType.value];
@@ -54,6 +47,12 @@ function moveTransformDown(i: number) {
 }
 function deleteTransform(i: number) {
     props.connection.transforms.splice(i, 1);
+}
+
+function setIdentifyTile(tile: Tile | null, v: boolean) {
+    if (tile === null) return;
+    if (v) TileEditor.state.identifyTilesSidebar.add(tile);
+    else TileEditor.state.identifyTilesSidebar.delete(tile);
 }
 </script>
 
@@ -79,16 +78,16 @@ function deleteTransform(i: number) {
         <div class="transformsWindow">
             <div class="connectionLabel transformsConnectionHeader">
                 <!-- can't put separate lines because it completely destroys the formatting -->
-                <div :title="`Source: ${props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
+                <div :title="`Source: ${props.connection.source.label} [${props.connection.sourceKey}]`" @mouseenter="setIdentifyTile(props.connection.source.tile, true)" @mouseleave="setIdentifyTile(props.connection.source.tile, false)">{{ props.connection.source.label }} <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span></div>
                 <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
-                <div :title="`Target: ${props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
+                <div :title="`Target: ${props.connection.target.label} [${props.connection.targetKey}]`" @mouseenter="setIdentifyTile(props.connection.target.tile, true)" @mouseleave="setIdentifyTile(props.connection.target.tile, false)">{{ props.connection.target.label }} <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span></div>
             </div>
             <div class="transformsContainer">
                 <!-- hard-coded inputs and outputs to make clearer the direction of the transform chain -->
                 <div class="transformItem transformItemIO" title="The input value to the transform chain coming from the source">
                     <div class="transformItemIndex">0</div>
                     <div class="transformItemIOLabel" style="color: var(--logo-green);">Input</div>
-                    <div class="transformItemIOTag" @mouseenter="setTileHover(props.connection.source.tile)" @mouseleave="resetTileHover"></div>
+                    <div class="transformItemIOTag" @mouseenter="setIdentifyTile(props.connection.source.tile, true)" @mouseleave="setIdentifyTile(props.connection.source.tile, false)"></div>
                 </div>
                 <div class="transformItem" v-for="t, i in props.connection.transforms" :key="i">
                     <div class="transformItemIndex">{{ i + 1 }}</div>
@@ -100,7 +99,7 @@ function deleteTransform(i: number) {
                 <div class="transformItem transformItemIO" title="The output leaving the transform chain to the target">
                     <div class="transformItemIndex">{{ props.connection.transforms.length + 1 }}</div>
                     <div class="transformItemIOLabel" style="color: var(--logo-blue);">Output</div>
-                    <div class="transformItemIOTag" @mouseenter="setTileHover(props.connection.target.tile)" @mouseleave="resetTileHover"></div>
+                    <div class="transformItemIOTag" @mouseenter="setIdentifyTile(props.connection.target.tile, true)" @mouseleave="setIdentifyTile(props.connection.target.tile, false)"></div>
                 </div>
             </div>
             <div class="transformsAddContainer">

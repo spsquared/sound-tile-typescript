@@ -74,9 +74,6 @@ export namespace Modulation {
             this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
-            if (tile !== undefined) this.effectScope.run(() => {
-                watch(() => reactive(tile).label, (v) => this.label = v, { immediate: true });
-            });
             this.tile = tile ?? null;
         }
 
@@ -244,10 +241,6 @@ export namespace Modulation {
             this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
-            // adopt tile label
-            if (tile !== undefined) this.effectScope.run(() => {
-                watch(() => reactive(tile).label, (v) => this.label = v, { immediate: true });
-            });
             this.tile = tile ?? null;
         }
 

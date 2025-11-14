@@ -26,10 +26,6 @@ onBeforeUnmount(() => {
     props.tile.sidebarElements = null;
 });
 
-function setHover() {
-    TileEditor.state.sidebarIdentifyTile = props.tile;
-}
-
 // text label overflow stuff
 const label = useTemplateRef('label');
 const { width: handleWidth } = useElementSize(handle);
@@ -53,12 +49,17 @@ function toggleEditTile() {
 const destroyDisabled = computed(() => props.root || TileEditor.lock.locked || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
 function dragTile(e: MouseEvent) {
     if (TileEditor.startDrag(props.tile, { x: 100, y: 5 }, { w: 200, h: 150 }, e)) {
-        TileEditor.state.sidebarIdentifyTile = null;
+        setIdentifyTile(false);
     }
 }
 function deleteTile() {
     TileEditor.markLayoutChange();
     props.tile.destroy();
+}
+
+function setIdentifyTile(v: boolean) {
+    if (v) TileEditor.state.identifyTilesSidebar.add(props.tile);
+    else TileEditor.state.identifyTilesSidebar.delete(props.tile);
 }
 </script>
 
@@ -66,8 +67,8 @@ function deleteTile() {
     <div class="editItem">
         <div :class="{
             editItemBar: true,
-            editItemBarIdentify: TileEditor.state.editWindowIdentifyTile === props.tile
-        }" ref="handle" @mouseenter="setHover">
+            editItemBarIdentify: TileEditor.state.identifyTilesLayout.has(props.tile)
+        }" ref="handle" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
             <div class="editItemGroupIcon" v-if="props.tile instanceof GroupTile" @click="toggleChildren"></div>
             <input type="text" class="editItemLabel" ref="label" v-model="props.tile.label" @focus="openChildren" @mouseleave="resetLabelScroll">
             <div class="editItemSpacer" @click="toggleChildren"></div>
