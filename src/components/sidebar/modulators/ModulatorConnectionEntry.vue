@@ -97,9 +97,9 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
                 <div class="transformItem" v-for="t, i in props.connection.transforms" :key="i">
                     <div class="transformItemIndex">{{ i + 1 }}</div>
                     <ModulatorConnectionTransformItem :transform="t"></ModulatorConnectionTransformItem>
-                    <input type="button" class="transformItemMoveUp" @click="moveTransformUp(i)" :disabled="i == 0"></input>
-                    <input type="button" class="transformItemMoveDown" @click="moveTransformDown(i)" :disabled="i == props.connection.transforms.length - 1"></input>
-                    <input type="button" class="transformItemDelete" @click="deleteTransform(i)"></input>
+                    <input type="button" class="transformItemMoveUp" @click="moveTransformUp(i)" :disabled="i == 0">
+                    <input type="button" class="transformItemMoveDown" @click="moveTransformDown(i)" :disabled="i == props.connection.transforms.length - 1">
+                    <input type="button" class="transformItemDelete" @click="deleteTransform(i)">
                 </div>
                 <div class="transformItem transformItemIO" title="The output leaving the transform chain to the target">
                     <div class="transformItemIndex">{{ props.connection.transforms.length + 1 }}</div>
@@ -111,7 +111,7 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
                 <select class="transformsAddType" v-model="transformAddType" title="Choose function for modulation transform" v-once>
                     <option v-for="transform in Modulation.TransformTypes" :value="transform.type">{{ transform.transformName }}</option>
                 </select>
-                <input type="button" class="transformsAddButton" value="+" title="Add the chosen transform function" @click="addTransform"></input>
+                <input type="button" class="transformsAddButton" value="+" title="Add the chosen transform function" @click="addTransform">
             </div>
         </div>
     </DraggableWindow>
