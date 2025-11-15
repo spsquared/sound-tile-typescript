@@ -493,10 +493,10 @@ export class TileEditor {
                 }
             }
         });
+        // currentTiles is used everywhere
         watchEffect(() => {
             // somehow this works perfectly and only updates when there is a layout change
             // it triggers multiple times but only runs once because vue isnt stupid and defers it
-            // debugger;
             this.flattenedTiles.clear();
             const stack: Tile[] = [this.root];
             while (stack.length > 0) {

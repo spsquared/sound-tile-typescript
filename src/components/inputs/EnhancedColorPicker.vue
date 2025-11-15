@@ -305,9 +305,12 @@ function removeStop(i: number) {
 
 .pickerGradientStopEyedropper:hover,
 .pickerGradientStopUp:hover,
-.pickerGradientStopDown:hover,
-.pickerGradientStopDelete:hover {
+.pickerGradientStopDown:hover {
     background-color: #777;
+}
+
+.pickerGradientStopDelete:hover {
+    background-color: red;
 }
 
 .pickerGradientStopEyedropper:disabled,

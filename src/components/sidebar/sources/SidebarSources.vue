@@ -4,6 +4,7 @@ import { debouncedWatch, throttledWatch } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { Tile, VisualizerTile } from '@/visualizer/tiles';
+import { ReuseVisualizerSource } from './reuseSource';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import SourceItem from './SourceItem.vue';
 
@@ -98,7 +99,6 @@ function pausePreview(sourceKey: string) {
     node.node?.stop();
     node.node?.disconnect();
 }
-
 watch(sidebarVisible, () => {
     if (!sidebarVisible.value) {
         if (sourceItems.value !== null) for (const source of sourceItems.value) {
@@ -112,13 +112,28 @@ watch(sidebarVisible, () => {
         audioContext.suspend();
     } else audioContext.resume();
 });
+
+// automatically opening the sidebar and canceling if navigated away
+watch(ReuseVisualizerSource.active, () => {
+    if (ReuseVisualizerSource.active.value) {
+        TileEditor.state.sidebarOpen = true;
+        TileEditor.state.sidebarTab = 'sources';
+        TileEditor.state.hideTabs = false;
+    }
+});
+watch(() => TileEditor.state.sidebarOpen && TileEditor.state.sidebarTab == 'sources', (isOpen) => {
+    if (!isOpen && ReuseVisualizerSource.active.value) ReuseVisualizerSource.cancelSource();
+});
 </script>
 
 <template>
     <SidebarContentWrapper tab="sources">
-        <template v-slot:header>Sources</template>
+        <template v-slot:header>
+            {{ ReuseVisualizerSource.active.value ? 'Select Source' : 'Sources' }}
+            <input type="button" class="cancelReuseSource" v-if="ReuseVisualizerSource.active.value" @click="ReuseVisualizerSource.cancelSource">
+        </template>
         <template v-slot:content>
-            <SourceItem v-for="source in sources" :key="source.key" :source-key="source.key" ref="sourceItems" :tiles="source.tiles" :preview-duration="playbackNodes.get(source.key)?.buffer.duration" :play-preview="(t) => playPreview(source.key, t)" :pause-preview="() => pausePreview(source.key)"></SourceItem>
+            <SourceItem v-for="source in sources" :key="source.key" ref="sourceItems" :source-key="source.key" :buffer="source.buffer" :tiles="source.tiles" :preview-duration="playbackNodes.get(source.key)?.buffer.duration" :play-preview="(t) => playPreview(source.key, t)" :pause-preview="() => pausePreview(source.key)"></SourceItem>
             <div class="noSources" v-if="sources.length == 0">
                 No sources added!
                 <br>
@@ -129,6 +144,20 @@ watch(sidebarVisible, () => {
 </template>
 
 <style scoped>
+.cancelReuseSource {
+    width: 28px;
+    height: 20px;
+    background-color: red;
+    background-image: url(@/img/close.svg);
+    background-position: center;
+    background-size: 80% 80%;
+    background-repeat: no-repeat;
+}
+
+.cancelReuseSource:hover {
+    background-color: tomato;
+}
+
 .noSources {
     margin-top: 1em;
     text-align: center;

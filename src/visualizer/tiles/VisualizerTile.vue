@@ -7,6 +7,7 @@ import { VisualizerTile } from '../tiles';
 import { VisualizerMode } from '../visualizerData';
 import Visualizer from '../visualizer';
 import Tile from './Tile.vue';
+import { ReuseVisualizerSource } from '@/components/sidebar/sources/reuseSource';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
@@ -57,6 +58,12 @@ async function uploadSource() {
     }
     uploadSourceDisabled.value = false;
 }
+async function reuseSource() {
+    uploadSourceDisabled.value = true;
+    const source = await ReuseVisualizerSource.pickExistingSource();
+    if (source !== null) options.value.buffer = source;
+    uploadSourceDisabled.value = false;
+}
 
 const gainIcon = computed(() => options.value.mute ? volumeMuteIcon : (options.value.gain > 0.6 ? volume2Icon : (options.value.gain > 0 ? volume1Icon : volume0Icon)));
 
@@ -94,17 +101,17 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
         <template v-slot:content>
             <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="visualizerUploadCover" v-if="options.buffer === null">
-                <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
+                <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" title="Upload an audio source file" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
+                <span style="font-size: 0.8em">-- OR --</span>
+                <input type="button" @click="reuseSource" value="Reuse source" :disabled="uploadSourceDisabled || ReuseVisualizerSource.active.value || TileEditor.lock.locked">
             </div>
         </template>
         <template v-slot:options>
             <TileOptionsSection title="General">
                 <div class="optionsRows">
                     <div>
-                        <label title="Audio source file">
-                            <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
-                        </label>
-                        <!-- future - linking multiple tiles to the same source audio -->
+                        <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :title="`${options.buffer === null ? 'Upload an' : 'Replace the'} audio source file`" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
+                        <input type="button" @click="reuseSource" value="Reuse source" title="Reuse an existing audio source from a different tile for this one" :disabled="uploadSourceDisabled || ReuseVisualizerSource.active.value || TileEditor.lock.locked">
                     </div>
                     <div class="optionsGrid">
                         <label title="Volume (gain) of tile - affects visualizer and output">
@@ -417,6 +424,8 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 
 .visualizerUploadCover {
     display: flex;
+    flex-direction: column;
+    row-gap: 4px;
     position: absolute;
     top: 0px;
     left: 0px;

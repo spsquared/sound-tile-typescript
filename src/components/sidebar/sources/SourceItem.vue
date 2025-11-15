@@ -3,10 +3,12 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { VisualizerTile } from '@/visualizer/tiles';
+import { ReuseVisualizerSource } from './reuseSource';
 import Slider from '@/components/inputs/Slider.vue';
 
 const props = defineProps<{
     sourceKey: string // literally useless here, only used in parent to not pause this when playing
+    buffer: ArrayBuffer // also useless other than for the source reuse code
     playPreview: (t: number) => void
     pausePreview: () => void
     tiles: Set<VisualizerTile>
@@ -65,6 +67,7 @@ function setIdentifyTile(tile: VisualizerTile, v: boolean) {
             <div class="tileLink" @mouseenter="setIdentifyTile(tile, true)" @mouseleave="setIdentifyTile(tile, false)">{{ tile.label }}</div>
             <div class="tileLinkDivider"></div>
         </template>
+        <input type="button" class="reuseSourceButton" value="+ Link" v-if="ReuseVisualizerSource.active.value" @click="ReuseVisualizerSource.resolveSource(props.buffer)" title="Reuse this source">
     </div>
 </template>
 
@@ -190,5 +193,18 @@ function setIdentifyTile(tile: VisualizerTile, v: boolean) {
     height: 2px;
     margin: 0px 16px;
     background-color: #555;
+}
+
+.tileLinkDivider:last-child {
+    display: none;
+}
+
+.reuseSourceButton {
+    margin-top: 3px;
+    background-color: dodgerblue;
+}
+
+.reuseSourceButton:hover {
+    background-color: color-mix(in hsl, dodgerblue 80%, cyan 20%);
 }
 </style>
