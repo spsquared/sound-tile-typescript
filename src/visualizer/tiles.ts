@@ -204,9 +204,10 @@ export class GroupTile extends Tile {
             ...cloneDeep<Omit<MediaSchema.GroupTile, keyof MediaSchema.Tile>>({
                 orientation: this.orientation,
                 borderColor: this.borderColor.colorData,
-                children: this.children.map((c) => c.getSchemaData())
-            })
-        } as MediaSchema.GroupTile;
+                children: []
+            }),
+            children: this.children.map((c) => c.getSchemaData()) // avoid unnecessary cloning
+        };
     }
     static fromSchemaData(data: MediaSchema.GroupTile): GroupTile {
         return this.reconstitute(data, new GroupTile());
@@ -281,10 +282,15 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     getSchemaData(): MediaSchema.VisualizerTile {
         return {
             ...super.getSchemaData(),
-            ...cloneDeep<Omit<MediaSchema.VisualizerTile, keyof MediaSchema.Tile>>({
-                data: this.visualizer.data
-            })
-        } as MediaSchema.VisualizerTile;
+            data: {
+                ...cloneDeep<MediaSchema.VisualizerTile['data']>({
+                    ...this.visualizer.data,
+                    buffer: null
+                }),
+                // don't clone the audio buffer (it stays as reference, and is "immutable" anyway)
+                buffer: this.visualizer.data.buffer
+            }
+        };
     }
     static fromSchemaData(data: MediaSchema.VisualizerTile): VisualizerTile {
         // visualizer data can't be set after creation so it has to be done here
@@ -345,7 +351,7 @@ export class TextTile extends Tile implements Modulation.Modulatable<{
                 textColor: this.textColor.colorData,
                 align: this.align
             })
-        } as MediaSchema.TextTile;
+        };
     }
     static fromSchemaData(data: MediaSchema.TextTile): TextTile {
         return this.reconstitute(data, new TextTile());
@@ -399,7 +405,7 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
                 imgSrc: new TextEncoder().encode(this.imgSrc).buffer,
                 smoothDrawing: this.smoothDrawing
             })
-        } as MediaSchema.ImageTile;
+        };
     }
     static fromSchemaData(data: MediaSchema.ImageTile): ImageTile {
         return this.reconstitute(data, new ImageTile());
@@ -429,10 +435,8 @@ export class GrassTile extends Tile {
 
     getSchemaData(): MediaSchema.GrassTile {
         return {
-            ...super.getSchemaData(),
-            ...cloneDeep<Omit<MediaSchema.GrassTile, keyof MediaSchema.Tile>>({
-            })
-        } as MediaSchema.GrassTile;
+            ...super.getSchemaData()
+        };
     }
     static fromSchemaData(data: MediaSchema.GrassTile): GrassTile {
         return this.reconstitute(data, new GrassTile());
