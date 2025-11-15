@@ -24,6 +24,7 @@ async function uploadToCurrent() {
         const media = await Media.decompress(files[0]);
         if (media === null) {
             TileEditor.lock.release();
+            console.error('Failed to decompress media from uploaded file');
             return;
         }
         MediaPlayer.media.current = media;
@@ -36,6 +37,7 @@ async function downloadFromCurrent() {
     const buffer = await MediaPlayer.media.current.compress();
     if (buffer === null) {
         TileEditor.lock.release();
+        console.error('Failed to compress media for download');
         return;
     }
     const file = new Blob([buffer], { type: 'application/x-soundtile' });

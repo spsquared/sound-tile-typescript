@@ -99,12 +99,6 @@ function pausePreview(sourceKey: string) {
     node.node?.disconnect();
 }
 
-// console.log('stop')
-// const node = playbackNodes.get(source.$props.sourceKey);
-// if (node === undefined) return;
-// node.node?.stop();
-// node.node?.disconnect();
-
 watch(sidebarVisible, () => {
     if (!sidebarVisible.value) {
         if (sourceItems.value !== null) for (const source of sourceItems.value) {

@@ -278,6 +278,7 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
     background-position: center;
     background-size: 60% 60%;
     background-repeat: no-repeat;
+    outline-offset: -4px;
 }
 
 .transformItemMoveUp {

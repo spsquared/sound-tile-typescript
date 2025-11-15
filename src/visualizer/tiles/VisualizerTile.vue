@@ -109,7 +109,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     <div class="optionsGrid">
                         <label title="Volume (gain) of tile - affects visualizer and output">
                             Gain ({{ Math.round(options.gain * 100) }}%)
-                            <Slider length="120px" v-model="options.gain" :min="0" :max="1.2" :step="0.01" :title="`Volume: ${Math.round(options.gain * 100)}%`"></Slider>
+                            <Slider length="120px" v-model="options.gain" :min="0" :max="1.2" :step="0.01" :scroll-speed="0.25" :title="`Volume: ${Math.round(options.gain * 100)}%`"></Slider>
                         </label>
                         <label title="Mute - does not affect visualizer, only output">
                             Mute

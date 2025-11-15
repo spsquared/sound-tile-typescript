@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
     /**Minimum value */
@@ -34,6 +34,8 @@ const props = defineProps<{
     thumbLength?: string
     /**Edge radius in CSS units of slider thumb */
     thumbRadius?: string
+    /**Multiplier for scrolling interaction speed of slider */
+    scrollSpeed?: number
     /**Icon to display on slider thumb */
     icon?: string
     /**Size in CSS units of icon */
@@ -50,11 +52,9 @@ const emit = defineEmits<{
 // scrollValue allows snapping to step while providing smooth control using scroll wheel
 const scrollValue = ref(value.value);
 function onWheel(e: WheelEvent) {
-    if (props.vertical) {
-        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaY * (props.step ?? 1), props.max ?? Infinity));
-    } else {
-        scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaX * (props.step ?? 1), props.max ?? Infinity));
-    }
+    // sideways scrolling often triggers nagivation and sucks on mice so we provide both options
+    scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaY * (props.step ?? 1) * (props.scrollSpeed ?? 1), props.max ?? Infinity));
+    if (!props.vertical) scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value + e.deltaX * (props.step ?? 1) * (props.scrollSpeed ?? 1), props.max ?? Infinity));
     if (props.step != undefined && props.step > 0) {
         value.value = Number((Math.round(scrollValue.value / props.step) * props.step).toFixed((props.step.toString().split('.')[1] ?? '').length));
         emit('input', value.value);
@@ -62,15 +62,17 @@ function onWheel(e: WheelEvent) {
         value.value = scrollValue.value;
         emit('input', value.value);
     }
+    e.preventDefault();
 }
 function endWheel() {
     scrollValue.value = value.value;
 }
+watch(value, () => scrollValue.value = value.value);
 </script>
 
 <template>
     <label :class="{ slider: true, sliderVertical: props.vertical, sliderDisabled: props.disabled }">
-        <input type="range" class="sliderInput" v-model="value" @input="emit('input', value)" @wheel.passive="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
+        <input type="range" class="sliderInput" v-model="value" @input="emit('input', value)" @wheel="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
         <div class="sliderTrack"></div>
         <div class="sliderThumbWrapper">
             <div class="sliderThumb"></div>
