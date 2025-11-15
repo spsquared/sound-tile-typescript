@@ -3,6 +3,7 @@ import { onMounted, onUnmounted } from 'vue';
 import { matchTextInput } from '@/constants';
 import TileEditor from '@/visualizer/editor';
 import SidebarTileEdit from './tileEdit/SidebarTileEdit.vue';
+import SidebarSources from './sources/SidebarSources.vue';
 import SidebarModulators from './modulators/SidebarModulators.vue';
 import SidebarExport from './export/SidebarExport.vue';
 import SidebarPlaylist from './playlist/SidebarPlaylist.vue';
@@ -12,7 +13,6 @@ import sourcesIcon from '@/img/sources.svg';
 import modulationIcon from '@/img/modulation.svg';
 import exportIcon from '@/img/export.svg';
 import playlistIcon from '@/img/playlist.svg';
-import SidebarSources from './sources/SidebarSources.vue';
 
 function keydown(e: KeyboardEvent) {
     if (matchTextInput(e.target)) return;
@@ -137,6 +137,8 @@ onUnmounted(() => {
     background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
+    outline-offset: -2px;
+    outline-color: cyan;
 }
 
 #sidebarToggle:checked+#sidebar #sidebarToggleTab {

@@ -149,7 +149,6 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
 .connectionDelete:focus-visible+.connectionLabel {
     transform: translateX(-24px);
     background-color: #555;
-    border-bottom-color: #777;
 }
 
 .connectionLabel>div {

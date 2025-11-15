@@ -103,6 +103,8 @@ const showAppInfo = inject<Ref<boolean>>('showAppInfoRef', ref(false));
     background-size: 80% 80%;
     background-repeat: no-repeat;
     transition: 200ms linear opacity;
+    outline-offset: -2px;
+    outline-color: cyan;
 }
 
 #dropdownToggle:checked+#dropdown>#dropdownTab {

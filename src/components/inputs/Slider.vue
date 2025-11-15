@@ -2,23 +2,43 @@
 import { ref } from 'vue';
 
 const props = defineProps<{
+    /**Minimum value */
     min?: number
+    /**Maximum value */
     max?: number
+    /**Quantization step */
     step?: number
+    /**Length in CSS units of slider */
     length?: string
+    /**Title */
     title?: string
+    /**Track color */
     color1?: string
+    /**Lower track color (track "before" slider thumb) */
     color2?: string
+    /**Thumb color */
     color3?: string
+    /**Thumb hover color */
     color4?: string
+    /**Display the slider vertically */
     vertical?: boolean
+    /**Width in CSS units of slider track */
     trackWidth?: string
+    /**Border thickness on the ends of slider track */
     endBorderWidth?: string
+    /**Border thickness on the sides of slider track */
     sideBorderWidth?: string
+    /**Width in CSS units of slider thumb */
     thumbWidth?: string
+    /**Length in CSS units of slider thumb */
     thumbLength?: string
+    /**Edge radius in CSS units of slider thumb */
     thumbRadius?: string
+    /**Icon to display on slider thumb */
     icon?: string
+    /**Size in CSS units of icon */
+    iconSize?: string
+    /**Disable input */
     disabled?: boolean
 }>();
 const value = defineModel({ default: 0 });
@@ -156,7 +176,7 @@ function endWheel() {
     background-color: v-bind("$props.color3 ?? 'var(--input-color)'");
     background-image: v-bind('$props.icon !== undefined ? `url("${$props.icon}")` : ``');
     background-position: center;
-    background-size: 80% 80%;
+    background-size: v-bind("$props.iconSize ?? '80% 80%'");
 }
 
 .sliderThumb::before {

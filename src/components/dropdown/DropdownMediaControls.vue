@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted } from 'vue';
+import { matchTextInput } from '@/constants';
+import MediaPlayer from '@/visualizer/mediaPlayer';
+import { pipEnabled } from '@/visualizer/pipPlayer';
 import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
-import { matchTextInput } from '@/constants';
 import volume0Icon from '@/img/volume0-dark.svg';
 import volume1Icon from '@/img/volume1-dark.svg';
 import volume2Icon from '@/img/volume2-dark.svg';
 import loopIcon from '@/img/loop-dark.svg';
-import MediaPlayer from '@/visualizer/mediaPlayer';
-import { pipEnabled } from '@/visualizer/pipPlayer';
-import { computed, onMounted, onUnmounted } from 'vue';
 
 const volumeIcon = computed(() => MediaPlayer.state.volume > 0.75 ? volume2Icon : (MediaPlayer.state.volume > 0 ? volume1Icon : volume0Icon));
 
@@ -39,7 +39,7 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime
         <div id="mediaControlsBorder1"></div>
         <div id="mediaControlsBorder2"></div>
         <input type="checkbox" id="playCheckbox" v-model="MediaPlayer.playing.value">
-        <label button id="playButton" for="playCheckbox" :title="MediaPlayer.playing.value ? 'Pause' : 'Play'"></label>
+        <label button id="playButton" for="playCheckbox" :title="MediaPlayer.playing.value ? 'Pause' : 'Play'" tabindex="0"></label>
         <div id="mediaControlsTimeContainer">
             <span :title="timeStr">{{ MediaPlayer.formatTime(MediaPlayer.currentTime.value) }}</span>
             <Toggle v-model="MediaPlayer.state.loop" :icon="loopIcon" title="Loop song"></Toggle>
@@ -111,6 +111,7 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime
     background-position: center;
     background-size: 50% 50%;
     background-repeat: no-repeat;
+    outline-offset: -4px;
 }
 
 #playButton:hover {

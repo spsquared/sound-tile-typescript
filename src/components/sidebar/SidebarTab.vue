@@ -37,6 +37,8 @@ function set() {
     background-position: center;
     background-size: v-bind("$props.size ?? '80% 80%'");
     background-repeat: no-repeat;
+    outline-offset: -2px;
+    outline-color: cyan;
 }
 
 .sidebarTab:first-child {

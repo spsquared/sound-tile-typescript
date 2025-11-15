@@ -1,13 +1,22 @@
 <script setup lang="ts">
 const props = defineProps<{
+    /**Title */
     title?: string
+    /**"Off" track color */
     color1?: string
+    /**"On" track color */
     color2?: string
+    /**Thumb color */
     color3?: string
+    /**Thumb hover color */
     color4?: string
+    /**Icon to display on thumb */
     icon?: string
+    /**Size in CSS units of icon */
     iconSize?: string
+    /**Border thickness of track */
     borderWidth?: string
+    /**Disable input */
     disabled?: boolean
 }>();
 const checked = defineModel({ default: false });
@@ -71,7 +80,7 @@ defineExpose({
     transform: translateX(-4px);
     background-image: v-bind('$props.icon !== undefined ? `url("${$props.icon}")` : ``');
     background-position: center;
-    background-size: v-bind("iconSize ?? '80% 80%'");
+    background-size: v-bind("$props.iconSize ?? '80% 80%'");
     background-repeat: no-repeat;
 }
 

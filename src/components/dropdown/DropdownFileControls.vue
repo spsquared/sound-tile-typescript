@@ -94,8 +94,7 @@ onUnmounted(() => document.removeEventListener('keydown', keydown));
     background-position: center;
     background-size: 80% 80%;
     background-repeat: no-repeat;
-    outline-offset: -2px;
-    outline-color: black;
+    outline-offset: -4px;
 }
 
 #tileUpload {

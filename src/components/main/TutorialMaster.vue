@@ -3,10 +3,10 @@ import { ref, useTemplateRef, watch } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { VisualizerRenderer } from '@/visualizer/visualizerRenderer';
-import FullscreenModal from '../FullscreenModal.vue';
 import { GroupTile } from '@/visualizer/tiles';
 import { sleep } from '../utils';
 import xue9_unknown from '@/img/xue9-unknown.jpg';
+import FullscreenModal from '../FullscreenModal.vue';
 
 let activated = window.localStorage.getItem('xue9') !== null || false;
 const spooky = ref(false);

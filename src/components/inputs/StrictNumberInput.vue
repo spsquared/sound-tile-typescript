@@ -2,11 +2,17 @@
 import { ref, watch } from 'vue';
 
 const props = defineProps<{
+    /**Minimum value accessible by input scroller, default also the hard minimum */
     min?: number
+    /**Maximum vlaue accessible by input scroller, default also the hard maximum */
     max?: number
+    /**The step of the input scroller, default also the quantization value */
     step?: number
+    /**Override the hard minimum */
     strictMin?: number
+    /**Override the hard maximum */
     strictMax?: number
+    /**Override the quantization value */
     strictStep?: number
 }>();
 const emit = defineEmits<{
