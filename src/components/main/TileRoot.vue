@@ -1,6 +1,17 @@
 <script setup lang="ts">
+import { shallowRef, provide, onMounted, onUnmounted } from 'vue';
 import GroupTile from '@/visualizer/tiles/GroupTile.vue';
 import TileEditor from '@/visualizer/editor';
+
+// ripped straight from SidebarModulators to provide hovered element for modulator drag-and-drop
+const hoveredElement = shallowRef<Element | null>(null);
+provide('modulatorHoveredElement', hoveredElement);
+function updateHoveredElements(e: MouseEvent) {
+    if (TileEditor.modulatorDrag.source === null) return;
+    hoveredElement.value = document.elementsFromPoint(e.clientX, e.clientY)[1] ?? null;
+}
+onMounted(() => document.addEventListener('mousemove', updateHoveredElements));
+onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElements));
 </script>
 
 <template>

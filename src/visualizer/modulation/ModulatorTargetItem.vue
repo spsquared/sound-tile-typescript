@@ -6,6 +6,7 @@ import ModulatorItem from './ModulatorItem.vue';
 
 const props = defineProps<{
     target: Modulation.Target<any>
+    noIdentify?: boolean
 }>();
 
 const connections = computed<Modulation.Connection[]>(() =>
@@ -20,8 +21,8 @@ const connections = computed<Modulation.Connection[]>(() =>
 const modKeys = computed(() => Object.keys(props.target.targets));
 
 // more js-powered hover
-const hoveredElement = inject<ShallowRef<Element | null>>('sidebarModulatorHoveredElement');
-if (hoveredElement === undefined) throw new Error('ModulatorTargetItem target not placed within SidebarModulators!');
+const hoveredElement = inject<ShallowRef<Element | null>>('modulatorHoveredElement');
+if (hoveredElement === undefined) throw new Error('ModulatorTargetItem missing modulatorHoveredElement injection!');
 // function ref because template ref stopped working for some reason, honestly I have no idea the template ref stuff didn't change and it borked
 const modKeyElements: Record<string, HTMLDivElement | null> = {};
 const hoverId = globalHoverId++;
@@ -57,7 +58,7 @@ let globalHoverId = 0;
 </script>
 
 <template>
-    <ModulatorItem type="target" :label="props.target.tile?.label ?? props.target.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys">
+    <ModulatorItem type="target" :label="props.target.tile?.label ?? props.target.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys" :no-identify="props.noIdentify">
         <template v-for="key in modKeys" v-slot:[key]>
             <div :class="{
                 targetDrop: true,

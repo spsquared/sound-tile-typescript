@@ -9,6 +9,7 @@ import TileOptionsSection from './options/TileOptionsSection.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
+import ModulatorTargetItem from '../modulation/ModulatorTargetItem.vue';
 
 const props = defineProps<{
     tile: ImageTile
@@ -95,7 +96,10 @@ async function uploadImage() {
             <TileOptionsSection title="Position">
             </TileOptionsSection>
             <TileOptionsSection title="Modulation">
-                Modulation drag-and-drop UI coming soon!
+                <!-- janky wrapper to get the thing to fit and avoid cutting off the items -->
+                <div style="width: 100%; min-height: calc(168px + 32px);">
+                    <ModulatorTargetItem :target="props.tile.modulation" no-identify></ModulatorTargetItem>
+                </div>
             </TileOptionsSection>
         </template>
     </Tile>

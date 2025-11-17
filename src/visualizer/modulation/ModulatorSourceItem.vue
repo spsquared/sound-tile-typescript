@@ -6,6 +6,7 @@ import ModulatorItem from './ModulatorItem.vue';
 
 const props = defineProps<{
     source: Modulation.Source<any>
+    noIdentify?: boolean
 }>();
 
 const connections = computed<Modulation.Connection[]>(() =>
@@ -25,7 +26,7 @@ function startDrag(key: string) {
 </script>
 
 <template>
-    <ModulatorItem type="source" :label="props.source.tile?.label ?? props.source.label" :tile="props.source.tile" :connections="connections" :modulation-keys="modKeys">
+    <ModulatorItem type="source" :label="props.source.tile?.label ?? props.source.label" :tile="props.source.tile" :connections="connections" :modulation-keys="modKeys" :no-identify="props.noIdentify">
         <template v-for="key in modKeys" v-slot:[key]>
             <div class="sourceDrag" title="Drag to a target to create a connection" @mousedown="startDrag(key)"></div>
         </template>

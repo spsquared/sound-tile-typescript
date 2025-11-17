@@ -21,6 +21,7 @@ import volumeMuteIcon from '@/img/volume-mute-dark.svg';
 import volume0Icon from '@/img/volume0-dark.svg';
 import volume1Icon from '@/img/volume1-dark.svg';
 import volume2Icon from '@/img/volume2-dark.svg';
+import ModulatorSourceItem from '../modulation/ModulatorSourceItem.vue';
 
 const props = defineProps<{
     tile: VisualizerTile
@@ -407,7 +408,10 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 </div>
             </TileOptionsSection>
             <TileOptionsSection title="Modulation">
-                Modulation drag-and-drop UI coming soon!
+                <!-- janky wrapper to get the thing to fit and avoid cutting off the items -->
+                <div style="width: 100%; min-height: calc(48px + 32px);">
+                    <ModulatorSourceItem :source="props.tile.modulator" no-identify></ModulatorSourceItem>
+                </div>
             </TileOptionsSection>
         </template>
     </Tile>

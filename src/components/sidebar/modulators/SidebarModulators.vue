@@ -4,9 +4,9 @@ import { debouncedWatch, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
-import ModulatorSourceItem from './ModulatorSourceItem.vue';
-import ModulatorTargetItem from './ModulatorTargetItem.vue';
-import ModulatorConnectionItem from './ModulatorConnectionItem.vue';
+import ModulatorSourceItem from '@/visualizer/modulation/ModulatorSourceItem.vue';
+import ModulatorTargetItem from '@/visualizer/modulation/ModulatorTargetItem.vue';
+import ModulatorConnectionItem from '@/visualizer/modulation/ModulatorConnectionItem.vue';
 import { Tile } from '@/visualizer/tiles';
 
 const splitPaneSize = ref(0.5);
@@ -111,7 +111,7 @@ const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.
 // passing in hovered element for drag-and-drop to get around big div covering the whole screen
 // takes all the elements and then removes the first which is always the dragging thing
 const hoveredElement = shallowRef<Element | null>(null);
-provide('sidebarModulatorHoveredElement', hoveredElement);
+provide('modulatorHoveredElement', hoveredElement);
 function updateHoveredElements(e: MouseEvent) {
     if (TileEditor.modulatorDrag.source === null) return;
     hoveredElement.value = document.elementsFromPoint(e.clientX, e.clientY)[1] ?? null;

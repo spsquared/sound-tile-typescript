@@ -12,14 +12,15 @@ const props = defineProps<{
     tile: Tile | null;
     connections: Modulation.Connection[]
     modulationKeys: string[]
+    noIdentify?: boolean
 }>();
 
 // targets open drag and drop list when user is dragging a source and any part of the item is hovered over
 const modItem = useTemplateRef('modItem');
 const dragHovering = ref(false);
 if (props.type == 'target') {
-    const hoveredElement = inject<ShallowRef<Element | null>>('sidebarModulatorHoveredElement');
-    if (hoveredElement === undefined) throw new Error('ModulatorItem target not placed within SidebarModulators!');
+    const hoveredElement = inject<ShallowRef<Element | null>>('modulatorHoveredElement');
+    if (hoveredElement === undefined) throw new Error('ModulatorItem target missing modulatorHoveredElement injection!');
     watch([hoveredElement, () => TileEditor.modulatorDrag.source], () => {
         dragHovering.value = (modItem.value?.contains(hoveredElement.value) ?? false) && TileEditor.modulatorDrag.source !== null;
     });
@@ -29,7 +30,7 @@ const dragItems = useTemplateRef('modDragItems');
 const { height: dragItemsHeight } = useElementSize(dragItems);
 
 function setIdentifyTile(v: boolean) {
-    if (props.tile === null) return;
+    if (props.tile === null || props.noIdentify) return;
     if (v) TileEditor.state.identifyTilesSidebar.add(props.tile);
     else TileEditor.state.identifyTilesSidebar.delete(props.tile);
 }

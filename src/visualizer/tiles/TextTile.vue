@@ -9,6 +9,7 @@ import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import TrixTextEditor from '@/components/inputs/TrixTextEditor.vue';
+import ModulatorTargetItem from '../modulation/ModulatorTargetItem.vue';
 
 const props = defineProps<{
     tile: TextTile
@@ -75,7 +76,10 @@ const sanitizedText = ref('');
                 <TrixTextEditor @input="setText" :initial-value="props.tile.text" :min-lines="10" :max-lines="15" no-wrap resizeable :disabled="TileEditor.lock.locked"></TrixTextEditor>
             </TileOptionsSection>
             <TileOptionsSection title="Modulation">
-                Modulation drag-and-drop UI coming soon!
+                <!-- janky wrapper to get the thing to fit and avoid cutting off the items -->
+                <div style="width: 100%; min-height: calc(128px + 32px);">
+                    <ModulatorTargetItem :target="props.tile.modulation" no-identify></ModulatorTargetItem>
+                </div>
             </TileOptionsSection>
         </template>
     </Tile>
