@@ -103,6 +103,8 @@ export interface VisualizerData {
         correlation: {
             /**Number of initial samples used in visualizer */
             samples: number
+            /**Error sampling randomly samples a proportion of the waveform, choosing random points for each sample, 0-1 - disabled at 0 */
+            stochasticSampling: number
             /**Gain used by gradient descent after best sample is picked, algorithm attempts to reduce gain if overtuned */
             gradientDescentGain: number
             /**Sets factor for blending the previous frame's data with the current data, 0-1 */
@@ -189,6 +191,7 @@ export function createDefaultVisualizerData(): VisualizerData {
             resolution: 1,
             correlation: {
                 samples: 32,
+                stochasticSampling: 0,
                 gradientDescentGain: 0.5,
                 frameSmoothing: 0.9
             }

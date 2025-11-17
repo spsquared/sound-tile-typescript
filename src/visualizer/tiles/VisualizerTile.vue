@@ -371,6 +371,10 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         Samples
                         <StrictNumberInput v-model="options.waveOptions.correlation.samples" :min="2" :max="64" :strict-max="128" :step="2"></StrictNumberInput>
                     </label>
+                    <label title="Randomly sample points when sampling error. For FFT size N, N*T non-unique random samples are chosen - best for larger correlation windows">
+                        Stochastic<br>({{ options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : (Math.floor(options.waveOptions.correlation.stochasticSampling * 100) + '%') }})
+                        <Slider length="100px" v-model="options.waveOptions.correlation.stochasticSampling" :min="0" :max="1" :step="0.05" :title="`Sample count: ${options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : Math.floor(options.waveOptions.correlation.stochasticSampling * options.fftSize)}`" disabled></Slider>
+                    </label>
                     <label title="Gain of gradient descent error minimization of frame">
                         GD<br>Gain
                         <StrictNumberInput v-model="options.waveOptions.correlation.gradientDescentGain" :min="0" :max="1" :strict-max="4" :step="0.1" :strict-step="0.01"></StrictNumberInput>

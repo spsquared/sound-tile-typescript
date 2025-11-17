@@ -60,7 +60,7 @@ function setIdentifyTile(tile: VisualizerTile, v: boolean) {
             <input type="checkbox" :id="idThing" class="previewPlayCheckbox" v-model="playing">
             <label button class="previewPlayButton" :for="idThing" v-if="props.previewDuration !== undefined" :title="playing ? 'Pause preview' : 'Play preview'" tabindex="0"></label>
             <div class="previewLoadingStandin" v-else></div>
-            <Slider class="previewSeekSlider" v-model="seekTime" :title="timeStr" :min="0" :max="props.previewDuration ?? 0" :step="0.01" length="100%" track-width="40px" thumb-width="40px" thumb-length="16px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
+            <Slider class="previewSeekSlider" v-model="seekTime" :title="timeStr" :min="0" :max="props.previewDuration ?? 0" :step="0.01" :scroll-speed="4" length="100%" track-width="40px" thumb-width="40px" thumb-length="16px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
             <div class="previewTimeDisplay" :title="timeStr">{{ MediaPlayer.formatTime(currentTime) }}</div>
         </div>
         <template v-for="tile in props.tiles">
