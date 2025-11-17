@@ -20,6 +20,8 @@ debouncedWatch([
 }, { debounce: 100, deep: false });
 
 // sources mapped to tile sets
+// unique symbols for each buffer AND HEY FINALLY A WEAKMAP
+const bufferSymbols: WeakMap<ArrayBuffer, symbol> = new WeakMap();
 const sources = computed(() => {
     const collectedSources: Map<ArrayBuffer, Set<VisualizerTile>> = new Map();
     for (const tile of debouncedTiles.value) {
@@ -32,16 +34,12 @@ const sources = computed(() => {
     return [...collectedSources.entries()].map<{
         buffer: ArrayBuffer
         tiles: Set<VisualizerTile>
-        key: string
-    }>(([buffer, tiles]) => {
-        // hopefully consistent keys
-        const key = tiles.values().next().value?.id.toString() ?? 'uh oh empty';
-        return {
-            buffer: buffer,
-            tiles: tiles,
-            key: key
-        };
-    });
+        key: symbol
+    }>(([buffer, tiles]) => ({
+        buffer: buffer,
+        tiles: tiles,
+        key: bufferSymbols.get(buffer) ?? (bufferSymbols.set(buffer, Symbol()), bufferSymbols.get(buffer)!)
+    }));
 });
 
 // the source preview gets its own audio context
@@ -52,13 +50,13 @@ watch(() => MediaPlayer.state.volume, () => gain.gain.value = MediaPlayer.state.
 onUnmounted(() => audioContext.close());
 
 // playback handled here, source items just make the UI
-const playbackNodes: Map<string, {
+const playbackNodes: Map<Symbol, {
     buffer: AudioBuffer,
     node: AudioBufferSourceNode | null
 }> = reactive(new Map());
 throttledWatch(sources, async () => {
     // diff system, avoids decoding all audio on every tiny change (REALLY BAD!!!)
-    const newKeys = new Set<String>();
+    const newKeys = new Set<Symbol>();
     for (const { buffer, key } of sources.value) {
         newKeys.add(key);
         if (!playbackNodes.has(key)) audioContext.decodeAudioData(buffer.slice()).then((buffer) => {
@@ -78,7 +76,7 @@ throttledWatch(sources, async () => {
 }, { throttle: 500, leading: true, trailing: true });
 
 const sourceItems = useTemplateRef('sourceItems');
-function playPreview(sourceKey: string, t: number) {
+function playPreview(sourceKey: symbol, t: number) {
     const node = playbackNodes.get(sourceKey);
     if (node === undefined) return;
     if (sourceItems.value !== null) for (const source of sourceItems.value) {
@@ -93,7 +91,7 @@ function playPreview(sourceKey: string, t: number) {
     node.node.connect(gain);
     node.node.start(audioContext.currentTime, t);
 }
-function pausePreview(sourceKey: string) {
+function pausePreview(sourceKey: symbol) {
     const node = playbackNodes.get(sourceKey);
     if (node === undefined) return;
     node.node?.stop();

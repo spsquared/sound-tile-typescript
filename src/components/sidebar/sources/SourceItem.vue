@@ -7,7 +7,7 @@ import { ReuseVisualizerSource } from './reuseSource';
 import Slider from '@/components/inputs/Slider.vue';
 
 const props = defineProps<{
-    sourceKey: string // literally useless here, only used in parent to not pause this when playing
+    sourceKey: symbol // literally useless here, only used in parent to not pause this when playing
     buffer: ArrayBuffer // also useless other than for the source reuse code
     playPreview: (t: number) => void
     pausePreview: () => void

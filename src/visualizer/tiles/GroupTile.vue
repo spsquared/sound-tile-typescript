@@ -31,7 +31,7 @@ const tileOrientation = computed<string>({
                 groupChildrenCollapsed: isCollapsed,
                 groupChildrenInCollapsed: inCollapsedGroup
             }">
-                <component v-for="child of tile.children" :key="child.id" :is="child.class.component" :tile="child"></component>
+                <component v-for="child of tile.children" :key="child.id.toString()" :is="child.class.component" :tile="child"></component>
             </div>
         </template>
         <template v-slot:options>
