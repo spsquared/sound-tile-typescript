@@ -18,6 +18,7 @@ export class MediaPlayer {
         mediaDataTabOpen: boolean
     } = reactive({
         // the one time automatic ref unwrapping is good
+        // oops these settings sync across sessions
         shuffle: useLocalStorage('shuffle', false),
         loop: useLocalStorage('loop', false),
         volume: useLocalStorage('volume', 1),

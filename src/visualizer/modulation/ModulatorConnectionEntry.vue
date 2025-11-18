@@ -62,14 +62,14 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
         <div class="connectionLabel" ref="connectionLabel" @click="openWindow">
             <div>
                 <span v-if="props.type != 'source'">{{ props.connection.source.tile?.label ?? props.connection.source.label + ' ' }}</span>
-                <span v-else>This&ensp;</span>
-                <span class="connectionSourceKey">[{{ props.connection.sourceKey }}]</span>
+                <span v-else>This</span>
+                <span class="connectionSourceKey">&ensp;[{{ props.connection.sourceKey }}]</span>
             </div>
             <img src="@/img/arrow-right.svg" class="connectionArrow"></img>
             <div>
                 <span v-if="props.type != 'target'">{{ props.connection.target.tile?.label ?? props.connection.target.label + ' ' }}</span>
-                <span v-else>This&ensp;</span>
-                <span class="connectionTargetKey">[{{ props.connection.targetKey }}]</span>
+                <span v-else>This</span>
+                <span class="connectionTargetKey">&ensp;[{{ props.connection.targetKey }}]</span>
             </div>
         </div>
     </div>
