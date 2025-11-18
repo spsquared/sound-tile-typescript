@@ -24,15 +24,15 @@ export class MediaPlayer {
         volume: useLocalStorage('volume', 1),
         mediaDataTabOpen: false
     });
-    static readonly media = reactive({
+    static readonly media: {
+        current: Media
+    } = reactive({
         current: new Media({
             title: '',
             subtitle: '',
             coverArt: defaultCoverArt
         })
-    }) as {
-        current: Media
-    };
+    }) as any; // how the fuck was there no error with GroupTile until changed an unrelated thing and then there was an error
     private static readonly internalTimer = reactive<{
         // setting startTime essentially determines the offset of the audio
         startTime: number
@@ -132,7 +132,7 @@ export class MediaPlayer {
             const nowPlaying = [
                 this.media.current.title.trim(),
                 this.media.current.subtitle.trim()
-            ].map((s) => s.length > 32 ? s.substring(0, 32) + '...': s).filter((s) => s.length > 0).join(' - ');
+            ].map((s) => s.length > 32 ? s.substring(0, 32) + '...' : s).filter((s) => s.length > 0).join(' - ');
             const title = [nowPlaying, 'Sound Title'].filter((s) => s.length > 0).join(' | ');
             document.title = title;
         });
@@ -168,6 +168,6 @@ export class MediaPlayer {
         subtitle: '',
         coverArt: defaultCoverArt
     }, root);
-}
+};
 
 export default MediaPlayer;

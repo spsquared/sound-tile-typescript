@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplateRef } from 'vue';
 import { debouncedWatch, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
+import MediaPlayer from '@/visualizer/mediaPlayer';
 import Modulation from '@/visualizer/modulation';
 import { Tile } from '@/visualizer/tiles';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
@@ -132,6 +133,7 @@ onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElement
             <div :id="horizontal ? 'modSplitContainerHorizontal' : 'modSplitContainerVertical'" ref="container">
                 <div id="modSourceContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Sources</div>
+                    <ModulatorSourceItem :source="MediaPlayer.media.current.globalModulator"></ModulatorSourceItem>
                     <ModulatorSourceItem v-for="s in sourceList" :key="s.tile?.id.toString() ?? s.label" :source="s"></ModulatorSourceItem>
                 </div>
                 <div id="modTargetContainer" class="modGroupContainer">
