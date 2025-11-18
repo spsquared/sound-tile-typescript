@@ -21,6 +21,12 @@ export class Visualizer {
         this.gain.connect(this.audioContext.destination);
     }
 
+    /**
+     * Cache decoded audio so audio buffers can be reused. The promise prevents
+     * decoding the same buffer a second time while the first is still loading.
+     */
+    private static readonly decodedAudioCache: WeakMap<ArrayBuffer, Promise<AudioBuffer>> = new WeakMap();
+
     private readonly gain: GainNode;
     private readonly analyzers: AnalyserNode[] = []; // very british
     private audioBuffer: AudioBuffer | null = null;
@@ -52,8 +58,14 @@ export class Visualizer {
                 this.audioBuffer = null;
                 if (this.data.buffer !== null) {
                     Visualizer.recalculateDuration();
-                    // buffer is sliced as browser consumes the buffer in decoding
-                    this.audioBuffer = this.data.buffer !== null ? await Visualizer.audioContext.decodeAudioData(this.data.buffer.slice()) : null;
+                    if (Visualizer.decodedAudioCache.has(this.data.buffer)) {
+                        this.audioBuffer = await Visualizer.decodedAudioCache.get(this.data.buffer)!;
+                    } else {
+                        // buffer is sliced as browser consumes the buffer in decoding
+                        const promise = Visualizer.audioContext.decodeAudioData(this.data.buffer.slice());
+                        Visualizer.decodedAudioCache.set(this.data.buffer, promise);
+                        this.audioBuffer = await promise;
+                    }
                 }
                 Visualizer.recalculateDuration();
                 if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();
