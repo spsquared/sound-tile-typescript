@@ -1,5 +1,5 @@
 import { reactive, ref, Ref, WatchStopHandle } from 'vue';
-import { throttledWatch, useThrottleFn } from '@vueuse/core';
+import { watchThrottled, useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { cloneDeep } from 'lodash-es';
 import { VisualizerData, VisualizerMode } from './visualizerData';
@@ -29,7 +29,7 @@ export abstract class VisualizerRenderer {
     constructor(data: VisualizerSettingsData) {
         this.data = reactive(data);
         this.canvas = document.createElement('canvas');
-        this.stopWatching = throttledWatch(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
+        this.stopWatching = watchThrottled(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
     abstract draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, onMounted, ref, useTemplateRef } from 'vue';
-import { syncRef, throttledWatch, useElementSize } from '@vueuse/core';
+import { syncRef, watchThrottled, useElementSize } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
 import { VisualizerTile } from '../tiles';
@@ -35,7 +35,7 @@ onMounted(() => {
 props.tile.canvas.classList.add('visualizerCanvas');
 
 const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
-throttledWatch([canvasWidth, canvasHeight], () => {
+watchThrottled([canvasWidth, canvasHeight], () => {
     props.tile.visualizer.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
 }, { throttle: 50, immediate: true, leading: true, trailing: true });
 

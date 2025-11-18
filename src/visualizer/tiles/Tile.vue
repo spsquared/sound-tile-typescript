@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { throttledRef, useElementSize } from '@vueuse/core';
+import { refThrottled, useElementSize } from '@vueuse/core';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
 import DraggableWindow from '@/components/DraggableWindow.vue';
@@ -25,7 +25,7 @@ const props = defineProps<{
 
 const tile = useTemplateRef('tile');
 const { width: tileWidth, height: tileHeight } = useElementSize(tile);
-const radialGradientSize = throttledRef(computed(() => Math.max(tileWidth.value, tileHeight.value) / 2 + 'px'), 200, true, true);
+const radialGradientSize = refThrottled(computed(() => Math.max(tileWidth.value, tileHeight.value) / 2 + 'px'), 200, true, true);
 
 // tiles in collapsed group can't have background, also hides header and edit buttons
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));

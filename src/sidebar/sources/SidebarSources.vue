@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue';
-import { debouncedWatch, throttledWatch } from '@vueuse/core';
+import { watchDebounced, watchThrottled } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -12,7 +12,7 @@ const sidebarVisible = computed(() => TileEditor.state.sidebarOpen && TileEditor
 
 // update UI only when visible and when tiles settled
 const debouncedTiles = ref<Set<Tile>>(new Set());
-debouncedWatch([
+watchDebounced([
     sidebarVisible,
     TileEditor.currentTiles
 ], () => {
@@ -54,7 +54,7 @@ const playbackNodes: Map<Symbol, {
     buffer: AudioBuffer,
     node: AudioBufferSourceNode | null
 }> = reactive(new Map());
-throttledWatch(sources, async () => {
+watchThrottled(sources, async () => {
     // diff system, avoids decoding all audio on every tiny change (REALLY BAD!!!)
     const newKeys = new Set<Symbol>();
     for (const { buffer, key } of sources.value) {

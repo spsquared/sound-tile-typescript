@@ -4,7 +4,7 @@ import { GrassTile } from '../tiles';
 import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
-import { throttledRef, useElementSize } from '@vueuse/core';
+import { refThrottled, useElementSize } from '@vueuse/core';
 
 const props = defineProps<{
     tile: GrassTile
@@ -17,7 +17,7 @@ onUnmounted(() => clearInterval(updateLoop));
 
 const wrapper = useTemplateRef('wrapper');
 const { width: wrapperWidth, height: wrapperHeight } = useElementSize(wrapper);
-const aspectRatio = throttledRef(computed(() => wrapperWidth.value / wrapperHeight.value), 50);
+const aspectRatio = refThrottled(computed(() => wrapperWidth.value / wrapperHeight.value), 50);
 const width = computed(() => aspectRatio.value > 16 / 9 ? 'unset' : '100%');
 const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
 </script>

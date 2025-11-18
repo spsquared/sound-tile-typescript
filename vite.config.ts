@@ -28,7 +28,7 @@ export default defineConfig(async () => ({
         __VERSION__: JSON.stringify(pack.version),
     },
     build: {
-        target: 'modules',
+        target: 'baseline-widely-available',
         // lower this because why not
         assetsInlineLimit: 2048,
         // rollupOptions: { output: { sourcemap: true } }

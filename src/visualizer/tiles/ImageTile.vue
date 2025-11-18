@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, reactive, ref, useTemplateRef } from 'vue';
-import { throttledWatch, useElementSize } from '@vueuse/core';
+import { watchThrottled, useElementSize } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
 import { ImageTile } from '../tiles';
@@ -32,7 +32,7 @@ function resizeImage() {
         imgCss.height = 'unset';
     }
 }
-throttledWatch([wrapperWidth, wrapperHeight], () => resizeImage(), { throttle: 50, trailing: true, leading: true });
+watchThrottled([wrapperWidth, wrapperHeight], () => resizeImage(), { throttle: 50, trailing: true, leading: true });
 
 const uploadImageDisabled = ref(false);
 async function uploadImage() {

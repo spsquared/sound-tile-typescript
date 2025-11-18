@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplateRef } from 'vue';
-import { debouncedWatch, useElementSize } from '@vueuse/core';
+import { watchDebounced, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import Modulation from '@/visualizer/modulation';
@@ -65,7 +65,7 @@ onUnmounted(() => {
 
 // update UI only when visible and when tiles settled
 const debouncedTiles = ref<Set<Tile>>(new Set());
-debouncedWatch([
+watchDebounced([
     () => TileEditor.state.sidebarOpen && TileEditor.state.sidebarTab == 'modulators',
     TileEditor.currentTiles
 ], ([isVisible]) => {
