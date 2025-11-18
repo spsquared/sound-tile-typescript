@@ -9,7 +9,7 @@ import TileOptionsSection from './options/TileOptionsSection.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
-import ModulatorTargetItem from '../modulation/ModulatorTargetItem.vue';
+import ModulatorTargetItem from '@/modulation/ModulatorTargetItem.vue';
 
 const props = defineProps<{
     tile: ImageTile

@@ -9,7 +9,7 @@ import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import TrixTextEditor from '@/components/inputs/TrixTextEditor.vue';
-import ModulatorTargetItem from '../modulation/ModulatorTargetItem.vue';
+import ModulatorTargetItem from '@/modulation/ModulatorTargetItem.vue';
 
 const props = defineProps<{
     tile: TextTile

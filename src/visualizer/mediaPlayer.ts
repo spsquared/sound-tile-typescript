@@ -95,7 +95,6 @@ export class MediaPlayer {
     // playback
     static {
         watch(() => this.state.volume, () => Visualizer.gain.gain.value = this.state.volume, { immediate: true });
-        watch(() => this.internalTimer.now, () => this.updateTime());
         watch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
             if (this.playing.value && Visualizer.duration > 0) {
                 if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
@@ -113,7 +112,10 @@ export class MediaPlayer {
             // handles audio context interruptions
             if (Visualizer.playing != this.playing.value) this.playing.value = Visualizer.playing;
         });
-        setInterval(() => this.internalTimer.now = performance.now() / 1000, 20);
+        setInterval(() => {
+            this.internalTimer.now = performance.now() / 1000;
+            this.updateTime();
+        }, 10);
     }
 
     // playlist and session

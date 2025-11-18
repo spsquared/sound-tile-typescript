@@ -5,9 +5,9 @@ import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
 import { Tile } from '@/visualizer/tiles';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
-import ModulatorSourceItem from '@/visualizer/modulation/ModulatorSourceItem.vue';
-import ModulatorTargetItem from '@/visualizer/modulation/ModulatorTargetItem.vue';
-import ModulatorConnectionItem from '@/visualizer/modulation/ModulatorConnectionItem.vue';
+import ModulatorSourceItem from '@/modulation/ModulatorSourceItem.vue';
+import ModulatorTargetItem from '@/modulation/ModulatorTargetItem.vue';
+import ModulatorConnectionItem from '@/modulation/ModulatorConnectionItem.vue';
 
 const splitPaneSize = ref(0.5);
 const connectionsPaneSize = ref(0.25);

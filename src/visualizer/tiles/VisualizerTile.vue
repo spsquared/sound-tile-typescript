@@ -14,7 +14,7 @@ import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
 import ColorPicker from '@/components/inputs/colorPicker';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
-import ModulatorSourceItem from '../modulation/ModulatorSourceItem.vue';
+import ModulatorSourceItem from '@/modulation/ModulatorSourceItem.vue';
 import rotateIcon from '@/img/rotate-dark.svg';
 import flipHorizontalIcon from '@/img/flip-horizontal-dark.svg';
 import flipVerticalIcon from '@/img/flip-vertical-dark.svg';
