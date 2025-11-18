@@ -97,7 +97,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
 
     destroy() {
         super.destroy();
-        this.worker.terminate();
+        this.postMessage('stop', {});
     }
 }
 
@@ -857,6 +857,8 @@ type RendererMessageData = {
 } | {
     type: 'settings',
     data: VisualizerSettingsData
+} | {
+    type: 'stop'
 };
 interface RendererMessageEvent extends MessageEvent {
     readonly data: RendererMessageData
@@ -882,6 +884,10 @@ if (isInWorker) {
                     break;
                 case 'settings':
                     renderer.updateData(e.data.data);
+                    break;
+                case 'stop':
+                    // everything should be blocking in the worker, no async, so no need for locks
+                    close();
                     break;
             }
         };
