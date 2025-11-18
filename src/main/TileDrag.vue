@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, provide, shallowRef } from 'vue';
 import { useMouse } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import TileDragGhostTile from './TileDragGhostTile.vue';
@@ -10,6 +10,9 @@ const draggingPos = computed(() => ({
     x: mousePos.x.value - TileEditor.drag.offset.x - 4,
     y: mousePos.y.value - TileEditor.drag.offset.y - 4
 }));
+
+// dummy ref to stop errors
+provide('modulatorHoveredElement', shallowRef(null));
 </script>
 
 <template>
