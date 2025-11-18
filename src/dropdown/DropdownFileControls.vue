@@ -27,8 +27,7 @@ async function uploadToCurrent() {
             console.error('Failed to decompress media from uploaded file');
             return;
         }
-        // somehow removing this breaks modulators on top of being a resource leak
-        MediaPlayer.media.current.destroy();
+        MediaPlayer.media.current.destroy(); // beware resource leak
         MediaPlayer.media.current = media;
     }
     TileEditor.lock.release();
