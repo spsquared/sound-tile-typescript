@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef, provide, onMounted, onUnmounted } from 'vue';
-import GroupTile from '@/visualizer/tiles/GroupTile.vue';
 import TileEditor from '@/visualizer/editor';
+import GroupTile from '@/visualizer/tiles/GroupTile.vue';
 
 // ripped straight from SidebarModulators to provide hovered element for modulator drag-and-drop
 const hoveredElement = shallowRef<Element | null>(null);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { useMouse } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
-import { ref, watch } from 'vue';
 
 const mousePos = useMouse();
 

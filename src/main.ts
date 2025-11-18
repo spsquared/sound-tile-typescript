@@ -3,7 +3,7 @@ import '@/assets/common.css';
 import '@/components/inputs/trix';
 
 import { createApp } from 'vue';
-import App from '@/App.vue';
+import App from '@/main/App.vue';
 
 const app = createApp(App);
 app.mount("#root");

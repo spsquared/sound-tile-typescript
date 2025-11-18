@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
+import { sleep } from '@/components/utils';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
-import { VisualizerRenderer } from '@/visualizer/visualizerRenderer';
 import { GroupTile } from '@/visualizer/tiles';
-import { sleep } from '../utils';
+import { VisualizerRenderer } from '@/visualizer/visualizerRenderer';
 import xue9_unknown from '@/img/xue9-unknown.jpg';
-import FullscreenModal from '../FullscreenModal.vue';
+import FullscreenModal from '@/components/FullscreenModal.vue';
 
 let activated = window.localStorage.getItem('xue9') !== null || false;
 const spooky = ref(false);

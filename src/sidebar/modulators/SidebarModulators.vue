@@ -3,11 +3,11 @@ import { computed, onMounted, onUnmounted, provide, ref, shallowRef, useTemplate
 import { debouncedWatch, useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import Modulation from '@/visualizer/modulation';
+import { Tile } from '@/visualizer/tiles';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import ModulatorSourceItem from '@/visualizer/modulation/ModulatorSourceItem.vue';
 import ModulatorTargetItem from '@/visualizer/modulation/ModulatorTargetItem.vue';
 import ModulatorConnectionItem from '@/visualizer/modulation/ModulatorConnectionItem.vue';
-import { Tile } from '@/visualizer/tiles';
 
 const splitPaneSize = ref(0.5);
 const connectionsPaneSize = ref(0.25);

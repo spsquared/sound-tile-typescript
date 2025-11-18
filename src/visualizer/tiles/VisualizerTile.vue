@@ -7,13 +7,14 @@ import { VisualizerTile } from '../tiles';
 import { VisualizerMode } from '../visualizerData';
 import Visualizer from '../visualizer';
 import Tile from './Tile.vue';
-import { ReuseVisualizerSource } from '@/components/sidebar/sources/reuseSource';
+import { ReuseVisualizerSource } from '@/sidebar/sources/reuseSource';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
 import ColorPicker from '@/components/inputs/colorPicker';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
+import ModulatorSourceItem from '../modulation/ModulatorSourceItem.vue';
 import rotateIcon from '@/img/rotate-dark.svg';
 import flipHorizontalIcon from '@/img/flip-horizontal-dark.svg';
 import flipVerticalIcon from '@/img/flip-vertical-dark.svg';
@@ -21,7 +22,6 @@ import volumeMuteIcon from '@/img/volume-mute-dark.svg';
 import volume0Icon from '@/img/volume0-dark.svg';
 import volume1Icon from '@/img/volume1-dark.svg';
 import volume2Icon from '@/img/volume2-dark.svg';
-import ModulatorSourceItem from '../modulation/ModulatorSourceItem.vue';
 
 const props = defineProps<{
     tile: VisualizerTile

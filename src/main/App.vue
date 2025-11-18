@@ -2,13 +2,13 @@
 import { provide, ref } from 'vue';
 import { copyright, dreamberd, repositoryURL, version } from '@/constants';
 import FullscreenModal from '@/components/FullscreenModal.vue';
-import Dropdown from '@/components/dropdown/Dropdown.vue';
-import Sidebar from '@/components/sidebar/Sidebar.vue';
-import TileRoot from '@/components/main/TileRoot.vue';
-import TileDrag from '@/components/main/TileDrag.vue';
-import ModulatorDrag from './components/main/ModulatorDrag.vue';
-import TutorialMaster from './components/main/TutorialMaster.vue';
-import ErrorQueue from './components/main/ErrorQueue.vue';
+import Dropdown from '@/dropdown/Dropdown.vue';
+import Sidebar from '@/sidebar/Sidebar.vue';
+import TileRoot from '@/main/TileRoot.vue';
+import TileDrag from '@/main/TileDrag.vue';
+import ModulatorDrag from '@/main/ModulatorDrag.vue';
+import TutorialMaster from '@/main/TutorialMaster.vue';
+import ErrorQueue from '@/main/ErrorQueue.vue';
 
 const showAppInfo = ref(false);
 provide('showAppInfoRef', showAppInfo);
