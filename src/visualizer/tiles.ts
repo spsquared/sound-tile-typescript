@@ -11,11 +11,13 @@ import GroupTileComponent from './tiles/GroupTile.vue';
 import VisualizerTileComponent from './tiles/VisualizerTile.vue';
 import TextTileComponent from './tiles/TextTile.vue';
 import ImageTileComponent from './tiles/ImageTile.vue';
+import BeepboxTileComponent from './tiles/BeepboxTile.vue';
 import GrassTileComponent from './tiles/GrassTile.vue';
 import blankTileImg from '@/img/blank-tile.png';
 import visualizerTileImg from '@/img/visualizer-tile.png';
 import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
+import beepboxTileImg from '@/img/beepbox-tile.png';
 
 enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
@@ -420,6 +422,34 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
     destroy(): void {
         super.destroy();
         this.modulation.destroy();
+    }
+}
+
+export class BeepboxTile extends Tile {
+    static readonly id: string = 'bb';
+    static readonly component = BeepboxTileComponent;
+    static readonly name: string = 'BeepBox Tile';
+    static readonly image: string = beepboxTileImg;
+    readonly class: typeof BeepboxTile = BeepboxTile;
+    static { this.registerTile(this); }
+
+    label: string = BeepboxTile.name;
+
+    constructor() {
+        super();
+    }
+
+    getSchemaData(): MediaSchema.BeepboxTile {
+        return {
+            ...super.getSchemaData()
+        };
+    }
+    static fromSchemaData(data: MediaSchema.BeepboxTile): BeepboxTile {
+        return this.reconstitute(data, new BeepboxTile());
+    }
+    protected static reconstitute(data: MediaSchema.BeepboxTile, tile: BeepboxTile): BeepboxTile {
+        super.reconstitute(data, tile);
+        return tile;
     }
 }
 

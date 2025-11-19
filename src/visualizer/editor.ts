@@ -2,7 +2,7 @@ import { computed, reactive, watch, watchEffect } from 'vue';
 import { useIdle } from '@vueuse/core';
 import { AsyncLock } from '@/components/lock';
 import { matchTextInput } from '@/constants';
-import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
+import { BeepboxTile, GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
 import Modulation from './modulation';
 
 /**
@@ -521,5 +521,6 @@ TileEditor.registerTile(GroupTile, false);
 TileEditor.registerTile(VisualizerTile, true);
 TileEditor.registerTile(TextTile, true);
 TileEditor.registerTile(ImageTile, true);
+TileEditor.registerTile(BeepboxTile, true);
 TileEditor.registerTile(Tile, true);
 TileEditor.registerTile(GrassTile, false);

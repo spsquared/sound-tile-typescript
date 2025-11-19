@@ -37,6 +37,9 @@ export namespace MediaSchema {
         imgSrc: ArrayBuffer
         smoothDrawing: boolean
     };
+    /**BeepBox tile schema-layout data */
+    export type BeepboxTile = Tile & {
+    };
     /**Grass tile schema-layout data */
     export type GrassTile = Tile & {};
 
