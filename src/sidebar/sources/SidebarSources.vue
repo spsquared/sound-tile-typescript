@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue';
-import { watchDebounced, watchThrottled } from '@vueuse/core';
+import { useDebounceFn, watchDebounced, watchThrottled } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { Tile, VisualizerTile } from '@/visualizer/tiles';
@@ -54,7 +54,10 @@ const playbackNodes: Map<Symbol, {
     buffer: AudioBuffer,
     node: AudioBufferSourceNode | null
 }> = reactive(new Map());
-watchThrottled(sources, async () => {
+watchThrottled([sources, sidebarVisible], async () => {
+    // does very little since sources don't update when sidebar not visible
+    // mainly to reload audio data on sidebar open
+    if (!sidebarVisible.value) return;
     // diff system, avoids decoding all audio on every tiny change (REALLY BAD!!!)
     const newKeys = new Set<Symbol>();
     for (const { buffer, key } of sources.value) {
@@ -74,6 +77,17 @@ watchThrottled(sources, async () => {
         }
     }
 }, { throttle: 500, leading: true, trailing: true });
+
+// to save resources audio data is unloaded after the pane has been closed for a period of time
+const setUnloadTimer = useDebounceFn(() => {
+    if (!sidebarVisible.value) {
+        for (const node of playbackNodes.values()) {
+            node.node?.stop();
+            node.node?.disconnect();
+        }
+        playbackNodes.clear();
+    }
+}, 10000);
 
 const sourceItems = useTemplateRef('sourceItems');
 function playPreview(sourceKey: symbol, t: number) {
@@ -108,6 +122,7 @@ watch(sidebarVisible, () => {
             node.node = null;
         }
         audioContext.suspend();
+        setUnloadTimer();
     } else audioContext.resume();
 });
 
