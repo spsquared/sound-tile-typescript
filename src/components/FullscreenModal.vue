@@ -169,6 +169,7 @@ export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input
 
 .modalBody h1 {
     margin: 0.25em 0px;
+    font-size: 40px;
 }
 
 .modalButtons {
