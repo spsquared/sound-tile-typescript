@@ -289,6 +289,7 @@ export class Visualizer {
         });
     }
 
+    /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
     private static async draw(): Promise<void> {
         await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
     }
@@ -300,7 +301,8 @@ export class Visualizer {
                     if (!document.hidden) requestAnimationFrame(() => resolve());
                     else setTimeout(() => resolve(), 200);
                 });
-                if (!document.hidden) await this.draw();
+                // allowing tiles to drop frames individually rather than the entire layout slowing down
+                if (!document.hidden) this.draw();
             }
         })();
         document.addEventListener('keydown', (e) => {
