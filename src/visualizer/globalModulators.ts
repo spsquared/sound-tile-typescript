@@ -19,5 +19,5 @@ const playbackTime = ref(0);
 export function createGlobalModulator(): GlobalModulator {
     return new Modulation.Source({
         playbackTime: () => playbackTime.value // giving it the ref directly interacts weirdly with the effect scope... so we don't
-    }, { label: 'Page Sources' });
+    }, { label: 'Global Modulator' }); // genuinely dont know what to call this
 }

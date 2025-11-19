@@ -306,6 +306,9 @@ export namespace Modulation {
         abstract apply(n: T): T;
     }
 
+    /**Modulo of negative numbers in floating point is different from modulo in math. This is dumb. */
+    const mod = (n: number, m: number): number => (n % m + m) % m;
+
     // constant and linear can technically be just polynomial transforms with 2 terms,
     // but it's less overwhelming for users to have these commonly used ones separate from more advanced options
 
@@ -426,10 +429,51 @@ export namespace Modulation {
         }
     }
 
+    /** Calculates a periodic function, like a sine wave, ramp, and duty cycle. */
+    export class PeriodicTransform extends Transform<number> {
+        static readonly transformName: string = 'Periodic (LFO)';
+        static readonly type: 'periodic' = 'periodic';
+        readonly class: typeof PeriodicTransform = PeriodicTransform;
+        data: [
+            // i could have made this an object but i wont lmao
+            'sine' | 'ramp' | 'pulse', // "triangle", "saw", and "ramp" all fall under "ramp"
+            number, // additional shape parameter (ramp inflection point and pulse width)
+            number, // frequency, in hz or bpm
+            number, // phase shift, in multiples of period
+            boolean // use bpm instead of hertz
+        ];
+        readonly typeLabel: 'number' = 'number';
+
+        constructor(data?: PeriodicTransform['data']) {
+            super();
+            this.data = data ?? [
+                'sine',
+                0,
+                1,
+                0,
+                false
+            ];
+        }
+
+        apply(n: number): number {
+            const period = this.data[4] ? (60 / this.data[2]) : (1 / this.data[2]);
+            const pulse = this.data[1];
+            const shift = this.data[3];
+            // modulo actually works differently in code than in math for negative numbers
+            switch (this.data[0]) {
+                case 'sine':
+                    return 0.5 * Math.sin(2 * Math.PI * n / period - 2 * Math.PI * shift) + 0.5;
+                case 'ramp':
+                    return mod(n / period - shift, 1) < pulse ? mod(n - period * shift, period) / (period * pulse) : 1 - mod(n - period * (pulse + shift), period) / (period * (1 - pulse));
+                case 'pulse':
+                    return mod(n / period - shift, 1) < pulse ? 1 : 0;
+            }
+        }
+    }
+
     // compressor transform????
     // smoothing transform
     // delay transform - keeps a queue of a certain number of calls to "apply"
-
     // literal math transform that uses big math library
 
     /**Jank way of enumerating all usable transform types */
@@ -439,7 +483,8 @@ export namespace Modulation {
         [PolynomialTransform.type]: PolynomialTransform,
         [ExponentialTransform.type]: ExponentialTransform,
         [ThresholdTransform.type]: ThresholdTransform,
-        [ClampTransform.type]: ClampTransform
+        [ClampTransform.type]: ClampTransform,
+        [PeriodicTransform.type]: PeriodicTransform
     } as const;
 }
 
