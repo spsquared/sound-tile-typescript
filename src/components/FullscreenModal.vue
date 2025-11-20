@@ -5,9 +5,13 @@ import { matchInput } from '@/constants';
 import { AsyncLock } from './lock';
 
 const props = defineProps<{
+    /**Modal title */
     title: string
+    /**Determines acknowledgement options for the user */
     mode: ModalMode
+    /**Color of modal border */
     color?: string
+    /**Background effect */
     effect?: 'frost-window' | 'frost-screen' | 'dim-screen' // default is dim-screen
 }>();
 

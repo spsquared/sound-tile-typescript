@@ -56,8 +56,11 @@ export default defineConfig(async () => ({
             cert: readFileSync('localhost.crt')
         } : undefined,
         headers: {
-            // 'content-security-policy': "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg;",
-            // 'cache-control': 'public, max-age=43200'
+            'Content-Security-Policy': "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg;",
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+            'Permissions-Policy': 'cross-origin-isolated',
+            // 'Cache-Control': 'public, max-age=43200'
         }
     }
 }));

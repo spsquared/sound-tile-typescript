@@ -3,16 +3,27 @@ import { computed, onMounted, onUnmounted, reactive, useTemplateRef, watch } fro
 import { onClickOutside, useDraggable, useElementBounding, useThrottleFn } from '@vueuse/core';
 
 const props = defineProps<{
+    /**Window title */
     title: string
+    /**Minimum width of window body */
     minWidth?: number
+    /**Minimum height of window body */
     minHeight?: number
+    /**Allow resizing of window width */
     resizeWidth?: boolean
+    /**Allow resizing of window height */
     resizeHeight?: boolean
+    /**Allow resizing of both window width and height (overrides other resize options) */
     resizeable?: boolean
+    /**Close the window when the user clicks on anything outside the window */
     closeOnClickOut?: boolean
+    /**Color of outside window borders */
     borderColor?: string
+    /**Scroll behavior when overflowing horizontally */
     overflowX?: 'auto' | 'scroll' | 'clip'
+    /**Scroll behavior when overflowing vertically */
     overflowY?: 'auto' | 'scroll' | 'clip'
+    /**Frosted glass effect on the background */
     frosted?: boolean
 }>();
 

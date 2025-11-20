@@ -32,7 +32,7 @@ export abstract class VisualizerRenderer {
         this.stopWatching = watchThrottled(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
-    abstract draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void>
+    abstract draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults>
     abstract resize(w: number, h: number): void
     protected abstract updateData(): void
 
@@ -40,8 +40,13 @@ export abstract class VisualizerRenderer {
         this.stopWatching();
     }
 
-    static playing: boolean = false;
-    static debugInfo: 0 | 1 | 2 = 0;
+    static readonly state: {
+        playing: boolean
+        debugInfo: 0 | 1 | 2
+    } = reactive({
+        playing: false,
+        debugInfo: 0
+    });
 }
 
 /**
@@ -63,12 +68,13 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
         }
     }
 
-    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
+    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
         this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', {
             buffer: buffer,
-            playing: VisualizerRenderer.playing,
-            debug: VisualizerRenderer.debugInfo
+            playing: VisualizerRenderer.state.playing,
+            debug: VisualizerRenderer.state.debugInfo
         }, Array.isArray(buffer) ? buffer.map((b) => b.buffer) : [buffer.buffer]);
+        return this.frameResult.value;
     }
     resize(w: number, h: number): void {
         this.postMessage('resize', { w: w, h: h });
@@ -112,10 +118,11 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
         this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep({ ...this.data, buffer: undefined }));
     }
 
-    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
-        this.renderer.playing = VisualizerRenderer.playing;
-        this.renderer.debugInfo = VisualizerRenderer.debugInfo;
+    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
+        this.renderer.playing = VisualizerRenderer.state.playing;
+        this.renderer.debugInfo = VisualizerRenderer.state.debugInfo;
         this.renderer.draw(buffer);
+        return this.renderer.frameResult;
     }
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
@@ -278,7 +285,7 @@ class VisualizerRenderInstance {
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
                 isInWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
-                `PLAYING: ${this.playing}`,
+                `Playing: ${this.playing}`,
                 `FPS: ${this.frames.length} (${minArr(this.fpsHistory)} / ${maxArr(this.fpsHistory)} / ${avgArr(this.fpsHistory).toFixed(1)})`,
                 `Timings: ${(endTime - startTime).toFixed(1)}ms (${minArr(this.timingsHistory).toFixed(1)}ms / ${maxArr(this.timingsHistory).toFixed(1)}ms / ${avgArr(this.timingsHistory).toFixed(1)}ms)`,
                 ...this.debugText

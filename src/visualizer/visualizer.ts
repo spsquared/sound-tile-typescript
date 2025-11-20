@@ -253,13 +253,13 @@ export class Visualizer {
     static start(time: number = 0): void {
         this.time.startTime = this.audioContext.currentTime - time;
         this.time.playing = true;
-        VisualizerRenderer.playing = true;
+        VisualizerRenderer.state.playing = true;
         for (const vis of this.instances) vis.start();
         this.audioContext.resume();
     }
     static stop(): void {
         this.time.playing = false;
-        VisualizerRenderer.playing = false;
+        VisualizerRenderer.state.playing = false;
         for (const vis of this.instances) vis.stop();
         this.audioContext.suspend();
     }
@@ -306,7 +306,7 @@ export class Visualizer {
             }
         })();
         document.addEventListener('keydown', (e) => {
-            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.debugInfo = (VisualizerRenderer.debugInfo + 1) % 3 as any;
+            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.state.debugInfo = (VisualizerRenderer.state.debugInfo + 1) % 3 as any;
         });
     }
 }
