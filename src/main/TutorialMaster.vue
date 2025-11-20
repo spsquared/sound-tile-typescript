@@ -149,7 +149,7 @@ watch(() => TileEditor.root.label, async () => {
         spooky.value = false;
         await sleep(60);
         spooky.value = true;
-        VisualizerRenderer.debugInfo = 2;
+        VisualizerRenderer.state.debugInfo = 2;
         MediaPlayer.pause();
         await sleep(100);
         spooky.value = false;
@@ -189,7 +189,7 @@ function futilelyTryClose(ok: boolean) {
     if ('terminal' in message.value) {
         spooky.value = false;
         if (hostageData !== null) TileEditor.attachRoot(hostageData);
-        VisualizerRenderer.debugInfo = 0;
+        VisualizerRenderer.state.debugInfo = 0;
         hostageData = null;
         TileEditor.root.label = 'Warning';
         return;

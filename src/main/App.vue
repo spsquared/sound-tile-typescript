@@ -6,6 +6,7 @@ import Dropdown from '@/dropdown/Dropdown.vue';
 import Sidebar from '@/sidebar/Sidebar.vue';
 import TileRoot from '@/main/TileRoot.vue';
 import TileDrag from '@/main/TileDrag.vue';
+import MemoryStats from './MemoryStats.vue';
 import ModulatorDrag from '@/main/ModulatorDrag.vue';
 import TutorialMaster from '@/main/TutorialMaster.vue';
 import ErrorQueue from '@/main/ErrorQueue.vue';
@@ -19,6 +20,7 @@ provide('showAppInfoRef', showAppInfo);
     <Sidebar></Sidebar>
     <TileRoot></TileRoot>
     <TileDrag></TileDrag>
+    <MemoryStats></MemoryStats>
     <ModulatorDrag></ModulatorDrag>
     <TutorialMaster></TutorialMaster>
     <FullscreenModal v-model="showAppInfo" :title="`Sound Tile v${version}`" mode="notify" effect="frost-window">

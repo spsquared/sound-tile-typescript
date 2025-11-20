@@ -280,18 +280,16 @@ class VisualizerRenderInstance {
             if (this.playing && this.debugInfo == 2) this.printDebugInfo(buffer);
             this.ctx.resetTransform();
             this.ctx.font = '14px monospace';
-            const minArr = (a: number[]): number => a.reduce((p, c) => Math.min(p, c), a[0]);
-            const maxArr = (a: number[]): number => a.reduce((p, c) => Math.max(p, c), a[0]);
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
                 isInWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
                 `Playing: ${this.playing}`,
-                `FPS: ${this.frames.length} (${minArr(this.fpsHistory)} / ${maxArr(this.fpsHistory)} / ${avgArr(this.fpsHistory).toFixed(1)})`,
-                `Timings: ${(endTime - startTime).toFixed(1)}ms (${minArr(this.timingsHistory).toFixed(1)}ms / ${maxArr(this.timingsHistory).toFixed(1)}ms / ${avgArr(this.timingsHistory).toFixed(1)}ms)`,
+                `FPS: ${this.frames.length} (${Math.min(...this.fpsHistory)} / ${Math.max(...this.fpsHistory)} / ${avgArr(this.fpsHistory).toFixed(1)})`,
+                `Timings: ${(endTime - startTime).toFixed(1)}ms (${Math.min(...this.timingsHistory).toFixed(1)}ms / ${Math.max(...this.timingsHistory).toFixed(1)}ms / ${avgArr(this.timingsHistory).toFixed(1)}ms)`,
                 ...this.debugText
             ];
             this.ctx.fillStyle = '#333333AA';
-            this.ctx.fillRect(8, 8, maxArr(text.map((t) => this.ctx.measureText(t).width + 8)), text.length * 16 + 6);
+            this.ctx.fillRect(8, 8, Math.max(...text.map((t) => this.ctx.measureText(t).width + 8)), text.length * 16 + 6);
             this.ctx.fillStyle = '#FFFFFF';
             this.ctx.textAlign = 'left';
             this.ctx.textBaseline = 'top';
