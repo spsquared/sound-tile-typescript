@@ -15,7 +15,7 @@ function set() {
 </script>
 
 <template>
-    <button :class="{ sidebarTab: true, sidebarTabSelected: TileEditor.state.sidebarTab == props.for }" :title="props.title" @click="set"></button>
+    <input type="button" :class="{ sidebarTab: true, sidebarTabSelected: TileEditor.state.sidebarTab == props.for }" :title="props.title" @click="set">
 </template>
 
 <style scoped>

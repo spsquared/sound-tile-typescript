@@ -5,7 +5,7 @@ import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { GroupTile } from '@/visualizer/tiles';
 import { VisualizerRenderer } from '@/visualizer/visualizerRenderer';
-import xue9_unknown from '@/img/xue9-unknown.jpg';
+import xue9_unknown from '@/img/xue9-unknown.png';
 import FullscreenModal from '@/components/FullscreenModal.vue';
 
 let activated = window.localStorage.getItem('xue9') !== null || false;
