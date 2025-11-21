@@ -206,6 +206,7 @@ export class GroupTile extends Tile {
             ...cloneDeep<Omit<MediaSchema.GroupTile, keyof MediaSchema.Tile>>({
                 orientation: this.orientation,
                 borderColor: this.borderColor.colorData,
+                hideBorders: this.hideBorders,
                 children: []
             }),
             children: this.children.map((c) => c.getSchemaData()) // avoid unnecessary cloning
@@ -218,6 +219,7 @@ export class GroupTile extends Tile {
         super.reconstitute(data, tile);
         tile.orientation = data.orientation;
         tile.borderColor.colorData = data.borderColor;
+        tile.hideBorders = data.hideBorders;
         tile.children.push(...data.children.map<Tile>((childData) => {
             const TileConstructor = Tile.tileTypes[childData.type];
             if (TileConstructor === undefined) {

@@ -284,8 +284,8 @@ class VisualizerRenderInstance {
             const text = [
                 isInWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
                 `Playing: ${this.playing}`,
-                `FPS: ${this.frames.length} (${Math.min(...this.fpsHistory)} / ${Math.max(...this.fpsHistory)} / ${avgArr(this.fpsHistory).toFixed(1)})`,
-                `Timings: ${(endTime - startTime).toFixed(1)}ms (${Math.min(...this.timingsHistory).toFixed(1)}ms / ${Math.max(...this.timingsHistory).toFixed(1)}ms / ${avgArr(this.timingsHistory).toFixed(1)}ms)`,
+                `FPS: ${this.frames.length} (${avgArr(this.fpsHistory).toFixed(1)} / [${Math.min(...this.fpsHistory)} - ${Math.max(...this.fpsHistory)}])`,
+                `Timings: ${(endTime - startTime).toFixed(1)}ms (${avgArr(this.timingsHistory).toFixed(1)}ms / [${Math.min(...this.timingsHistory).toFixed(1)}ms - ${Math.max(...this.timingsHistory).toFixed(1)}ms])`,
                 ...this.debugText
             ];
             this.ctx.fillStyle = '#333333AA';

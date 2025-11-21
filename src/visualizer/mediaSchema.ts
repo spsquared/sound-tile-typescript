@@ -19,6 +19,7 @@ export namespace MediaSchema {
     export type GroupTile = Tile & {
         orientation: typeof GroupTileInstance.HORIZONTAL
         borderColor: ColorData
+        hideBorders: boolean
         children: Tile[]
     };
     /**Visualizer tile schema-layout data - data is partial as files may be missing newer additions */
