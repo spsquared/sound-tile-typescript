@@ -4,6 +4,8 @@ import { v7 as uuidV7 } from 'uuid';
 import { MediaSchema } from './mediaSchema';
 import Visualizer from './visualizer';
 import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
+import { BeepboxVisualizer } from './beepbox';
+import { BeepboxVisualizerData, createDefaultBeepboxVisualizerData } from './beepboxData';
 import Modulation from './modulation';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -436,9 +438,11 @@ export class BeepboxTile extends Tile {
     static { this.registerTile(this); }
 
     label: string = BeepboxTile.name;
+    readonly visualizer: BeepboxVisualizer;
 
-    constructor() {
+    constructor(data?: BeepboxVisualizerData) {
         super();
+        this.visualizer = new BeepboxVisualizer(data ?? createDefaultBeepboxVisualizerData());
     }
 
     getSchemaData(): MediaSchema.BeepboxTile {
@@ -452,6 +456,11 @@ export class BeepboxTile extends Tile {
     protected static reconstitute(data: MediaSchema.BeepboxTile, tile: BeepboxTile): BeepboxTile {
         super.reconstitute(data, tile);
         return tile;
+    }
+
+    destroy(): void {
+        super.destroy();
+        this.visualizer.destroy();
     }
 }
 

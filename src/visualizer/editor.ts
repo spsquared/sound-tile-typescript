@@ -521,6 +521,6 @@ TileEditor.registerTile(GroupTile, false);
 TileEditor.registerTile(VisualizerTile, true);
 TileEditor.registerTile(TextTile, true);
 TileEditor.registerTile(ImageTile, true);
-TileEditor.registerTile(BeepboxTile, true);
+TileEditor.registerTile(BeepboxTile, false);
 TileEditor.registerTile(Tile, true);
 TileEditor.registerTile(GrassTile, false);

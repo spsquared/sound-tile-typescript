@@ -18,6 +18,7 @@ export namespace Modulation {
     // buh so much redundant information but also performance and encapsulation
     // also I definitely did something horribly wrong and against all typescript laws here
     // vue keeps coming in and making things proxies which breaks stuff
+    // the code is still slow as fuck though
 
     /**
      * Modulation source side of controller. Values set to its source refs will be applied to linked targets.

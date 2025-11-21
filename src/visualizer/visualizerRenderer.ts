@@ -566,8 +566,10 @@ class VisualizerRenderInstance {
                     bestShift = shift;
                 }
             }
-            if (this.debugInfo == 2) this.debugText.push('Samples: ' + debugText.join(' '));
-            if (this.debugInfo > 0) this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
+            if (this.debugInfo == 2) {
+                this.debugText.push('Samples: ' + debugText.join(' '));
+                this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
+            }
             // gradient descent on lowest sample to minimize error
             let gain = this.data.waveOptions.correlation.gradientDescentGain;
             debugText.length = 0;
@@ -604,10 +606,8 @@ class VisualizerRenderInstance {
                     if (this.debugInfo == 2) debugText.push(`gain=${gain.toFixed(3)}`);
                 }
             }
-            if (this.debugInfo > 0) {
-                this.debugText.push('Gradient Descent: ' + debugText.join(' '));
-                this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
-            }
+            if (this.debugInfo == 2) this.debugText.push('Gradient Descent: ' + debugText.join(' '));
+            if (this.debugInfo > 0) this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
             this.corrwaveData.shift = bestShift;
             // average the shifted buffer with previous buffer
             const smoothing = this.data.waveOptions.correlation.frameSmoothing;
@@ -670,7 +670,7 @@ class VisualizerRenderInstance {
                     }
                 }
             } else {
-                if (this.debugInfo == 2) this.debugText.push('No quantizing')
+                if (this.debugInfo == 2) this.debugText.push('No quantizing');
                 if (altColor) {
                     for (let i = 0; i < freqRange; i++) {
                         spectCtx.fillStyle = this.colorScale(buffer[i] * scale).hex();
@@ -842,10 +842,11 @@ class VisualizerRenderInstance {
             width: this.canvas.width,
             height: this.canvas.height,
             timings: this.timingsHistory,
+            debug: this.debugText,
             data: this.data,
             buffer: buffer
         });
-    }, 250);
+    }, 500);
 }
 
 type RendererMessageData = {

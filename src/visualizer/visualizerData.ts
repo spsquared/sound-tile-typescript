@@ -1,7 +1,7 @@
 import { ColorData } from '@/components/inputs/colorPicker'
 
 /**
- * Possible settings for visualizers.
+ * Possible visualizer types and styles.
  */
 export enum VisualizerMode {
     FREQ_BAR,
