@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ComputedRef, inject, onMounted, ref, useTemplateRef } from 'vue';
-import { syncRef, watchThrottled, useElementSize } from '@vueuse/core';
+import { computed, ComputedRef, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { syncRef, useElementSize, useThrottleFn } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
 import { VisualizerTile } from '../tiles';
+import Tile from './Tile.vue';
 import { VisualizerMode } from '../visualizerData';
 import Visualizer from '../visualizer';
-import Tile from './Tile.vue';
 import { ReuseVisualizerSource } from '@/sidebar/sources/reuseSource';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
@@ -35,9 +35,12 @@ onMounted(() => {
 props.tile.canvas.classList.add('visualizerCanvas');
 
 const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
-watchThrottled([canvasWidth, canvasHeight], () => {
-    props.tile.visualizer.resize(canvasWidth.value * devicePixelRatio, canvasHeight.value * devicePixelRatio);
-}, { throttle: 50, immediate: true, leading: true, trailing: true });
+const onResize = useThrottleFn(() => {
+    props.tile.visualizer.resize(canvasWidth.value * window.devicePixelRatio, canvasHeight.value * window.devicePixelRatio);
+}, 50, true, true);
+watch([canvasWidth, canvasHeight], onResize);
+onMounted(() => window.addEventListener('resize', onResize, { passive: true }));
+onUnmounted(() => window.removeEventListener('resize', onResize));
 
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 

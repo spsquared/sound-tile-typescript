@@ -38,7 +38,7 @@ export class TileEditor {
         sidebarTab: 'edit',
         hideTabs: false,
         idleHideTabs: computed(() => this.idleTracker.idle.value && !this.state.dropdownOpen && !this.state.sidebarOpen) as any, // vue ref unwrapping conflicts with need to preserve private properties
-        sidebarScreenWidth: Number(localStorage.getItem('sidebarScreenWidth') ?? 25),
+        sidebarScreenWidth: Number(window.localStorage.getItem('sidebarScreenWidth') ?? 25),
         minSidebarWidthPx: 200,
         tileTypes: {},
         identifyTilesSidebar: new Set() as any, // wHY auToMATIc rEf unWRAPPING SUCKS I FUCKING HATE IT
@@ -474,7 +474,7 @@ export class TileEditor {
     }
 
     static {
-        watch(() => this.state.sidebarScreenWidth, () => localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
+        watch(() => this.state.sidebarScreenWidth, () => window.localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
         // this isn't a vue composable, no lifecycle hooks
         document.addEventListener('mousemove', (e) => this.updateDrag(e), { passive: true });
         document.addEventListener('mouseup', () => (this.endDrag(), this.endModulatorDrag()));

@@ -151,7 +151,7 @@ defineExpose({
     focus: () => bringToTop()
 });
 const fixPosOnResize = useThrottleFn(fixDragPosition, 100, true, true);
-onMounted(() => window.addEventListener('resize', fixPosOnResize));
+onMounted(() => window.addEventListener('resize', fixPosOnResize, { passive: true }));
 onUnmounted(() => window.removeEventListener('resize', fixPosOnResize));
 </script>
 <script lang="ts">

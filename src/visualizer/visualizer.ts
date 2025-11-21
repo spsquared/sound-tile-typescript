@@ -1,6 +1,6 @@
 
 
-import { effectScope, EffectScope, reactive, ref, Ref, watch, watchEffect } from 'vue';
+import { effectScope, EffectScope, reactive, ref, Ref, toRaw, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
 
@@ -11,7 +11,7 @@ if (!('AudioContext' in window)) {
 const webWorkerSupported = 'Worker' in window;
 
 /**
- * Audio and drawing context of visualizer tiles.
+ * Audio and visual rendering context of visualizer tiles.
  */
 export class Visualizer {
     static readonly audioContext: AudioContext = new AudioContext({ sampleRate: 48000 });
@@ -129,6 +129,10 @@ export class Visualizer {
                 }
             });
         });
+        // who cares about resource leak lmao this is a joke
+        if (window.localStorage.getItem('wtfmode') !== null) setInterval(() => {
+            this.source?.playbackRate.linearRampToValueAtTime(Math.sin(performance.now() / 50) * 0.2 + 1, Visualizer.audioContext.currentTime + 0.05);
+        }, 50);
     }
 
     private drawing: boolean = false;
@@ -228,13 +232,12 @@ export class Visualizer {
         return this.audioBuffer?.duration ?? 0;
     }
 
-    destroy: () => void = () => {
-        // weird syntax stops reactive() wrapper somewhere else in the code turning the "this" object into a proxy and borking everything
+    destroy(): void {
         this.stop();
         this.renderer.destroy();
         this.effectScope.stop();
         this.gain.disconnect();
-        Visualizer.instances.delete(this);
+        Visualizer.instances.delete(toRaw(this));
         Visualizer.recalculateDuration();
     }
 
@@ -307,7 +310,7 @@ export class Visualizer {
         })();
         document.addEventListener('keydown', (e) => {
             if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.state.debugInfo = (VisualizerRenderer.state.debugInfo + 1) % 3 as any;
-        });
+        }, { passive: true });
     }
 }
 

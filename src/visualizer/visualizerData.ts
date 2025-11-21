@@ -1,6 +1,3 @@
-// need this file so the web worker can import the visualizer modes enum
-// if in visualizer.ts it explodes because audio.ts gets imported
-
 import { ColorData } from '@/components/inputs/colorPicker'
 
 /**
@@ -18,7 +15,7 @@ export enum VisualizerMode {
 }
 
 /**
- * Visualizer options, audio data, and any attached images/text for a visualizer tile.
+ * Audio data and visualizer configurations for a visualizer tile.
  */
 export interface VisualizerData {
     /**Audio data uploaded by user - not decoded yet */
