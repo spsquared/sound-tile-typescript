@@ -14,6 +14,7 @@ const customElements = [
     'align-right',
     'align-justified'
 ];
+const srcDir = resolve(__dirname, 'src/');
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -25,21 +26,39 @@ export default defineConfig(async () => ({
         }
     })],
     define: {
-        __VERSION__: JSON.stringify(pack.version),
+        __VERSION__: JSON.stringify(pack.version)
     },
     build: {
         target: 'baseline-widely-available',
-        // lower this because why not
-        assetsInlineLimit: 2048,
-        // rollupOptions: { output: { sourcemap: true } }
+        assetsInlineLimit: 2048, // lower this because why not
+        rollupOptions: {
+            input: {
+                index: resolve(__dirname, 'index.html'),
+                loadingBar: resolve(srcDir, 'loadingBar.js'),
+                serviceWorker: resolve(srcDir, 'serviceWorker.ts')
+            },
+            output: {
+                dir: resolve(__dirname, 'dist/'),
+                entryFileNames: (chunk) => {
+                    switch (chunk.name) {
+                        case 'loadingBar': return `loadingBar.js`;
+                        case 'serviceWorker': return `serviceWorker.js`;
+                        case 'index': return 'assets/[name]-[hash].js';
+                    }
+                },
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash][extname]'
+            },
+        }
     },
     resolve: {
         alias: {
-            '@': resolve(__dirname, 'src/')
+            '@': srcDir,
+            '/loadingBar.js': resolve(srcDir, 'loadingBar.js') // need this workaround now
         }
     },
     assetsInclude: [
-        'src/**/*.html' // importing html for Trix editor
+        resolve(srcDir, 'assets/*.html') // importing html for Trix editor
     ],
     // prevent vite from obscuring rust errors
     clearScreen: false,
@@ -56,10 +75,11 @@ export default defineConfig(async () => ({
             cert: readFileSync('localhost.crt')
         } : undefined,
         headers: {
+            // emulating headers of firebase deployment
             'Content-Security-Policy': "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg;",
             'Cross-Origin-Opener-Policy': 'same-origin',
             'Cross-Origin-Embedder-Policy': 'require-corp',
-            'Permissions-Policy': 'cross-origin-isolated',
+            'Permissions-Policy': "cross-origin-isolated=self",
             // 'Cache-Control': 'public, max-age=43200'
         }
     }

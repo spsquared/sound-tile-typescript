@@ -6,6 +6,7 @@ import TileEditor from './editor';
 import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
 import { VisualizerMode } from './visualizerData';
 import Modulation from './modulation';
+import { startMediaPlayerPlaybackTime } from './globalModulators';
 
 /**
  * Global media controls, coordinates visualizer & controls.
@@ -169,5 +170,7 @@ export class MediaPlayer {
         coverArt: defaultCoverArt
     }, root);
 };
+
+startMediaPlayerPlaybackTime(MediaPlayer);
 
 export default MediaPlayer;
