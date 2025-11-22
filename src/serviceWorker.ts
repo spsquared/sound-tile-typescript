@@ -15,7 +15,7 @@ self2.addEventListener('install', (e) => {
     }));
 });
 self2.addEventListener("activate", (e) => {
-    console.log('ACTIVATE')
+    console.debug('ACTIVATE', cacheName);
     e.waitUntil(Promise.all([
         // remove all the old code
         caches.keys().then((keys) => Promise.all(keys.filter((k) => k != cacheName).map((k) => caches.delete(k)))),
