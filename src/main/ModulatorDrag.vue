@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useMouse } from '@vueuse/core';
+import { mousePos } from '@/components/inputs';
 import TileEditor from '@/visualizer/editor';
-
-const mousePos = useMouse();
 
 // track if target was found - only update while dragging, after dropping target is reset to null
 const successfulDrag = ref(false);

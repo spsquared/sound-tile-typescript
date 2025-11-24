@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, shallowRef } from 'vue';
-import { useMouse } from '@vueuse/core';
+import { mousePos } from '@/components/inputs';
 import TileEditor from '@/visualizer/editor';
 import TileDragGhostTile from './TileDragGhostTile.vue';
 
-const mousePos = useMouse();
 const draggingPos = computed(() => ({
     // account for borders
     x: mousePos.x.value - TileEditor.drag.offset.x - 4,

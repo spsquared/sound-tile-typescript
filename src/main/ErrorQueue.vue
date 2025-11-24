@@ -31,13 +31,12 @@ watch(() => ErrorQueue.queue.length > 0, (open) => {
         <span :style="{ color: colorMap[error?.type ?? 'notice'] }">
             {{ error?.message }}
         </span>
+        <br>
         <template v-if="(error?.type == 'error' || error?.type == 'warning') && 'stackTrace' in error">
-            <br>
-            <pre style="color: red">{{ error.stackTrace }}</pre>
+            <pre style="color: red; max-width: min(60vw, max(600px, 50vw))">{{ error.stackTrace }}</pre>
         </template>
         <template v-else-if="error?.type == 'error' && error.filename !== undefined">
-            <br>
-            <span style="color: red">{{ error.filename }} {{ error.lineno }}:{{ error.colno }}</span>
+            <span style="color: red; ">{{ error.filename }} {{ error.lineno }}:{{ error.colno }}</span>
         </template>
     </FullscreenModal>
 </template>

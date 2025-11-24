@@ -1,6 +1,7 @@
 const self2 = self as any as ServiceWorkerGlobalScope; // me when typescript
 
-const cacheName = 'page-' + __VERSION__;
+const version = __VERSION__;
+const cacheName = 'page-' + version;
 
 self2.addEventListener('install', (e) => {
     e.waitUntil(new Promise<void>(async (resolve) => {
@@ -14,13 +15,18 @@ self2.addEventListener('install', (e) => {
         resolve();
     }));
 });
-self2.addEventListener("activate", (e) => {
+self2.addEventListener('activate', (e) => {
     console.debug('ACTIVATE', cacheName);
     e.waitUntil(Promise.all([
-        // remove all the old code
+        // remove all the old stuff
         caches.keys().then((keys) => Promise.all(keys.filter((k) => k != cacheName).map((k) => caches.delete(k)))),
         self2.clients.claim()
     ]));
+    self2.clients.matchAll({ type: 'window' }).then((clients) => {
+        // for now, there's only one message type
+        // this will probably change if playlists go in the expected direction
+        for (const client of clients) client.postMessage(version);
+    });
 });
 
 async function getCached(req: Request): Promise<Response> {

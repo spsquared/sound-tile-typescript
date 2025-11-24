@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import { Media } from '@/visualizer/media';
 import MediaPlayer from '@/visualizer/mediaPlayer';
@@ -57,6 +57,34 @@ async function downloadFromCurrent() {
     TileEditor.lock.release();
 }
 
+const dragHovering = ref(false);
+function dragover(e: DragEvent) {
+    if (e.dataTransfer !== null) {
+        e.preventDefault();
+        dragHovering.value = true;
+    }
+}
+function dragend() {
+    dragHovering.value = false;
+}
+async function drop(e: DragEvent) {
+    dragHovering.value = false;
+    if (e.dataTransfer !== null && e.dataTransfer.files.length == 1) {
+        e.preventDefault();
+        if (TileEditor.lock.locked) return;
+        await TileEditor.lock.acquire();
+        const media = await Media.decompress(e.dataTransfer.files.item(0)!);
+        if (media === null) {
+            TileEditor.lock.release();
+            console.error('Failed to decompress media from uploaded file');
+            return;
+        }
+        MediaPlayer.media.current.destroy(); // beware resource leak
+        MediaPlayer.media.current = media;
+        TileEditor.lock.release();
+    }
+}
+
 function keydown(e: KeyboardEvent) {
     if (matchTextInput(e.target)) return;
     const key = e.key.toLowerCase();
@@ -71,8 +99,8 @@ onUnmounted(() => document.removeEventListener('keydown', keydown));
 </script>
 
 <template>
-    <div id="fileControls">
-        <input type="button" id="tileUpload" title="Load Tiles from computer" @click="uploadToCurrent" :disabled="TileEditor.lock.locked">
+    <div id="fileControls" @dragover="dragover" @dragleave="dragend" @dragend="dragend" @drop="drop">
+        <input type="button" id="tileUpload" title="Load Tiles from computer" @click="uploadToCurrent" :disabled="TileEditor.lock.locked" :style="{ backgroundColor: dragHovering ? 'dodgerblue' : undefined }">
         <input type="button" id="tileDownload" title="Save Tiles to computer" @click="downloadFromCurrent" :disabled="TileEditor.lock.locked">
     </div>
 </template>
