@@ -28,7 +28,7 @@ function keydown(e: KeyboardEvent) {
         endResize();
     }
 }
-onMounted(() => document.addEventListener('keydown', keydown));
+onMounted(() => document.addEventListener('keydown', keydown, { passive: true }));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
 
 let resizing = false;

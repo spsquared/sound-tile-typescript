@@ -5,8 +5,8 @@ import { matchInput } from '@/constants';
 import { AsyncLock } from './lock';
 
 const props = defineProps<{
-    /**Modal title */
-    title: string
+    /**Modal title - can coexist with the "title" slot */
+    title?: string
     /**Determines acknowledgement options for the user */
     mode: ModalMode
     /**Color of modal border */
@@ -42,7 +42,7 @@ function close(res: boolean) {
 watch(open, () => {
     if (open.value) {
         openLock.acquire();
-        document.addEventListener('keydown', keydown);
+        document.addEventListener('keydown', keydown, { passive: true });
         emit('open');
     } else {
         ftrap?.deactivate();
@@ -87,7 +87,7 @@ defineExpose<{
 });
 </script>
 <script lang="ts">
-export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input_warn' | 'none';
+export type ModalMode = 'info' | 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input_warn' | 'none';
 </script>
 
 <template>
@@ -95,9 +95,16 @@ export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input
         <Transition @after-enter="emit('open-settled')" @after-leave="emit('close-settled')">
             <div :class="{ modalContainer: true, modalContainerFrost: props.effect == 'frost-screen' }" v-if="open">
                 <div :class="{ modalBody: true, modalBodyFrost: props.effect == 'frost-window' }" ref="body">
-                    <h1>{{ props.title }}</h1>
-                    <slot :close="close"></slot>
-                    <div class="modalButtons" v-if="props.mode != 'none'">
+                    <h1 class="modalTitle">
+                        <slot name="title">{{ props.title ?? '' }}</slot>
+                    </h1>
+                    <div class="modalContent">
+                        <slot :close="close"></slot>
+                    </div>
+                    <div class="modalButtons" v-if="props.mode != 'none' || $slots">
+                        <span v-if="props.mode == 'info'">
+                            <input type="button" value="CLOSE" class="modalButton" @click="close(true)">
+                        </span>
                         <span v-if="props.mode == 'notify'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)">
                         </span>
@@ -127,8 +134,8 @@ export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input
 <style scoped>
 .modalContainer {
     display: grid;
-    grid-template-rows: 1fr min-content 1fr;
-    grid-template-columns: 1fr 50vw 1fr;
+    grid-template-rows: 2vh 1fr min-content 1fr 2vh;
+    grid-template-columns: 2vw 1fr minmax(50vw, min-content) 1fr 2vw;
     position: fixed;
     top: 0px;
     left: 0px;
@@ -143,27 +150,31 @@ export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input
     backdrop-filter: blur(4px);
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
     .modalContainer {
-        grid-template-columns: 1fr 90vw 1fr;
+        grid-template-columns: 1vw 1fr minmax(90vw, min-content) 1fr 1vw;
     }
 }
 
 .modalBody {
-    grid-row: 2;
-    grid-column: 2;
+    grid-row: 3;
+    grid-column: 3;
     contain: content;
-    display: inline-block;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     position: relative;
     bottom: calc(50vh + 50%);
     min-width: 0px;
-    padding: 4px 1em;
-    background-color: black;
+    max-width: 96vw;
+    max-height: 96vh;
     border: 4px solid white;
     border-radius: 8px;
+    background-color: black;
     transition: 400ms ease-in-out transform;
     transform: translateY(calc(50vh + 50%));
     text-align: center;
+    overflow-y: auto;
 }
 
 .modalBodyFrost {
@@ -171,13 +182,28 @@ export type ModalMode = 'notify' | 'confirm' | 'confirm_warn' | 'input' | 'input
     backdrop-filter: blur(20px);
 }
 
-.modalBody h1 {
-    margin: 0.25em 0px;
+.modalTitle {
+    position: sticky;
+    top: 0px;
+    margin: 0px 0px 12px 0px;
+    padding-top: 12px;
     font-size: 40px;
+    background-color: black;
+    box-shadow: 0px 0px 6px 6px black;
+}
+
+.modalContent {
+    padding: 0px 16px;
 }
 
 .modalButtons {
-    margin: 16px 0px;
+    position: sticky;
+    bottom: 0px;
+    margin-top: 12px;
+    padding: 0px;
+    padding-bottom: 16px;
+    background-color: black;
+    box-shadow: 0px 0px 6px 6px black;
 }
 
 .modalButton {

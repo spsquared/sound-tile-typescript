@@ -20,7 +20,7 @@ function keydown(e: KeyboardEvent) {
         }
     }
 }
-onMounted(() => document.addEventListener('keydown', keydown));
+onMounted(() => document.addEventListener('keydown', keydown, { passive: true }));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
 
 // removes animating of sidebar spacer width when resizing

@@ -91,6 +91,6 @@ trix-editor:not(:focus-within)::selection {
     border-radius: 4px;
     align-items: center;
     justify-content: center;
-    box-shadow: inset #FFFA 0px 0px 8px 2px;
+    box-shadow: inset 0px 0px 8px 2px #FFFA;
 }
 </style>

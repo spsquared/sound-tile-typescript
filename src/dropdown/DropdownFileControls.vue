@@ -66,7 +66,7 @@ function keydown(e: KeyboardEvent) {
         downloadFromCurrent();
     }
 }
-onMounted(() => document.addEventListener('keydown', keydown));
+onMounted(() => document.addEventListener('keydown', keydown, { passive: true }));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
 </script>
 

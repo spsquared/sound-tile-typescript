@@ -222,7 +222,7 @@ export namespace Modulation {
 
         /**Reactive record of all sources for this target - if this is edited it's not this class's problem */
         readonly connectedSources: {
-            readonly [K in keyof Props & string]: [Source<any>, string, Transform<Props[K]>[]] | null
+            readonly [K in keyof Props & string]: readonly [Source<any>, string, Transform<Props[K]>[]] | null
         };
 
         /**Fallback thing and also miscellaneous reactivity scope */

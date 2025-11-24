@@ -85,6 +85,8 @@ export class TileEditor {
         this.state.tileTypes[t.id] = { Tile: t, visible: visible };
     }
 
+    private constructor() {}; // no constructor 4 u
+
     /**
      * Root node of current layout on screen, wrapped inside a `Reactive` object.
      * Because of this `reactive()` wrapper Vue's automatic ref unwrapping nukes your types and causes unimaginable
@@ -492,7 +494,7 @@ export class TileEditor {
                         break;
                 }
             }
-        });
+        }, { passive: true });
         // currentTiles is used everywhere
         watchEffect(() => {
             // somehow this works perfectly and only updates when there is a layout change
