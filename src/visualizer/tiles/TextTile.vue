@@ -35,7 +35,7 @@ const sanitizedText = ref('');
         <template v-slot:content>
             <div class="textContain">
                 <div class="textWrapper" :style="{
-                    transform: `translate(${modTargets.textOffsetX.value}%, ${modTargets.textOffsetY.value}%) scale(${modTargets.textScale.value})`
+                    transform: `translate(${modTargets.textOffsetX.value}%, ${modTargets.textOffsetY.value}%) rotateZ(${modTargets.textRotation}deg) scale(${modTargets.textScale.value})`
                 }" v-html="sanitizedText"></div>
             </div>
         </template>

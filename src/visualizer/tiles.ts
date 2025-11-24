@@ -321,6 +321,7 @@ export class TextTile extends Tile implements Modulation.Modulatable<{
     textScale: number
     textOffsetX: number
     textOffsetY: number
+    textRotation: number
 }> {
     static readonly id: string = 't';
     static readonly component = TextTileComponent;
@@ -334,7 +335,8 @@ export class TextTile extends Tile implements Modulation.Modulatable<{
     readonly modulation = new Modulation.Target({
         textScale: 1,
         textOffsetX: 0,
-        textOffsetY: 0
+        textOffsetY: 0,
+        textRotation: 0
     }, { tile: this });
 
     /**Text HTML of tile */
