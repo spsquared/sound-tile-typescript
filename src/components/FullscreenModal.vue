@@ -62,7 +62,7 @@ watch(body, () => {
     if (body.value !== null) {
         ftrap = createFocusTrap(body.value, {
             onDeactivate: () => close(false),
-            initialFocus: body.value.querySelector('.modalButton') as HTMLElement
+            initialFocus: body.value.querySelector('.modalButton') as HTMLElement ?? undefined
         });
         ftrap.activate();
     }
@@ -101,29 +101,30 @@ export type ModalMode = 'info' | 'notify' | 'confirm' | 'confirm_warn' | 'input'
                     <div class="modalContent">
                         <slot :close="close"></slot>
                     </div>
-                    <div class="modalButtons" v-if="props.mode != 'none' || $slots">
-                        <span v-if="props.mode == 'info'">
+                    <div class="modalButtons" v-if="props.mode != 'none' || $slots.buttons !== undefined">
+                        <slot name="buttons" :close="close"></slot>
+                        <template v-if="props.mode == 'info'">
                             <input type="button" value="CLOSE" class="modalButton" @click="close(true)">
-                        </span>
-                        <span v-if="props.mode == 'notify'">
+                        </template>
+                        <template v-if="props.mode == 'notify'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)">
-                        </span>
-                        <span v-else-if="props.mode == 'confirm'">
+                        </template>
+                        <template v-else-if="props.mode == 'confirm'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)" style="background-color: green;">
                             <input type="button" value="CANCEL" class="modalButton" @click="close(false)" style="background-color: red;">
-                        </span>
-                        <span v-else-if="props.mode == 'confirm_warn'">
+                        </template>
+                        <template v-else-if="props.mode == 'confirm_warn'">
                             <input type="button" value="OK" class="modalButton" @click="close(true)" style="background-color: red;">
                             <input type="button" value="CANCEL" class="modalButton" @click="close(false)">
-                        </span>
-                        <span v-else-if="props.mode == 'input'">
+                        </template>
+                        <template v-else-if="props.mode == 'input'">
                             <input type="button" value="YES" class="modalButton" @click="close(true)" style="background-color: green;">
                             <input type="button" value="NO" class="modalButton" @click="close(false)" style="background-color: red;">
-                        </span>
-                        <span v-else-if="props.mode == 'input_warn'">
+                        </template>
+                        <template v-else-if="props.mode == 'input_warn'">
                             <input type="button" value="YES" class="modalButton" @click="close(true)" style="background-color: red;">
                             <input type="button" value="NO" class="modalButton" @click="close(false)" style="background-color: green;">
-                        </span>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -207,14 +208,12 @@ export type ModalMode = 'info' | 'notify' | 'confirm' | 'confirm_warn' | 'input'
 }
 
 .modalButton {
-    appearance: none;
     width: 80px;
     height: 32px;
     border: 4px solid white;
     border-radius: 2px;
     margin: 0px 4px;
     background-color: #555;
-    color: white;
     font-size: 16px;
     transition: 50ms linear transform;
     transform: translateY(0px);

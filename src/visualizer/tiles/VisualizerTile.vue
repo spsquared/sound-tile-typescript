@@ -102,7 +102,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 
 <template>
     <Tile :tile="props.tile" :options-window="{ minWidth: 500, minHeight: 300 }">
-        <template v-slot:content>
+        <template #content>
             <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="visualizerUploadCover" v-if="options.buffer === null">
                 <input type="button" class="uploadButton" @click="uploadSource" value="Upload source audio" title="Upload an audio source file" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
@@ -110,7 +110,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 <input type="button" @click="reuseSource" value="Reuse source" :disabled="uploadSourceDisabled || ReuseVisualizerSource.active.value || TileEditor.lock.locked">
             </div>
         </template>
-        <template v-slot:options>
+        <template #options>
             <TileOptionsSection title="General">
                 <div class="optionsRows">
                     <div>
@@ -424,7 +424,6 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 .visualizerCanvas {
     width: 100%;
     height: 100%;
-    background-color: transparent;
 }
 </style>
 <style scoped>

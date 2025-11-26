@@ -25,7 +25,7 @@ const tileOrientation = computed<string>({
 
 <template>
     <Tile :tile="props.tile" :hide-header="!isCollapsed" :hide-edit="!isCollapsed" :ignore-collapsed-group="isCollapsed && !inCollapsedGroup">
-        <template v-slot:content>
+        <template #content>
             <div :class="{
                 groupChildren: true,
                 groupChildrenCollapsed: isCollapsed,
@@ -34,7 +34,7 @@ const tileOrientation = computed<string>({
                 <component v-for="child of tile.children" :key="child.id.toString()" :is="child.class.component" :tile="child"></component>
             </div>
         </template>
-        <template v-slot:options>
+        <template #options>
             <TileOptionsSection title="General">
                 <label title="Label of tile">
                     Label

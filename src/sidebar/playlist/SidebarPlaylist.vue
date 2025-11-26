@@ -5,8 +5,8 @@ import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 
 <template>
     <SidebarContentWrapper tab="playlist">
-        <template v-slot:header>Playlist</template>
-        <template v-slot:content>
+        <template #header>Playlist</template>
+        <template #content>
             Playlists are not yet implemented
         </template>
     </SidebarContentWrapper>

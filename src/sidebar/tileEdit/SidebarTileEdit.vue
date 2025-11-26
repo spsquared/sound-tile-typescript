@@ -6,8 +6,8 @@ import TileEditItem from './TileEditItem.vue';
 
 <template>
     <SidebarContentWrapper tab="edit">
-        <template v-slot:header>Tile Tree Editor</template>
-        <template v-slot:content>
+        <template #header>Tile Tree Editor</template>
+        <template #content>
             <div id="tileEditUndoControls">
                 <input type="button" id="tileEditUndo" title="Undo layout change" @click="TileEditor.undoLayoutChange()">
                 <input type="button" id="tileEditRedo" title="Redo layout change" @click="TileEditor.redoLayoutChange()">

@@ -128,8 +128,8 @@ onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElement
     <!-- also can you tell I've given up writing good code and just spammed toRaw everywhere and something will inevitably break because of that -->
     <!-- update: no more toRaw spam but instead lots of casting -->
     <SidebarContentWrapper tab="modulators">
-        <template v-slot:header>Modulators</template>
-        <template v-slot:content>
+        <template #header>Modulators</template>
+        <template #content>
             <div :id="horizontal ? 'modSplitContainerHorizontal' : 'modSplitContainerVertical'" ref="container">
                 <div id="modSourceContainer" class="modGroupContainer">
                     <div class="modGroupTitle">Sources</div>

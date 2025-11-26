@@ -141,11 +141,11 @@ watch(() => TileEditor.state.sidebarOpen && TileEditor.state.sidebarTab == 'sour
 
 <template>
     <SidebarContentWrapper tab="sources">
-        <template v-slot:header>
+        <template #header>
             {{ ReuseVisualizerSource.active.value ? 'Select Source' : 'Sources' }}
             <input type="button" class="cancelReuseSource" v-if="ReuseVisualizerSource.active.value" @click="ReuseVisualizerSource.cancelSource" title="Cancel">
         </template>
-        <template v-slot:content>
+        <template #content>
             <SourceItem v-for="source in sources" :key="source.key" ref="sourceItems" :source-key="source.key" :buffer="source.buffer" :tiles="source.tiles" :preview-duration="playbackNodes.get(source.key)?.buffer.duration" :play-preview="(t) => playPreview(source.key, t)" :pause-preview="() => pausePreview(source.key)"></SourceItem>
             <div class="noSources" v-if="sources.length == 0">
                 No sources added!

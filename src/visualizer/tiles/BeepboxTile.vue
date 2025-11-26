@@ -20,13 +20,13 @@ function uploadJson() {
 
 <template>
     <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
-        <template v-slot:content>
+        <template #content>
             such beep and even more box
             <div class="beepboxUploadCover" v-if="true">
                 <input type="button" class="uploadButton" @click="uploadJson" value="Upload JSON song data" title="Upload a JSON export of your BeepBox project" :disabled="uploadJsonDisabled || TileEditor.lock.locked">
             </div>
         </template>
-        <template v-slot:options>
+        <template #options>
             <TileOptionsSection title="General">
                 <div class="optionsRows">
                     <div>

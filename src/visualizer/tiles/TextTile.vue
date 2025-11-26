@@ -32,14 +32,14 @@ const sanitizedText = ref('');
 
 <template>
     <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
-        <template v-slot:content>
+        <template #content>
             <div class="textContain">
                 <div class="textWrapper" :style="{
                     transform: `translate(${modTargets.textOffsetX.value}%, ${modTargets.textOffsetY.value}%) rotateZ(${modTargets.textRotation}deg) scale(${modTargets.textScale.value})`
                 }" v-html="sanitizedText"></div>
             </div>
         </template>
-        <template v-slot:options>
+        <template #options>
             <TileOptionsSection title="General">
                 <div class="optionsRows">
                     <div>

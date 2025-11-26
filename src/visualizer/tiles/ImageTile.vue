@@ -56,7 +56,7 @@ async function uploadImage() {
 
 <template>
     <Tile :tile="props.tile">
-        <template v-slot:content>
+        <template #content>
             <div class="imageWrapper" ref="imageWrapper">
                 <img :class="{
                     image: true,
@@ -69,7 +69,7 @@ async function uploadImage() {
                 <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.lock.locked">
             </div>
         </template>
-        <template v-slot:options>
+        <template #options>
             <TileOptionsSection title="General">
                 <label title="Image source">
                     <input type="button" class="uploadButton" @click="uploadImage" :value="props.tile.imgSrc == '' ? 'Upload image' : 'Replace image'" :disabled="uploadImageDisabled || TileEditor.lock.locked">

@@ -59,7 +59,7 @@ let globalHoverId = 0;
 
 <template>
     <ModulatorItem type="target" :label="props.target.tile?.label ?? props.target.label" :tile="props.target.tile" :connections="connections" :modulation-keys="modKeys" :no-identify="props.noIdentify">
-        <template v-for="key in modKeys" v-slot:[key]>
+        <template v-for="key in modKeys" #[key]>
             <div :class="{
                 targetDrop: true,
                 targetDropAccepting: TileEditor.modulatorDrag.target === props.target && TileEditor.modulatorDrag.targetKey == key,

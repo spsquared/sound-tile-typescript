@@ -103,7 +103,7 @@ function setIdentifyTile(v: boolean) {
         <input type="button" class="tileEditButton" ref="editButton" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" title="Edit tile options" @click="toggleEditTile">
         <div class="tileOutline" v-if="TileEditor.state.identifyTilesSidebar.has(props.tile) || TileEditor.state.identifyTilesLayout.has(props.tile)"></div>
         <DraggableWindow ref="editWindow" v-model="props.tile.editWindowOpen" :title="props.tile.label" :border-color="TileEditor.state.identifyTilesSidebar.has(props.tile) ? 'cyan' : 'white'" frosted overflow-y="scroll" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
-            <template v-slot:bar>
+            <template #bar>
                 <div class="optionsBarIdentify" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
                     ID
                 </div>

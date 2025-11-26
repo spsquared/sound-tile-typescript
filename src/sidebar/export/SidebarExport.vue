@@ -5,8 +5,8 @@ import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 
 <template>
     <SidebarContentWrapper tab="export">
-        <template v-slot:header>Export</template>
-        <template v-slot:content>
+        <template #header>Export</template>
+        <template #content>
             Exporting is not yet implemented
         </template>
     </SidebarContentWrapper>

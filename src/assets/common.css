@@ -151,7 +151,7 @@ a[no-deco] {
 }
 
 code {
-    padding-inline: 0px;
+    padding-inline: 0.2em;
     padding-block: 0.2em;
     font-family: 'Source Code Pro', Courier, monospace;
     background-color: #FFF2;

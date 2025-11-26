@@ -24,12 +24,12 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
 
 <template>
     <Tile :tile="props.tile">
-        <template v-slot:content>
+        <template #content>
             <div class="grassWrapper" ref="wrapper">
                 <img :src="src" :style="{ width: width, height: height }">
             </div>
         </template>
-        <template v-slot:options>
+        <template #options>
             <div class="grassCoolBackground"></div>
             <TileOptionsSection title="General">
                 <label title="Relative size of tile to sibling tiles">
@@ -68,8 +68,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
     animation: 10000ms linear grass-tile-cool-background-super-secret-thingy infinite;
     background-repeat: repeat;
 }
-</style>
-<style>
+
 @keyframes grass-tile-cool-background-super-secret-thingy {
     from {
         background-position: 40px 00px;
