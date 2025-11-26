@@ -37,7 +37,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
                     <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
                 </label>
             </TileOptionsSection>
-            Source: <a href="https://watching-grass-grow.com" target="_blank">https://watching-grass-grow.com</a>
+            <a href="https://www.watching-grass-grow.com/"><img style="border: 2px solid green;" src="https://www.watching-grass-grow.com/watching-grass-grow.gif" alt="watching grass grow" title="watching grass grow"></a>
         </template>
     </Tile>
 </template>
@@ -67,6 +67,7 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
     background-size: 80px 80px;
     animation: 10000ms linear grass-tile-cool-background-super-secret-thingy infinite;
     background-repeat: repeat;
+    z-index: -1;
 }
 
 @keyframes grass-tile-cool-background-super-secret-thingy {
