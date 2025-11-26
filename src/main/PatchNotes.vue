@@ -27,7 +27,7 @@ type SectionIndex = Lowercase<typeof listItems[number]>;
             <div class="notesVersion" v-for="version in patchNotes" ref="versionContainers" v-once>
                 <div :class="['notesScrollAnchor', 'v' + version.version.replaceAll('.', '_')]"></div>
                 <a :href="version.releaseURL" target="_blank" v-if="version.releaseURL !== undefined">
-                    <h2>v{{ version.version }} {{ version.headline }}</h2>
+                    <h2>v{{ version.version }} {{ version.headline }}<div class="openExternalIcon"></div></h2>
                 </a>
                 <h2 v-else>v{{ version.version }} {{ version.headline }}</h2>
                 <div class="notesVersionSection" v-html="version.description"></div>
@@ -119,7 +119,7 @@ type SectionIndex = Lowercase<typeof listItems[number]>;
     text-decoration: none;
 }
 
-.notesVersion a>h2:hover {
+.notesVersion a:hover>h2 {
     text-decoration: dodgerblue underline;
     background-color: #333;
 }
@@ -127,6 +127,23 @@ type SectionIndex = Lowercase<typeof listItems[number]>;
 .notesVersion h3 {
     padding: 0px 0.2em 4px 0.2em;
     border-bottom: 4px solid #333;
+}
+
+.openExternalIcon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-left: 0.25em;
+    mask-size: 1em;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-image: url(@/img/open-external.svg);
+    transform: translateY(0.15em);
+    background-color: #555;
+}
+
+a:hover .openExternalIcon {
+    background-color: dodgerblue;
 }
 
 .notesNavLabel {
