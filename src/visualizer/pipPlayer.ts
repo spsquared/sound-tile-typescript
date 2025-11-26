@@ -1,1 +1,1 @@
-export const pipEnabled = window.documentPictureInPicture !== undefined && window.isSecureContext;
+export const pipEnabled = window.documentPictureInPicture !== undefined && window.isSecureContext && false;
