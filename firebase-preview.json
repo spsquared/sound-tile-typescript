@@ -1,6 +1,6 @@
 {
     "hosting": {
-        "target": "deployment",
+        "target": "preview",
         "public": "dist",
         "ignore": [
             "firebase.json",
