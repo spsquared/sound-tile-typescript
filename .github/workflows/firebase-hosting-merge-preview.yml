@@ -18,4 +18,3 @@ jobs:
           channelId: live
           projectId: soundtile-147da
           target: preview
-          entryPoint: 'firebase/preview'

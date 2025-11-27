@@ -16,4 +16,3 @@ jobs:
           channelId: live
           projectId: soundtile-147da
           target: deployment
-          entryPoint: 'firebase/deployment'
