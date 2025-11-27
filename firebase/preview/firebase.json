@@ -1,10 +1,9 @@
 {
     "hosting": {
-        "public": "dist",
+        "target": "preview",
+        "public": "../../dist",
         "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
+            "firebase.json"
         ],
         "headers": [
             {
@@ -13,10 +12,6 @@
                     {
                         "key": "Content-Security-Policy",
                         "value": "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg https://www.watching-grass-grow.com/watching-grass-grow.gif;"
-                    },
-                    {
-                        "key": "Cache-Control",
-                        "value": "public, max-age=43200"
                     }
                 ]
             }
