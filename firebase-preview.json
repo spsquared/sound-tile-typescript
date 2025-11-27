@@ -1,9 +1,11 @@
 {
     "hosting": {
-        "target": "preview",
-        "public": "../../dist",
+        "target": "deployment",
+        "public": "dist",
         "ignore": [
-            "firebase.json"
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
         ],
         "headers": [
             {

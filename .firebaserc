@@ -1,16 +1,18 @@
 {
-  "projects": {},
-  "targets": {
-    "soundtile-147da": {
-      "hosting": {
-        "deployment": [
-          "sound-tile"
-        ],
-        "preview": [
-          "sound-tile-dev"
-        ]
-      }
-    }
-  },
-  "etags": {}
+    "projects": {
+        "default": "sound-tile-147da"
+    },
+    "targets": {
+        "soundtile-147da": {
+            "hosting": {
+                "deployment": [
+                    "sound-tile"
+                ],
+                "preview": [
+                    "sound-tile-dev"
+                ]
+            }
+        }
+    },
+    "etags": {}
 }
