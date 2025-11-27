@@ -1,5 +1,5 @@
 
-name: Deploy production to Firebase Hosting on merge
+name: Manual deploy production to Firebase Hosting
 on:
   workflow_dispatch
 jobs:
@@ -14,5 +14,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOUNDTILE_147DA }}
           channelId: live
           projectId: soundtile-147da
-          target: deployment
+          target: sound-tile
           entryPoint: 'firebase/deployment'
