@@ -38,5 +38,4 @@ dist-ssr
 
 *.code-workspace
 
-.firebaserc
-*.cache
+.firebase/

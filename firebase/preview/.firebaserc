@@ -1,0 +1,15 @@
+{
+    "projects": {
+        "default": "sound-tile-147da"
+    },
+    "targets": {
+        "soundtile-147da": {
+            "hosting": {
+                "preview": [
+                    "sound-tile-dev"
+                ]
+            }
+        }
+    },
+    "etags": {}
+}
