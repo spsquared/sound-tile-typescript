@@ -1,6 +1,5 @@
 {
     "hosting": {
-        "site": "sound-tile-dev",
         "public": "dist",
         "ignore": [
             "firebase.json",
