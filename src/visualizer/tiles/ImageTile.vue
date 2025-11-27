@@ -60,7 +60,8 @@ async function uploadImage() {
             <div class="imageWrapper" ref="imageWrapper">
                 <img :class="{
                     image: true,
-                    draggableImage: props.tile.editWindowOpen && !inCollapsedGroup
+                    // disabled for now
+                    draggableImage: props.tile.editWindowOpen && !inCollapsedGroup && false
                 }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" :style="{
                     transform: `translate(${modTargets.imgOffsetX.value - 50}%, ${modTargets.imgOffsetY.value - 50}%) rotateZ(${modTargets.imgRotation.value}deg) scale(${modTargets.imgScale.value})`
                 }" @load="resizeImage">
