@@ -11,7 +11,12 @@ const props = defineProps<{
     mode: ModalMode
     /**Color of modal border */
     color?: string
-    /**Background effect */
+    /**
+     * Background effect
+     * - frost-window: frosted glass window background and dimmed screen, disables scroll fading under title & buttons
+     * - frost-screen: opaque window background and frosted screen
+     * - dim-screen: opaque window background and dimmed screen (default)
+     */
     effect?: 'frost-window' | 'frost-screen' | 'dim-screen' // default is dim-screen
 }>();
 
@@ -95,13 +100,13 @@ export type ModalMode = 'info' | 'notify' | 'confirm' | 'confirm_warn' | 'input'
         <Transition @after-enter="emit('open-settled')" @after-leave="emit('close-settled')">
             <div :class="{ modalContainer: true, modalContainerFrost: props.effect == 'frost-screen' }" v-if="open">
                 <div :class="{ modalBody: true, modalBodyFrost: props.effect == 'frost-window' }" ref="body">
-                    <h1 class="modalTitle">
+                    <h1 :class="{ modalTitle: true, modalTitleBackground: props.effect != 'frost-window' }">
                         <slot name="title">{{ props.title ?? '' }}</slot>
                     </h1>
                     <div class="modalContent">
                         <slot :close="close"></slot>
                     </div>
-                    <div class="modalButtons" v-if="props.mode != 'none' || $slots.buttons !== undefined">
+                    <div :class="{ modalButtons: true, modalButtonsBackground: props.effect != 'frost-window' }" v-if="props.mode != 'none' || $slots.buttons !== undefined">
                         <slot name="buttons" :close="close"></slot>
                         <template v-if="props.mode == 'info'">
                             <input type="button" value="CLOSE" class="modalButton" @click="close(true)">
@@ -189,8 +194,12 @@ export type ModalMode = 'info' | 'notify' | 'confirm' | 'confirm_warn' | 'input'
     margin: 0px 0px 12px 0px;
     padding-top: 12px;
     font-size: 40px;
+}
+
+.modalTitleBackground {
     background-color: black;
     box-shadow: 0px 0px 6px 6px black;
+    z-index: 1;
 }
 
 .modalContent {
@@ -203,8 +212,12 @@ export type ModalMode = 'info' | 'notify' | 'confirm' | 'confirm_warn' | 'input'
     margin-top: 12px;
     padding: 0px;
     padding-bottom: 16px;
+}
+
+.modalButtonsBackground {
     background-color: black;
     box-shadow: 0px 0px 6px 6px black;
+    z-index: 1;
 }
 
 .modalButton {
