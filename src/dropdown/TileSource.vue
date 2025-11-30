@@ -37,6 +37,7 @@ function createTile(e: MouseEvent | TouchEvent) {
 
 .tilePreviewImg {
     image-rendering: pixelated;
+    pointer-events: none;
 }
 
 .tilePreviewText {

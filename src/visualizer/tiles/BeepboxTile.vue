@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, ref } from 'vue';
+import FileAccess from '@/components/inputs/fileAccess';
+import ErrorQueue from '@/errorQueue';
 import TileEditor from '../editor';
 import { BeepboxTile } from '../tiles';
 import Tile from './Tile.vue';
+import { BeepboxVisualizer } from '../beepbox';
 import TileOptionsSection from './options/TileOptionsSection.vue';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 
 const props = defineProps<{
     tile: BeepboxTile
@@ -13,8 +18,26 @@ const options = computed(() => props.tile.visualizer.data);
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
 const uploadJsonDisabled = ref(false);
-function uploadJson() {
-
+async function uploadJson() {
+    uploadJsonDisabled.value = true;
+    const source = await FileAccess.openFilePicker({
+        id: 'soundtileUploadSource',
+        types: [{
+            accept: {
+                'application/json': ['.json']
+            }
+        }]
+    });
+    if (source.length > 0) {
+        try {
+            const json = JSON.parse(await source[0].text());
+            options.value.song = BeepboxVisualizer.parseRawJSON(json);
+        } catch (err) {
+            ErrorQueue.error(`${err}\nPerhaps the JSON isn't a BeepBox song?`, 'Could not load song');
+        }
+    }
+    console.log(options.value.song)
+    uploadJsonDisabled.value = false;
 }
 </script>
 
@@ -22,7 +45,7 @@ function uploadJson() {
     <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template #content>
             such beep and even more box
-            <div class="beepboxUploadCover" v-if="true">
+            <div class="beepboxUploadCover" v-if="options.song === null">
                 <input type="button" class="uploadButton" @click="uploadJson" value="Upload JSON song data" title="Upload a JSON export of your BeepBox project" :disabled="uploadJsonDisabled || TileEditor.lock.locked">
             </div>
         </template>
@@ -57,6 +80,19 @@ function uploadJson() {
 </template>
 
 <style scoped>
+.beepboxUploadCover {
+    display: flex;
+    flex-direction: column;
+    row-gap: 4px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
 .optionsRows {
     display: flex;
     flex-direction: column;
@@ -70,5 +106,17 @@ function uploadJson() {
     flex-wrap: wrap;
     column-gap: 12px;
     row-gap: 4px;
+}
+
+.uploadButton {
+    background-color: dodgerblue;
+}
+
+.uploadButton:hover {
+    background-color: color-mix(in hsl, dodgerblue 80%, cyan 20%);
+}
+
+.uploadButton:disabled {
+    background-color: gray;
 }
 </style>

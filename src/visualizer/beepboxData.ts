@@ -33,7 +33,18 @@ export interface BeepboxVisualizerData {
         }
         /**Converted channel data */
         channels: {
-
+            type: 'pitch' | 'drum' | 'mod'
+            name: string
+            patterns: {
+                pitches: number[]
+                points: {
+                    tick: number
+                    pitchBend: number
+                    volume: number
+                }[]
+                continueLast: boolean // shortened
+            }[][]
+            sequence: number[]
         }[]
     } | null;
     channelStyles: {
@@ -55,6 +66,25 @@ export type BeepboxJsonSkeleton = {
     beatsPerBar: number
     ticksPerBeat: number
     beatsPerMinute: number
+    channels: {
+        type: 'pitch' | 'drum' | 'mod'
+        name?: string
+        instruments: unknown[]
+        patterns: {
+            notes: {
+                pitches: number[]
+                points: {
+                    tick: number
+                    pitchBend: number
+                    volume: number
+                    forMod?: boolean
+                }[]
+                continuesLastPattern: boolean
+            }[]
+            instruments: number[]
+        }[]
+        sequence: number[]
+    }[]
 }
 
 export function createDefaultBeepboxVisualizerData(): BeepboxVisualizerData {

@@ -49,7 +49,6 @@ async function uploadSource() {
     uploadSourceDisabled.value = true;
     const source = await FileAccess.openFilePicker({
         id: 'soundtileUploadSource',
-        excludeAcceptAllOption: true,
         types: [{
             accept: {
                 'audio/*': ['.aac', '.mp3', '.oga', '.ogg', '.wav', '.webm', '.m4a']
