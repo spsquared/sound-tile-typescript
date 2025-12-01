@@ -119,7 +119,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     <div class="optionsGrid">
                         <label title="Volume (gain) of tile - affects visualizer and output">
                             Gain ({{ Math.round(options.gain * 100) }}%)
-                            <Slider length="120px" v-model="options.gain" :min="0" :max="1.2" :step="0.01" :scroll-speed="0.25" :title="`Volume: ${Math.round(options.gain * 100)}%`"></Slider>
+                            <Slider length="120px" v-model="options.gain" :min="0" :max="1.2" :step="0.01" :scroll-speed="0.2" :title="`Gain: ${Math.round(options.gain * 100)}%`"></Slider>
                         </label>
                         <label title="Mute - does not affect visualizer, only output">
                             Mute
@@ -190,7 +190,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     <div class="optionsGrid">
                         <label title="Smoothing of frequency data over time">
                             Smoothing<br>({{ Math.round(options.freqOptions.smoothing * 100) }}%)
-                            <Slider length="100px" v-model="options.freqOptions.smoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.freqOptions.smoothing * 100)}%`"></Slider>
+                            <Slider length="100px" v-model="options.freqOptions.smoothing" :min="0" :max="1" :step="0.05" :scroll-speed="0.02" :title="`Smoothing: ${Math.round(options.freqOptions.smoothing * 100)}%`"></Slider>
                         </label>
                         <label title="Cutoff proportion of maximum frequency - dependent on device audio sample rate">
                             Freq Cut<br>({{ Math.round(options.freqOptions.freqCutoff * Visualizer.audioContext.sampleRate / 2) }}Hz)
@@ -216,7 +216,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         </label>
                         <label title="&quot;Reflect&quot; the visualizer across an axis parallel to the frequency axis">
                             Reflect<br>({{ reflectionDisabled ? 0 : Math.round(options.freqOptions.reflect * 100) }}%)
-                            <Slider length="100px" v-model="options.freqOptions.reflect" :min="0" :max="0.5" :step="0.01" :title="`Symmetry: ${Math.round(options.freqOptions.reflect * 100)}%`" :disabled="reflectionDisabled"></Slider>
+                            <Slider length="100px" v-model="options.freqOptions.reflect" :min="0" :max="0.5" :step="0.01" :scroll-speed="0.02" :title="`Symmetry: ${Math.round(options.freqOptions.reflect * 100)}%`" :disabled="reflectionDisabled"></Slider>
                         </label>
                         <label title="Use a logarithmic frequency scale">
                             Log Scale
@@ -265,7 +265,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         </label>
                         <label title="Smoothing of levels over time">
                             Smoothing<br>({{ Math.round(options.levelOptions.frameSmoothing * 100).toString() }}%)
-                            <Slider length="100px" v-model="options.levelOptions.frameSmoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.levelOptions.frameSmoothing * 100)}%`"></Slider>
+                            <Slider length="100px" v-model="options.levelOptions.frameSmoothing" :min="0" :max="1" :step="0.05" :scroll-speed="0.02" :title="`Smoothing: ${Math.round(options.levelOptions.frameSmoothing * 100)}%`"></Slider>
                         </label>
                         <label title="Scaling factor of frequency data">
                             Scale
@@ -273,7 +273,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         </label>
                         <label title="&quot;Reflect&quot; the visualizer across an axis parallel to the channel axis">
                             Reflect<br>({{ Math.round(options.levelOptions.reflect * 100) }}%)
-                            <Slider length="100px" v-model="options.levelOptions.reflect" :min="0" :max="0.5" :step="0.01" :title="`Symmetry: ${Math.round(options.levelOptions.reflect * 100)}%`"></Slider>
+                            <Slider length="100px" v-model="options.levelOptions.reflect" :min="0" :max="0.5" :step="0.01" :scroll-speed="0.02" :title="`Symmetry: ${Math.round(options.levelOptions.reflect * 100)}%`"></Slider>
                         </label>
                     </div>
                     <div class="optionsGrid">
@@ -317,9 +317,9 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
             <TileOptionsSection title="Bar Style" v-show="barModes.includes(options.mode)">
                 <div class="optionsRows">
                     <div>
-                        <label title="Thickness of bars in proportion to available width per bar">
+                        <label title="Thickness of bars in proportion to available width per bar (set to 1.1 to prevent aliasing with full bars)">
                             Size
-                            <StrictNumberInput v-model="options.freqOptions.bar.size" :min="0" :max="1" :step="0.05" :strict-step="0.01"></StrictNumberInput>
+                            <StrictNumberInput v-model="options.freqOptions.bar.size" :min="0" :max="1" :strict-max="1.1" :step="0.05" :strict-step="0.01"></StrictNumberInput>
                         </label>
                         <label title="Minimum length of bars when data is zero">
                             Min Length
@@ -368,7 +368,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 <div class="optionsGrid">
                     <label title="Smoothing of previous waveform &quot;memory&quot; over time">
                         Smoothing<br>({{ Math.round(options.waveOptions.correlation.frameSmoothing * 100) }}%)
-                        <Slider length="100px" v-model="options.waveOptions.correlation.frameSmoothing" :min="0" :max="1" :step="0.05" :title="`Smoothing: ${Math.round(options.waveOptions.correlation.frameSmoothing * 100)}%`"></Slider>
+                        <Slider length="100px" v-model="options.waveOptions.correlation.frameSmoothing" :min="0" :max="1" :step="0.05" :scroll-speed="0.02" :title="`Smoothing: ${Math.round(options.waveOptions.correlation.frameSmoothing * 100)}%`"></Slider>
                     </label>
                     <label title="Number of samples in initial sampling of frame, higher is better but slower">
                         Samples
@@ -376,7 +376,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     </label>
                     <label title="Randomly sample points when sampling error. For FFT size N, N*T non-unique random samples are chosen - best for larger correlation windows">
                         Stochastic<br>({{ options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : (Math.floor(options.waveOptions.correlation.stochasticSampling * 100) + '%') }})
-                        <Slider length="100px" v-model="options.waveOptions.correlation.stochasticSampling" :min="0" :max="1" :step="0.05" :title="`Sample count: ${options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : Math.floor(options.waveOptions.correlation.stochasticSampling * options.fftSize)}`" disabled></Slider>
+                        <Slider length="100px" v-model="options.waveOptions.correlation.stochasticSampling" :min="0" :max="1" :step="0.05" :scroll-speed="0.1" :title="`Sample count: ${options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : Math.floor(options.waveOptions.correlation.stochasticSampling * options.fftSize)}`" disabled></Slider>
                     </label>
                     <label title="Gain of gradient descent error minimization of frame">
                         GD<br>Gain

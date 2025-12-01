@@ -52,6 +52,7 @@ const emit = defineEmits<{
 // scrollValue allows snapping to step while providing smooth control using scroll wheel
 const scrollValue = ref(value.value);
 function onWheel(e: WheelEvent) {
+    if (props.disabled) return;
     // sideways scrolling often triggers nagivation and sucks on mice so we provide both options
     scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value - e.deltaY * (props.step ?? 1) * (props.scrollSpeed ?? 1), props.max ?? Infinity));
     if (!props.vertical) scrollValue.value = Math.max(props.min ?? -Infinity, Math.min(scrollValue.value + e.deltaX * (props.step ?? 1) * (props.scrollSpeed ?? 1), props.max ?? Infinity));
