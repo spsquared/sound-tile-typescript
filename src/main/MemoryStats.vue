@@ -26,6 +26,7 @@ onMounted(() => {
     canvas.value.height = 80 * window.devicePixelRatio;
     const ctx = canvas.value.getContext('2d')!;
     if ('memory' in performance) {
+        const width = canvas.value.width;
         const height = canvas.value.height; // buh types
         setInterval(() => {
             const lastHeapSize = heapSize.value;
@@ -42,20 +43,20 @@ onMounted(() => {
                 ctx.font = `${10 * window.devicePixelRatio}px monospace`;
                 const min = Math.min(...memoryHistory.value);
                 const max = Math.max(...memoryHistory.value);
+                const range = max - min;
                 ctx.fillStyle = 'white';
                 ctx.textBaseline = 'top';
                 ctx.fillText(`${max.toFixed(2)}MB`, 0, 0);
                 ctx.textBaseline = 'bottom';
                 ctx.fillText(`${min.toFixed(2)}MB`, 0, height);
-                ctx.transform(200 / 99, 0, 0, -height + 20, 0, height - 10);
+                ctx.transform(width / 119, 0, 0, -height + 20, 0, height - 10);
                 const arr = memoryHistory.value;
                 ctx.lineWidth = 2;
                 ctx.lineJoin = 'bevel';
                 ctx.lineCap = 'square';
                 ctx.strokeStyle = 'cyan';
                 ctx.beginPath();
-                ctx.moveTo(0, arr[0] / max);
-                const range = max - min;
+                ctx.moveTo(0, (arr[0] - min) / range);
                 for (let i = 0; i < arr.length; i++) {
                     ctx.lineTo(i, (arr[i] - min) / range);
                 }

@@ -1,4 +1,4 @@
-import { effectScope, EffectScope, reactive } from "vue";
+import { effectScope, EffectScope, markRaw, reactive } from "vue";
 import { DeepPartial } from "@/components/utils";
 import { BeepboxJsonSkeleton, BeepboxVisualizerData, ScaleKeys } from "./beepboxData";
 
@@ -24,6 +24,7 @@ export class BeepboxVisualizer {
      * @throws Will throw an error if the object is not a valid BeepBox song JSON
      */
     static parseRawJSON(raw: any): BeepboxVisualizerData['song'] {
+        const start = performance.now();
         // we probably don't need such a bulletproof data valiation thing but like...
         // it's also probably not bulletproof
         if (raw == undefined) throw new TypeError('Invalid song data: data is nullish');
@@ -39,7 +40,7 @@ export class BeepboxVisualizer {
         const abortInvalidNoteData = (): never => {
             throw new TypeError('Invalid song data: invalid note data');
         };
-        return {
+        const song: BeepboxVisualizerData['song'] = {
             key: ScaleKeys[json.key as any] as any ?? ScaleKeys.C,
             bpm: json.beatsPerMinute,
             barLength: json.beatsPerBar * json.ticksPerBeat,
@@ -77,6 +78,8 @@ export class BeepboxVisualizer {
                 } satisfies NonNullable<BeepboxVisualizerData['song']>['channels'][number];
             })
         };
+        console.debug(`Loaded BeepBox in ${performance.now() - start}ms`);
+        return markRaw(song);
     }
 
     destroy(): void {
