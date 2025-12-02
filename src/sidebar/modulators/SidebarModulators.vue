@@ -93,7 +93,10 @@ const targetList = computed(() => {
     return tiles.sort((a, b) => ((a.tile?.id ?? 0n) - (b.tile?.id ?? 0n)) < 0 ? -1 : 1);
 });
 // this isnt cumbersome at all
-const connectionList = computed<Modulation.Connection[]>(() => sourceList.value.flatMap((source) =>
+const connectionList = computed<Modulation.Connection[]>(() => [
+    MediaPlayer.media.current.globalModulator,
+    ...sourceList.value
+].flatMap((source) =>
     // this is the kind of bullshit I have to pull because of ref unwrapping
     Object.entries(source.connectedTargets).flatMap(([sourceKey, targets]) =>
         targets.map(([target, targetKey, transforms]) => ({

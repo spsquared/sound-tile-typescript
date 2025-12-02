@@ -220,7 +220,6 @@ function setIdentifyTile(v: boolean) {
     grid-row: 2;
     grid-column: 1 / 3;
     display: flex;
-    /* newest at top */
     flex-direction: column;
     row-gap: 3px;
 }

@@ -12,6 +12,28 @@ type PatchNoteEntry = {
 
 export const patchNotes: readonly PatchNoteEntry[] = [
     {
+        version: '2.0.1',
+        releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.0.1',
+        headline: 'QoL improvements',
+        description: `
+            <p>
+            </p>
+        `,
+        changes: [
+            'Modulator targets will now scroll into view when hovered over, since manual scrolling is not possible in drag-and-drop',
+            'Lowered the scrolling sensitivity of visualizer settings sliders',
+            'Reversed order of modulation list to be more intuitive'
+        ],
+        fixes: [
+            'Added missing entries to "connections" section of modulation sidebar tab',
+            'Fixed Trix text editor changing font sizes of text when highlighting it',
+            'Fixed issue that allowed disabled sliders to be scrolled',
+            'Fixed scroll bars appearing when windows are moved to the edge of the screen in some cases',
+            'Fixed cut-off modulation targets in Text Tile window'
+        ],
+        notes: []
+    },
+    {
         version: '2.0.0',
         releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.0.0',
         headline: 'The Big Rewrite',
@@ -29,7 +51,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
                 <b>New features are already underway!</b> Here's a <s>sneak peek</s> sneek peak: <i>Playlists; a standalone app;
                 a BeepBox song visualizer; MIDI visualizer; and video exporting!</i>
             </p>
-            `,
+        `,
         changes: [
             ['Rewrote entire codebase from scratch in TypeScript and Vue', [
                 'No more spaghetti monoliths!',
