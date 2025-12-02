@@ -36,7 +36,6 @@ async function uploadJson() {
             ErrorQueue.error(`${err}\nPerhaps the JSON isn't a BeepBox song?`, 'Could not load song');
         }
     }
-    console.log(options.value.song)
     uploadJsonDisabled.value = false;
 }
 </script>

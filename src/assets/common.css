@@ -8,6 +8,8 @@ body {
     scroll-behavior: smooth;
     /* disables swipe navigation for most browsers */
     overscroll-behavior: none;
+    /* floating point error in window drag-and-drop can still spawn scrollbars */
+    overflow: clip;
 }
 
 #root {
