@@ -21,6 +21,7 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
     ['align-left', 'align-center', 'align-right', 'align-justified'].forEach((tag) => {
         Trix.config.blockAttributes[tag.substring(0, 5) + tag.charAt(6).toUpperCase() + tag.substring(7)] = {
             tagName: tag,
+            parse: true,
             // there's no way to just make it its own thing
             nestable: false,
             exclusive: true
@@ -68,11 +69,16 @@ export const trixLoadPromise: Promise<void> = new Promise<void>(async (resolve) 
                 // not checking event target since this is the editor element
                 if (!editor.attributeIsActive('fontSize')) {
                     // when creating new blocks fontSize is lost, wait is necessary because event is fired at weird time
-                    setTimeout(() => setValue(currentValue));
+                    // selecting text with multiple font sizes also enters this case so uh avoid borking the text
+                    const selection = editor.getSelectedRange();
+                    if (selection[1] - selection[0] == 0) setTimeout(() => setValue(currentValue));
                 } else {
                     const attributes = editor.getDocument().getCommonAttributesAtRange(editor.getSelectedRange());
                     if ('fontSize' in attributes) setValue(Number(attributes.fontSize.toString().replace('em', '')) * 10, false);
                     else input.value = '';
+                }
+                if (!['alignLeft', 'alignCenter', 'alignRight', 'alignJustified'].some((attr) => editor.attributeIsActive(attr))) {
+                    editor.activateAttribute('alignLeft');
                 }
             });
             setValue(20);
