@@ -77,7 +77,7 @@ const sanitizedText = ref('');
             </TileOptionsSection>
             <TileOptionsSection title="Modulation">
                 <!-- janky wrapper to get the thing to fit and avoid cutting off the items -->
-                <div style="width: 100%; min-height: calc(128px + 32px);">
+                <div style="width: 100%; min-height: calc(168px + 32px);">
                     <ModulatorTargetItem :target="props.tile.modulation" no-identify></ModulatorTargetItem>
                 </div>
             </TileOptionsSection>

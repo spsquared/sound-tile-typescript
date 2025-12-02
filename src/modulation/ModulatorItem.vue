@@ -17,12 +17,15 @@ const props = defineProps<{
 
 // targets open drag and drop list when user is dragging a source and any part of the item is hovered over
 const modItem = useTemplateRef('modItem');
+const modDragScrollAnchor = useTemplateRef('modDragScrollAnchor');
 const dragHovering = ref(false);
 if (props.type == 'target') {
     const hoveredElement = inject<ShallowRef<Element | null>>('modulatorHoveredElement');
     if (hoveredElement === undefined) throw new Error('ModulatorItem target missing modulatorHoveredElement injection!');
     watch([hoveredElement, () => TileEditor.modulatorDrag.source], () => {
         dragHovering.value = (modItem.value?.contains(hoveredElement.value) ?? false) && TileEditor.modulatorDrag.source !== null;
+        // sometimes the items are cut off and scrolling can't be done while drag-and-drop is active
+        if (dragHovering.value) modDragScrollAnchor.value?.scrollIntoView({ behavior: 'smooth' });
     });
 }
 
@@ -44,7 +47,8 @@ function setIdentifyTile(v: boolean) {
     }" ref="modItem" :title="props.tile !== null ? `Tile associated with source: ${props.label}` : `Source: ${props.label}`" @mouseenter="setIdentifyTile(true)" @mouseleave="setIdentifyTile(false)">
         <div class="modLabel">{{ props.label }}</div>
         <div class="modDragContainer">
-            <div class="modDragDropdown" ref="modDragDropdown">
+            <div class="modDragDropdown">
+                <div class="modDragScrollAnchor" ref="modDragScrollAnchor"></div>
                 <div class="modDragItems" ref="modDragItems">
                     <div class="modDragItem" v-for="key in props.modulationKeys">
                         <div>{{ key }}</div>
@@ -180,6 +184,13 @@ function setIdentifyTile(v: boolean) {
     pointer-events: none;
 }
 
+.modDragScrollAnchor {
+    position: absolute;
+    /* 44px to account for header and 16px more so scrolling up is possible */
+    top: -60px;
+    height: v-bind("dragItemsHeight + 'px'");
+}
+
 .modDragItems {
     display: grid;
     grid-template-columns: 1fr min-content;
@@ -210,7 +221,7 @@ function setIdentifyTile(v: boolean) {
     grid-column: 1 / 3;
     display: flex;
     /* newest at top */
-    flex-direction: column-reverse;
+    flex-direction: column;
     row-gap: 3px;
 }
 </style>
