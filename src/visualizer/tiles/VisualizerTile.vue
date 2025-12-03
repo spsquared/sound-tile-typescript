@@ -317,9 +317,9 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
             <TileOptionsSection title="Bar Style" v-show="barModes.includes(options.mode)">
                 <div class="optionsRows">
                     <div>
-                        <label title="Thickness of bars in proportion to available width per bar (set to 1.1 to prevent aliasing with full bars)">
+                        <label title="Thickness of bars in proportion to available width per bar (set to >1 to prevent aliasing with full bars)">
                             Size
-                            <StrictNumberInput v-model="options.freqOptions.bar.size" :min="0" :max="1" :strict-max="1.1" :step="0.05" :strict-step="0.01"></StrictNumberInput>
+                            <StrictNumberInput v-model="options.freqOptions.bar.size" :min="0" :max="1" :strict-max="1.5" :step="0.05" :strict-step="0.01"></StrictNumberInput>
                         </label>
                         <label title="Minimum length of bars when data is zero">
                             Min Length

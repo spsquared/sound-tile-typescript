@@ -22,7 +22,8 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         changes: [
             'Modulator targets will now scroll into view when hovered over, since manual scrolling is not possible in drag-and-drop',
             'Lowered the scrolling sensitivity of visualizer settings sliders',
-            'Reversed order of modulation list to be more intuitive'
+            'Reversed order of modulation list to be more intuitive',
+            'Allow bar widths >1 for some niche uses of bar mode'
         ],
         fixes: [
             'Added missing entries to "connections" section of modulation sidebar tab',

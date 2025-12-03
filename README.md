@@ -12,4 +12,4 @@ There will be a better showcase and tutorial of features in the future, but for 
 Sample screenshots:
 | | | |
 |-|-|-|
-|![](https://raw.githubusercontent.com/spsquared/sound-tile/main/client/assets/pwa-screenshot-1.png)|![](https://raw.githubusercontent.com/spsquared/sound-tile/main/client/assets/pwa-screenshot-2.png)|![](https://raw.githubusercontent.com/spsquared/sound-tile/main/client/assets/pwa-screenshot-4.png)|
+|![](https://raw.githubusercontent.com/spsquared/sound-tile-typescript/main/public/pwa-assets/screenshot-1.png)|![](https://raw.githubusercontent.com/spsquared/sound-tile-typescript/main/public/pwa-assets/screenshot-2.png)|![](https://raw.githubusercontent.com/spsquared/sound-tile-typescript/main/public/pwa-assets/screenshot-3.png)|

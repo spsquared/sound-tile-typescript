@@ -88,6 +88,7 @@ provide('showPatchNotesRef', showPatchNotes);
     grid-template-columns: 1fr min-content min-content 1fr;
     grid-template-areas: "a logo title b" "a logo version b";
     column-gap: 0.3em;
+    user-select: none;
 }
 
 .appInfoTitle>img {
