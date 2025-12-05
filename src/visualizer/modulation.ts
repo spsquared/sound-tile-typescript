@@ -154,6 +154,7 @@ export namespace Modulation {
                     for (const [_, targetKey] of modMap) {
                         publicTarget.connectionTrackers.delete(targetKey);
                         publicTarget.connectedSources[targetKey] = null;
+                        publicTarget.targets[targetKey].value = publicTarget.initialValues[targetKey];
                     }
                 }
                 this.connectionTrackers.clear();
@@ -175,6 +176,7 @@ export namespace Modulation {
                     publicTarget.connectionTrackers.delete(targetKey);
                     (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t]) => toRaw(t) !== normTarget); // did I mention that I hate this line?
                     (normTarget.connectedSources as any)[targetKey] = null; // shut up "can only be indexed for reading"
+                    targetRef.value = publicTarget.initialValues[targetKey];
                 }
                 this.connectionTrackers.delete(normTarget);
                 return;
@@ -189,6 +191,7 @@ export namespace Modulation {
             publicTarget.connectionTrackers.delete(targetKey!);
             (this.connectedTargets[sourceKey as keyof Props & string] as any) = this.connectedTargets[sourceKey as keyof Props & string].filter(([t, k]) => toRaw(t) !== normTarget || k !== targetKey); // this one's even worse
             publicTarget.connectedSources[targetKey!] = null;
+            targetRef.value = publicTarget.initialValues[targetKey!];
         }
 
         /**
@@ -217,6 +220,8 @@ export namespace Modulation {
         /**Also used for UI purposes */
         readonly tile: Tile | null = null;
 
+        /**Keep the initial values for resetting on disconnect */
+        private readonly initialValues: Props;
         /**Helps efficiently disconnect all sources, maps targets to tuple of source and source property, also used to enumerate sources */
         private readonly connectionTrackers: Map<keyof Props, [Source<any>, string]> = markRaw(new Map());
 
@@ -235,10 +240,11 @@ export namespace Modulation {
          * will be used to determine the type of a source.
          */
         constructor(initialValues: Props, { typeLabels, label, tile }: { typeLabels?: Partial<Target<Props>['typeLabels']>, label?: string, tile?: Tile } = { typeLabels: {} }) {
+            this.initialValues = { ...initialValues }; // shallow
             // internally, these are normal writeable refs, but we only expose readonly ones (.effect is irrelevant so its fine)
             // markRaw prevents automatic ref unwrapping shitting all over the types
-            this.targets = markRaw(Object.entries(initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
-            this.typeLabels = markRaw({ ...Object.entries(initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
+            this.targets = markRaw(Object.entries(this.initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
+            this.typeLabels = markRaw({ ...Object.entries(this.initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
             this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
@@ -284,6 +290,7 @@ export namespace Modulation {
             // ignoring typing on transforms because TS can't tell that the type of the properties are the same
             [K in keyof Props]: [Source<any>, string, Transform<any>[]] | null
         };
+        readonly initialValues: Props;
     }
 
     /**Helper for standardizing modulation sources */
