@@ -95,12 +95,13 @@ function setIdentifyTile(v: boolean) {
     <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
         <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup)">
+            <input type="button" class="tileEditButton" title="Edit tile options" @click="toggleEditTile"></input>
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" title="Move tile" @mousedown="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
-        <input type="button" class="tileEditButton" ref="editButton" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" title="Edit tile options" @click="toggleEditTile">
+        <input type="button" class="tileFloatingEditButton" ref="editButton" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" title="Edit tile options" @click="toggleEditTile">
         <div class="tileOutline" v-if="TileEditor.state.identifyTilesSidebar.has(props.tile) || TileEditor.state.identifyTilesLayout.has(props.tile)"></div>
         <DraggableWindow ref="editWindow" v-model="props.tile.editWindowOpen" :title="props.tile.label" :border-color="TileEditor.state.identifyTilesSidebar.has(props.tile) ? 'cyan' : 'white'" frosted overflow-y="scroll" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
             <template #bar>
@@ -189,16 +190,29 @@ function setIdentifyTile(v: boolean) {
     flex-grow: 1;
 }
 
+.tileEditButton,
 .tileDeleteButton {
     width: 20px;
     height: 20px;
     border-radius: 0px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.tileEditButton {
+    background-color: transparent;
+    background-image: url(@/img/edit.svg);
+    background-size: 60% 60%;
+}
+
+.tileEditButton:hover {
+    background-color: dodgerblue;
+}
+
+.tileDeleteButton {
     background-color: red;
     background-image: url(@/img/delete-dark.svg);
-    background-position: center;
     background-size: 80% 80%;
-    background-repeat: no-repeat;
-    cursor: pointer;
 }
 
 .tileDeleteButton:hover {
@@ -214,7 +228,7 @@ function setIdentifyTile(v: boolean) {
     cursor: not-allowed;
 }
 
-.tileEditButton {
+.tileFloatingEditButton {
     position: absolute;
     bottom: 4px;
     left: 4px;
@@ -223,14 +237,14 @@ function setIdentifyTile(v: boolean) {
     background-color: dodgerblue;
     background-image: url(@/img/edit.svg);
     background-position: center;
-    background-repeat: no-repeat;
     background-size: 60% 60%;
+    background-repeat: no-repeat;
     opacity: 0;
     transition: 100ms linear opacity;
 }
 
-.tileEditButton:hover,
-.tileEditButton:focus {
+.tileFloatingEditButton:hover,
+.tileFloatingEditButton:focus-visible {
     opacity: 1;
 }
 

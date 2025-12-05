@@ -20,6 +20,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
             </p>
         `,
         changes: [
+            'Added a second tile settings button to tile header bars',
             'Modulator targets will now scroll into view when hovered over, since manual scrolling is not possible in drag-and-drop',
             'Lowered the scrolling sensitivity of visualizer settings sliders',
             'Reversed order of modulation list to be more intuitive',
