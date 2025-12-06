@@ -5,6 +5,7 @@ type PatchNoteEntry = {
     readonly releaseURL?: string
     readonly headline: string
     readonly description: string
+    readonly breaking: readonly (string | readonly [string, string[]])[]
     readonly changes: readonly (string | readonly [string, string[]])[]
     readonly fixes: readonly (string | readonly [string, string[]])[]
     readonly notes: readonly (string | readonly [string, string[]])[]
@@ -21,6 +22,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
                 Any and all constructive feedback is appreciated! You can <a href="${repositoryURL}/issues" target="_blank">create an issue on GitHub</a> or contact me directly.
             </p>
         `,
+        breaking: [],
         changes: [
             'Added a second tile settings button to tile header bars',
             'Modulator targets will now scroll into view when hovered over, since manual scrolling is not possible in drag-and-drop',
@@ -59,6 +61,12 @@ export const patchNotes: readonly PatchNoteEntry[] = [
                 a BeepBox song visualizer; MIDI visualizer; and video exporting!</i>
             </p>
         `,
+        breaking: [
+            ['Text size is now proportional to tile height rather than viewport height', [
+                'Sound Tile will attempt to convert the text units but this conversion will not always work',
+                'Text in legacy layouts may appear large and require changes'
+            ]]
+        ],
         changes: [
             ['Rewrote entire codebase from scratch in TypeScript and Vue', [
                 'No more spaghetti monoliths!',
@@ -132,6 +140,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
                 The original Sound Tile didn't have a versioning system, but I'm putting this here anyway.
             </p>
         `,
+        breaking: [],
         changes: [],
         fixes: [],
         notes: [

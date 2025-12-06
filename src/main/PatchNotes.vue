@@ -17,7 +17,7 @@ function scrollToVersion(version: string) {
 }
 </script>
 <script lang="ts">
-const listItems = ['Changes', 'Fixes', 'Notes'] as const;
+const listItems = ['Breaking', 'Changes', 'Fixes', 'Notes'] as const;
 type SectionIndex = Lowercase<typeof listItems[number]>;
 </script>
 
