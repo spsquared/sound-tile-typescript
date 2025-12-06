@@ -19,7 +19,8 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         description: `
             <p>
                 Per user feedback, some minor changes have been made to make Sound Tile smoother to use.
-                Any and all constructive feedback is appreciated! You can <a href="${repositoryURL}/issues" target="_blank">create an issue on GitHub</a> or contact me directly.
+                A number of bugs were squashed, too. Any and all constructive feedback is appreciated! You can
+                <a href="${repositoryURL}/issues" target="_blank">create an issue on GitHub</a> or contact me directly.
             </p>
         `,
         breaking: [],
