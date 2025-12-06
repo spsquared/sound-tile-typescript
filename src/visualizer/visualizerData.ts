@@ -162,7 +162,7 @@ export function createDefaultVisualizerData(): VisualizerData {
                 ledEffect: false,
                 ledCount: 64,
                 ledSize: 0.8,
-                minLength: 2
+                minLength: 4
             },
             line: {
                 thickness: 2,
@@ -205,7 +205,7 @@ export function createDefaultVisualizerData(): VisualizerData {
             ledEffect: false,
             ledCount: 64,
             ledSize: 0.8,
-            minLength: 2
+            minLength: 4
         },
         rotate: false,
         flipX: false,
