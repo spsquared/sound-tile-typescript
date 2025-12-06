@@ -17,6 +17,8 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         headline: 'QoL improvements',
         description: `
             <p>
+                Per user feedback, some minor changes have been made to make Sound Tile smoother to use.
+                Any and all constructive feedback is appreciated! You can <a href="${repositoryURL}/issues" target="_blank">create an issue on GitHub</a> or contact me directly.
             </p>
         `,
         changes: [
@@ -29,10 +31,11 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         ],
         fixes: [
             'Added missing entries to "connections" section of modulation sidebar tab',
+            'Fixed new version message not showing',
             'Fixed Trix text editor changing font sizes of text when highlighting it',
             'Fixed issue that allowed disabled sliders to be scrolled',
             'Fixed scroll bars appearing when windows are moved to the edge of the screen in some cases',
-            'Fixed cut-off modulation targets in Text Tile window'
+            'Fixed cut-off modulation targets in Text Tile window',
         ],
         notes: []
     },

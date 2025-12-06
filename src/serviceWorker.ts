@@ -8,7 +8,12 @@ self2.addEventListener('install', (e) => {
         const cache = await caches.open(cacheName);
         await cache.addAll([
             '/',
-            '/index.html'
+            '/index.html',
+            '/favicon.png',
+            '/fonts.css',
+            '/SourceCodePro.ttf',
+            '/logo.png',
+            '/logo-border.png'
             // until I figure out how to get the build output filenames I can't get these ahead of time
         ]);
         self2.skipWaiting(); // idk what this ACTUALLY does and if it'll break things but it's probably fine
@@ -29,13 +34,28 @@ self2.addEventListener('activate', (e) => {
     });
 });
 
+let offlineMode = false;
 async function getCached(req: Request): Promise<Response> {
     const cache = await caches.open(cacheName);
+    if (offlineMode) {
+        // use cache immediately and check if online by trying to update cache
+        fetch(req).then((res) => {
+            if (res.ok) {
+                cache.put(req, res.clone());
+                offlineMode = false;
+                console.debug('Switched to online cache mode');
+            }
+        }).catch(); // oh well still offline
+        return await cache.match(req) ?? Response.error();
+    }
+    // fetch first and then cache
     return fetch(req).then((res) => {
         if (res.ok) cache.put(req, res.clone());
         return res;
     }).catch(async () => {
         // fetch failed, attempt to respond with something
+        offlineMode = true;
+        console.debug('Switched to offline cache mode');
         return await cache.match(req) ?? Response.error();
     });
 }

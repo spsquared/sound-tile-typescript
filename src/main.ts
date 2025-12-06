@@ -4,12 +4,12 @@ import '@/components/inputs/trix';
 
 import { createApp } from 'vue';
 import App from '@/main/App.vue';
+import { setupServiceWorker } from './serviceWorkerClient';
 
 const app = createApp(App);
 app.mount("#root");
+if (import.meta.env.PROD) setupServiceWorker();
 
-import { version } from './constants';
-import ErrorQueue from './errorQueue';
 import TileEditor from './visualizer/editor';
 import MediaPlayer from './visualizer/mediaPlayer';
 import { Media } from './visualizer/media';
@@ -26,29 +26,6 @@ document.addEventListener('keydown', (e) => {
     // for some reason enter doesn't trigger checkboxes (also jank label button)
     if (key == 'enter' && e.target instanceof HTMLElement && e.target.matches('input[type=checkbox],label[button]')) e.target.click();
 });
-
-// register service worker
-if (import.meta.env.PROD) (async () => {
-    try {
-        navigator.serviceWorker?.register('/serviceWorker.js', { scope: '/', type: 'module' });
-    } catch (err) {
-        console.error('Service worker installation failed:', err);
-        ErrorQueue.warn('You can safely ignore this message unless you wish to use Sound Tile offline.', 'Service worker installation failed')
-    }
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.info('Service worker was updated, indicating a new version is potentially available.');
-    });
-    navigator.serviceWorker.addEventListener('message', (e) => {
-        // still only one message type
-        if (typeof e.data == 'string') {
-            // outdated version!
-            if (e.data !== version) {
-                console.info(`Version ${e.data} is available!`);
-
-            }
-        }
-    });
-})();
 
 // PWA code that got slapped on at the end
 window.launchQueue?.setConsumer(async (params) => {

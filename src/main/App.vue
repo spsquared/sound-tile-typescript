@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { provide, ref } from 'vue';
-import { copyright, dreamberd, repositoryURL, version } from '@/constants';
+import { copyright, dreamberd, reloadPage, repositoryURL, version } from '@/constants';
 import FullscreenModal from '@/components/FullscreenModal.vue';
 import Dropdown from '@/dropdown/Dropdown.vue';
 import Sidebar from '@/sidebar/Sidebar.vue';
@@ -12,10 +12,16 @@ import TutorialMaster from './TutorialMaster.vue';
 import PatchNotes from './PatchNotes.vue';
 import ErrorQueue from './ErrorQueue.vue';
 
-const showAppInfo = ref(false);
 provide('showAppInfoRef', showAppInfo);
-const showPatchNotes = ref(false);
 provide('showPatchNotesRef', showPatchNotes);
+provide('showNewVersionNoticeRef', showNewVersionNotice);
+</script>
+<script lang="ts">
+export const showAppInfo = ref(false);
+export const showPatchNotes = ref(false);
+export const showNewVersionNotice = ref(false);
+export const newVersionReload = ref(false);
+export const newVersionNumber = ref('');
 </script>
 
 <template>
@@ -47,6 +53,22 @@ provide('showPatchNotesRef', showPatchNotes);
             <input type="button" value="PATCH NOTES" class="patchNotesButton" @click="() => { opts.close(true); showPatchNotes = true }"></input>
         </template>
     </FullscreenModal>
+    <FullscreenModal v-model="showNewVersionNotice" :title="newVersionReload ? 'New Version Available!' : 'Updated Sound Tile!'" mode="info" effect="frost-window">
+        <template #default>
+            <template v-if="newVersionReload">
+                A new version of Sound Tile is available: v{{ newVersionNumber }}
+                <br>
+                You can <a href="">Reload</a> to use the new version now!
+            </template>
+            <template v-else>
+                Sound Tile has been updated to v{{ version }}
+            </template>
+        </template>
+        <template #buttons=opts>
+            <input v-if="newVersionReload" type="button" value="RELOAD" class="reloadButton" @click="() => { opts.close(true); reloadPage(); }"></input>
+            <input v-else type="button" value="PATCH NOTES" class="patchNotesButton" @click="() => { opts.close(true); showPatchNotes = true; }"></input>
+        </template>
+    </FullscreenModal>
     <FullscreenModal v-model="showPatchNotes" title="Patch Notes" mode="info" effect="frost-screen">
         <Suspense>
             <PatchNotes #default></PatchNotes>
@@ -61,12 +83,12 @@ provide('showPatchNotesRef', showPatchNotes);
 </template>
 
 <style scoped>
+.reloadButton,
 .patchNotesButton {
     height: 32px;
     border: 4px solid white;
     border-radius: 2px;
     margin: 0px 4px;
-    background-color: var(--logo-blue);
     color: white;
     font-size: 16px;
     transition: 50ms linear transform;
@@ -74,10 +96,20 @@ provide('showPatchNotesRef', showPatchNotes);
     cursor: pointer;
 }
 
+.reloadButton {
+    background-color: #555;
+}
+
+.patchNotesButton {
+    background-color: var(--logo-blue);
+}
+
+.reloadButton:hover,
 .patchNotesButton:hover {
     transform: translateY(-2px);
 }
 
+.reloadButton:active,
 .patchNotesButton:active {
     transform: translateY(2px);
 }
