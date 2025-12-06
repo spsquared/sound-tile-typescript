@@ -58,13 +58,19 @@ async function uploadSource() {
     if (source.length > 0) {
         const buffer = await source[0].arrayBuffer();
         options.value.buffer = buffer;
+        // auto-rename tile if it's the default name
+        if (props.tile.label.trim() == props.tile.class.name) props.tile.label += ` [${source[0].name}]`;
     }
     uploadSourceDisabled.value = false;
 }
 async function reuseSource() {
     uploadSourceDisabled.value = true;
     const source = await ReuseVisualizerSource.pickExistingSource();
-    if (source !== null) options.value.buffer = source;
+    if (source !== null) {
+        options.value.buffer = source[0];
+        // auto-rename tile if it's the default name
+        if (props.tile.label.trim() == props.tile.class.name && source[1] != '') props.tile.label += ` (copy of ${source[1]})`
+    }
     uploadSourceDisabled.value = false;
 }
 

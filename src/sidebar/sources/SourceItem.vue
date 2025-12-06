@@ -67,7 +67,7 @@ function setIdentifyTile(tile: VisualizerTile, v: boolean) {
             <div class="tileLink" @mouseenter="setIdentifyTile(tile, true)" @mouseleave="setIdentifyTile(tile, false)">{{ tile.label }}</div>
             <div class="tileLinkDivider"></div>
         </template>
-        <input type="button" class="reuseSourceButton" value="+ Link" v-if="ReuseVisualizerSource.active.value" @click="ReuseVisualizerSource.resolveSource(props.buffer)" title="Reuse this source">
+        <input type="button" class="reuseSourceButton" value="+ Link" v-if="ReuseVisualizerSource.active.value" @click="ReuseVisualizerSource.resolveSource(props.buffer, props.tiles.values().next().value?.label ?? '')" title="Reuse this source">
     </div>
 </template>
 
