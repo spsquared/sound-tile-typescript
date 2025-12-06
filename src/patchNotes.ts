@@ -34,6 +34,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         ],
         fixes: [
             'Added missing entries to "connections" section of modulation sidebar tab',
+            'Fixed memory management issue with modulator and sources sidebar tabs when closed',
             'Fixed new version message not showing',
             'Fixed Trix text editor changing font sizes of text when highlighting it',
             'Fixed issue that allowed disabled sliders to be scrolled',

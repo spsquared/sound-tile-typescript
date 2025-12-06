@@ -10,13 +10,14 @@ import SourceItem from './SourceItem.vue';
 
 const sidebarVisible = computed(() => TileEditor.state.sidebarOpen && TileEditor.state.sidebarTab == 'sources');
 
-// update UI only when visible and when tiles settled
+// update UI only when visible and when tiles settled and remove elements when not visible
 const debouncedTiles = ref<Set<Tile>>(new Set());
 watchDebounced([
     sidebarVisible,
     TileEditor.currentTiles
-], () => {
-    if (sidebarVisible.value) debouncedTiles.value = TileEditor.currentTiles.value;
+], ([isVisible]) => {
+    if (isVisible) debouncedTiles.value = TileEditor.currentTiles.value;
+    else debouncedTiles.value = new Set(); // prevent holding references to tiles (bad memory management)
 }, { debounce: 100, deep: false });
 
 // sources mapped to tile sets
@@ -54,9 +55,9 @@ const playbackNodes: Map<Symbol, {
     buffer: AudioBuffer,
     node: AudioBufferSourceNode | null
 }> = reactive(new Map());
-watchThrottled([sources, sidebarVisible], async () => {
-    // does very little since sources don't update when sidebar not visible
-    // mainly to reload audio data on sidebar open
+watchThrottled(sources, async () => {
+    // loads sources on sidebar open or sources changed
+    // sources is emptied on sidebar close and unloading is handled by setUnloadTimer below
     if (!sidebarVisible.value) return;
     // diff system, avoids decoding all audio on every tiny change (REALLY BAD!!!)
     const newKeys = new Set<Symbol>();

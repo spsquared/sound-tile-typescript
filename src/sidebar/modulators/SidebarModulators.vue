@@ -63,13 +63,14 @@ onUnmounted(() => {
 // not to mention that it DESTROYS type annotations by giving you MASSIVE NESTED OBJECTS full of BULLSHIT
 // instead of just giving you... idk... a CLASS NAME???
 
-// update UI only when visible and when tiles settled
+// update UI only when visible and when tiles settled and remove elements when not visible
 const debouncedTiles = ref<Set<Tile>>(new Set());
 watchDebounced([
     () => TileEditor.state.sidebarOpen && TileEditor.state.sidebarTab == 'modulators',
     TileEditor.currentTiles
 ], ([isVisible]) => {
     if (isVisible) debouncedTiles.value = TileEditor.currentTiles.value;
+    else debouncedTiles.value = new Set(); // prevent holding references to tiles (bad memory management)
 }, { debounce: 100, deep: false });
 // thanks vue for deleting my private members that are still there and then complaining that they're not there
 // ok for some reason this doesn't produce random ref unwrapping bullshit but the previous code using refs and watch functions did???
