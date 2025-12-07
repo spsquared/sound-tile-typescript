@@ -25,7 +25,8 @@ export async function setupServiceWorker() {
         }
     });
     // detects when the app itself updates, not the service worker
-    if (localStorage.getItem('version') !== version) {
+    const currentVersion = localStorage.getItem('version');
+    if (currentVersion !== null && currentVersion !== version) {
         showNewVersionNotice.value = true;
         newVersionReload.value = false;
     }
