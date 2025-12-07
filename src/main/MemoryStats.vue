@@ -38,7 +38,7 @@ onMounted(() => {
                 memoryHistory.value.shift();
                 allocationRateHistory.value.shift();
             }
-            if (VisualizerRenderer.state.debugInfo > 0) {
+            if (VisualizerRenderer.state.debugInfo > 0 && !document.hidden) {
                 ctx.reset();
                 ctx.font = `${10 * window.devicePixelRatio}px monospace`;
                 const min = Math.min(...memoryHistory.value);

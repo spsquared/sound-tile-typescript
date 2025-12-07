@@ -31,7 +31,8 @@ export const patchNotes: readonly PatchNoteEntry[] = [
             'Visualizer Tiles with the default label will append uploaded/reused source names',
             'Lowered the scrolling sensitivity of visualizer settings sliders',
             'Reversed order of modulation list to be more intuitive',
-            'Allow bar widths >1 for some niche uses of bar mode'
+            'Allow bar widths >1 for some niche uses of bar mode',
+            'Hide UI shortcuts (<code>SHIFT+H</code> and <code>SHIFT+E</code>) now hides most tile UI elements'
         ],
         fixes: [
             'Added missing entries to "connections" section of modulation sidebar tab',

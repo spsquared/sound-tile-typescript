@@ -84,6 +84,8 @@ watch(() => props.tile.editWindowOpen, () => {
     }
 });
 onBeforeUnmount(() => props.tile.editWindowOpen = false);
+// QoL shortcut
+watch(() => TileEditor.state.hideTabs, (hide) => hide && (props.tile.editWindowOpen = false));
 
 function setIdentifyTile(v: boolean) {
     if (v) TileEditor.state.identifyTilesLayout.add(props.tile);
@@ -94,14 +96,14 @@ function setIdentifyTile(v: boolean) {
 <template>
     <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
-        <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup)">
+        <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup) && !TileEditor.state.hideTabs">
             <input type="button" class="tileEditButton" title="Edit tile options" @click="toggleEditTile"></input>
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" title="Move tile" @mousedown="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
-        <input type="button" class="tileFloatingEditButton" ref="editButton" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup)" title="Edit tile options" @click="toggleEditTile">
+        <input type="button" class="tileFloatingEditButton" ref="editButton" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup) && !TileEditor.state.hideTabs" title="Edit tile options" @click="toggleEditTile">
         <div class="tileOutline" v-if="TileEditor.state.identifyTilesSidebar.has(props.tile) || TileEditor.state.identifyTilesLayout.has(props.tile)"></div>
         <DraggableWindow ref="editWindow" v-model="props.tile.editWindowOpen" :title="props.tile.label" :border-color="TileEditor.state.identifyTilesSidebar.has(props.tile) ? 'cyan' : 'white'" frosted overflow-y="scroll" :close-on-click-out="props.optionsWindow?.closeOnClickOut" :resizeable="props.optionsWindow?.resizeable" :resize-width="props.optionsWindow?.resizeWidth" :resize-height="props.optionsWindow?.resizeHeight ?? true" :min-width="props.optionsWindow?.minWidth ?? 300" :min-height="props.optionsWindow?.minHeight ?? 200">
             <template #bar>
@@ -109,24 +111,26 @@ function setIdentifyTile(v: boolean) {
                     ID
                 </div>
             </template>
-            <div class="optionsWrapper">
-                <slot name="options">
-                    <TileOptionsSection title="General">
-                        <label title="Label of tile">
-                            Label
-                            <input type="text" v-model="props.tile.label">
-                        </label>
-                        <label class="sectionItem" title="Relative size of tile to sibling tiles">
-                            Size
-                            <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
-                        </label>
-                        <label class="sectionItem" title="Background color of tile">
-                            Background
-                            <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
-                        </label>
-                    </TileOptionsSection>
-                </slot>
-            </div>
+            <template #default>
+                <div class="optionsWrapper">
+                    <slot name="options">
+                        <TileOptionsSection title="General">
+                            <label title="Label of tile">
+                                Label
+                                <input type="text" v-model="props.tile.label">
+                            </label>
+                            <label class="sectionItem" title="Relative size of tile to sibling tiles">
+                                Size
+                                <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
+                            </label>
+                            <label class="sectionItem" title="Background color of tile">
+                                Background
+                                <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
+                            </label>
+                        </TileOptionsSection>
+                    </slot>
+                </div>
+            </template>
         </DraggableWindow>
     </div>
 </template>
