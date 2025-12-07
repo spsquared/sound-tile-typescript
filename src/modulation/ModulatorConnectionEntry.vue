@@ -231,11 +231,12 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
 
 .transformsConnectionHeader>div {
     border-radius: 6px;
+    align-self: stretch;
+    align-content: center;
 }
 
 .transformsConnectionHeader>div:hover {
     background-color: #333;
-    /* outline: 2px solid cyan; */
 }
 
 .transformsContainer {
