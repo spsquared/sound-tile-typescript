@@ -606,8 +606,10 @@ class VisualizerRenderInstance {
                     if (this.debugInfo == 2) debugText.push(`gain=${gain.toFixed(3)}`);
                 }
             }
-            if (this.debugInfo == 2) this.debugText.push('Gradient Descent: ' + debugText.join(' '));
-            if (this.debugInfo > 0) this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
+            if (this.debugInfo == 2) {
+                this.debugText.push('Gradient Descent: ' + debugText.join(' '));
+                this.debugText.push(`Best: shift ${bestShift}, error ${bestError}`);
+            }
             this.corrwaveData.shift = bestShift;
             // average the shifted buffer with previous buffer
             const smoothing = this.data.waveOptions.correlation.frameSmoothing;

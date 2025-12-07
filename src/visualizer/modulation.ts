@@ -72,7 +72,7 @@ export namespace Modulation {
                 this.connections.set(sourceKey, new Set());
             }
             // again, using normal refs but exposing them as readonly, and .effect is still deprecated
-            this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any)) as any;
+            this.connectedTargets = reactive(Object.keys(this.sources).reduce((obj, key) => (obj[key] = [], obj), {} as any));
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
             this.tile = tile ?? null;
@@ -245,7 +245,7 @@ export namespace Modulation {
             // markRaw prevents automatic ref unwrapping shitting all over the types
             this.targets = markRaw(Object.entries(this.initialValues).reduce((obj, [key, v]) => (obj[key] = ref(v), obj), {} as any));
             this.typeLabels = markRaw({ ...Object.entries(this.initialValues).reduce((obj, [k, v]) => (obj[k] = typeof v, obj), {} as any), ...typeLabels });
-            this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any)) as any;
+            this.connectedSources = reactive(Object.keys(this.targets).reduce((obj, key) => (obj[key] = null, obj), {} as any));
             this.effectScope = effectScope();
             if (label !== undefined) this.label = label;
             this.tile = tile ?? null;
