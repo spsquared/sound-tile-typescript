@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg fill="#000000" height="800px" width="800px" xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 32 32">
-<polygon points="2 0 30 14 2 14" />
-<polygon points="2 18 30 18 2 32 2 20 4 20 4 28.7639 21.5279 20 2 20" />
+<svg fill="#000000" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+<polygon points="2 0 30 14 2 14"/>
+<polygon points="2 18 30 18 2 32 2 20 4 20 4 28.7639 21.5279 20 2 20"/>
 </svg>
