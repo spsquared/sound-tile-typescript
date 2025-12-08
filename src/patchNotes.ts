@@ -13,6 +13,21 @@ type PatchNoteEntry = {
 
 export const patchNotes: readonly PatchNoteEntry[] = [
     {
+        version: '2.1.0',
+        releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.1.0',
+        headline: 'The BeepBox Tile Update',
+        description: `
+        `,
+        breaking: [],
+        changes: [
+
+        ],
+        fixes: [
+            'Fixed overflow & display issues with periodic modulator transform type'
+        ],
+        notes: []
+    },
+    {
         version: '2.0.1',
         releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.0.1',
         headline: 'QoL improvements',

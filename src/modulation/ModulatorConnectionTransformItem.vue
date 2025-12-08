@@ -178,7 +178,7 @@ watch([() => props.transform.data, polyFocused], () => {
                 <select v-model="props.transform.data[0]">
                     <option value="sine">Sine</option>
                     <option value="ramp">Ramp</option>
-                    <option value="pulse">Pulse Width</option>
+                    <option value="pulse">Pulse</option>
                 </select>
             </div>
         </div>
@@ -201,9 +201,8 @@ watch([() => props.transform.data, polyFocused], () => {
                         Phase=<StrictNumberInput v-model="props.transform.data[3]" :min="0" :max="1" :step="0.05" :strict-step="0"></StrictNumberInput>
                     </label>
                     <template v-if="props.transform.data[0] != 'sine'">
-                        |
-                        <label :title="`${props.transform.data[0] ? 'Shape' : 'Pulse width'} of ${props.transform.data[0]}`">
-                            {{ props.transform.data[0] ? 'Shape' : 'Pulse' }}=<StrictNumberInput v-model="props.transform.data[1]" :min="0" :max="1" :step="0.05" :strict-step="0"></StrictNumberInput>
+                        <label :title="`${props.transform.data[0] == 'ramp' ? 'Morph shape' : 'Pulse width'} of ${props.transform.data[0]}`">
+                            {{ props.transform.data[0] == 'ramp' ? 'Shape' : 'Pulse' }}=<StrictNumberInput v-model="props.transform.data[1]" :min="0" :max="1" :step="0.05" :strict-step="0"></StrictNumberInput>
                         </label>
                     </template>
                 </div>
@@ -359,8 +358,10 @@ label[button]:focus-visible {
 .transformPeriodicLayout>div {
     display: flex;
     flex-direction: row;
+    min-width: 0px;
     column-gap: 4px;
     align-items: center;
+    text-wrap: nowrap;
 }
 
 .transformPeriodicLayout label[button] {
