@@ -23,7 +23,10 @@ export const patchNotes: readonly PatchNoteEntry[] = [
 
         ],
         fixes: [
-            'Fixed overflow & display issues with periodic modulator transform type'
+            'Fixed overflow & display issues with periodic modulator transform type',
+            ['Fixed text offset modulation being relative to text size instead of tile size', [
+                'This is somewhat breaking as text modulations may be amplified'
+            ]]
         ],
         notes: []
     },

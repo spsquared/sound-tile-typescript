@@ -62,9 +62,9 @@ async function uploadImage() {
                     image: true,
                     // disabled for now
                     draggableImage: props.tile.editWindowOpen && !inCollapsedGroup && false
-                }" ref="image" :src="props.tile.imgSrc" v-if="props.tile.imgSrc != ''" :style="{
+                }" ref="image" :src="props.tile.imgSrc" :style="{
                     transform: `translate(${modTargets.imgOffsetX.value - 50}%, ${modTargets.imgOffsetY.value - 50}%) rotateZ(${modTargets.imgRotation.value}deg) scale(${modTargets.imgScale.value})`
-                }" @load="resizeImage">
+                }" v-if="props.tile.imgSrc != ''" @load="resizeImage">
             </div>
             <div class="imageUploadCover" v-if="props.tile.imgSrc == ''">
                 <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.lock.locked">
