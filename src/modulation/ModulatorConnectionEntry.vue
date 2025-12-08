@@ -153,10 +153,11 @@ function setIdentifyTile(tile: Tile | null, v: boolean) {
 
 .connectionLabel>div {
     min-width: 0px;
+    max-height: 19.2em;
     font-size: 14px;
     text-align: center;
-    /* text-wrap: nowrap; */
     text-overflow: ellipsis;
+    line-height: 1.2em;
     overflow: hidden;
 }
 
