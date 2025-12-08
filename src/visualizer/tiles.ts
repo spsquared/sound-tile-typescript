@@ -445,6 +445,12 @@ export class BeepboxTile extends Tile {
     constructor(data?: BeepboxVisualizerData) {
         super();
         this.visualizer = new BeepboxVisualizer(data ?? createDefaultBeepboxVisualizerData());
+        // see VisualizerTile
+        this.mountedListeners.add(() => this.visualizer.visible.value = true);
+        this.unmountedListeners.add(async () => {
+            await nextTick();
+            if (this.element === null) this.visualizer.visible.value = false;
+        });
     }
 
     getSchemaData(): MediaSchema.BeepboxTile {

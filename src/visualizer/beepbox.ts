@@ -1,13 +1,17 @@
-import { effectScope, EffectScope, markRaw, reactive } from "vue";
+import { effectScope, EffectScope, markRaw, reactive, Ref, ref, watch } from "vue";
 import { DeepPartial } from "@/components/utils";
 import { BeepboxJsonSkeleton, BeepboxVisualizerData, ScaleKeys } from "./beepboxData";
 
 /**
- * Rendering context of BeepBox tiles.
+ * Rendering context of BeepBox tiles. BeepBox tile only handles visual rendering of notes
+ * in the piano roll, not synthesizing the audio. That's for BeepBox to do, not Sound Tile.
  */
 export class BeepboxVisualizer {
     /**Reactive state of visualizer - all settings & stuff */
     readonly data: BeepboxVisualizerData;
+    
+    /**Sets if the visualizer is visible */
+    readonly visible: Ref<boolean> = ref(false);
 
     private readonly effectScope: EffectScope;
 
@@ -15,8 +19,19 @@ export class BeepboxVisualizer {
         this.data = reactive(initData);
         this.effectScope = effectScope();
         this.effectScope.run(() => {
+            watch(this.visible, () => {
+                if (this.visible.value) BeepboxVisualizer.instances.add(this);
+                else BeepboxVisualizer.instances.delete(this);
+            });
         });
     }
+
+    private async draw(): Promise<void> {
+        // i guess workers would be a good idea for canvas rendering? canvas better for effects
+        // beepbox suffers from svg lag
+    }
+    // resize(w: number, h: number): void {
+    // }
 
     /**
      * Attempt to extract BeepBox song data from a JSON object. 
@@ -85,4 +100,16 @@ export class BeepboxVisualizer {
     destroy(): void {
         this.effectScope.stop();
     }
+
+    /**All **VISIBLE** instances of visualizers - maintained by the visualizer instances themselves */
+    private static readonly instances: Set<BeepboxVisualizer> = new Set();
+
+    // because playback is less complex with no audio context beepbox tile just uses media player time
+
+    /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
+    static async draw(): Promise<void> {
+        await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
+    }
 }
+
+export default BeepboxVisualizer;

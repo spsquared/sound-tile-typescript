@@ -243,7 +243,7 @@ export class Visualizer {
 
     /**All **VISIBLE** instances of visualizers - maintained by the visualizer instances themselves */
     private static readonly instances: Set<Visualizer> = new Set();
-    /**Internal timekeeping to synchronize visualizer playback states */
+    /**Internal timekeeping to synchronize visualizer playback */
     private static readonly time: {
         startTime: number
         duration: number
@@ -293,21 +293,11 @@ export class Visualizer {
     }
 
     /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
-    private static async draw(): Promise<void> {
+    static async draw(): Promise<void> {
         await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
     }
 
     static {
-        (async () => {
-            while (true) {
-                await new Promise<void>((resolve) => {
-                    if (!document.hidden) requestAnimationFrame(() => resolve());
-                    else setTimeout(() => resolve(), 200);
-                });
-                // allowing tiles to drop frames individually rather than the entire layout slowing down
-                if (!document.hidden) this.draw();
-            }
-        })();
         document.addEventListener('keydown', (e) => {
             if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.state.debugInfo = (VisualizerRenderer.state.debugInfo + 1) % 3 as any;
         }, { passive: true });

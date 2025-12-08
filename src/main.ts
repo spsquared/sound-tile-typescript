@@ -1,5 +1,4 @@
 import '@/assets/common.css';
-
 import '@/components/inputs/trix';
 
 import { createApp } from 'vue';
@@ -9,6 +8,8 @@ import { setupServiceWorker } from './serviceWorkerClient';
 const app = createApp(App);
 app.mount("#root");
 if (import.meta.env.PROD) setupServiceWorker();
+
+import '@/visualizer/drawLoop';
 
 import TileEditor from './visualizer/editor';
 import MediaPlayer from './visualizer/mediaPlayer';
