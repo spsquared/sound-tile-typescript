@@ -456,7 +456,7 @@ export namespace Modulation {
             super();
             this.data = data ?? [
                 'sine',
-                0,
+                0.5,
                 1,
                 0,
                 false

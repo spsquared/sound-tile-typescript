@@ -348,6 +348,8 @@ export class Visualizer {
         await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
     }
 
+    // sort of sucks that it has to be done this way since now the BeepBoxVisualizer has to do something similar
+    // now debugInfo is in unrelated code
     static get debugInfo(): 0 | 1 | 2 {
         return VisualizerRenderer.state.debugInfo; // lol
     }
