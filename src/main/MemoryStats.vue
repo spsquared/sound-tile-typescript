@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import DraggableWindow from '@/components/DraggableWindow.vue';
-import { VisualizerRenderer } from '@/visualizer/visualizerRenderer';
+import Visualizer from '@/visualizer/visualizer';
 
 const canvas = useTemplateRef('canvas');
 
 const forceOpenWindow = computed({
-    get: () => VisualizerRenderer.state.debugInfo > 0,
+    get: () => Visualizer.debugInfo > 0,
     set: (_) => undefined
 });
 
@@ -38,7 +38,7 @@ onMounted(() => {
                 memoryHistory.value.shift();
                 allocationRateHistory.value.shift();
             }
-            if (VisualizerRenderer.state.debugInfo > 0 && !document.hidden) {
+            if (Visualizer.debugInfo > 0 && !document.hidden) {
                 ctx.reset();
                 ctx.font = `${10 * window.devicePixelRatio}px monospace`;
                 const min = Math.min(...memoryHistory.value);

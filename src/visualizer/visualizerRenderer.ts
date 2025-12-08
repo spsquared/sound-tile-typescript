@@ -14,13 +14,16 @@ type VisualizerSettingsData = Omit<VisualizerData, 'buffer' | 'gain'>;
  * Creates its own canvas as to not irreversibly break outside canvases.
  */
 export abstract class VisualizerRenderer {
+    abstract readonly isWorker: boolean;
     /**Reactive data of visualizer, should be a reference to the same object used in the visualizer instance */
     readonly data: VisualizerSettingsData;
     readonly frameResult: Ref<VisualizerRendererFrameResults> = ref<VisualizerRendererFrameResults>({
         valueMax: 0,
         valueMin: 0,
         valueMinMaxDiff: 0,
-        approximatePeak: 0
+        approximatePeak: 0,
+        renderTime: 0,
+        debugText: []
     });
     readonly canvas: HTMLCanvasElement;
 
@@ -40,6 +43,7 @@ export abstract class VisualizerRenderer {
         this.stopWatching();
     }
 
+    // these are here because we can't import Visualizer
     static readonly state: {
         playing: boolean
         debugInfo: 0 | 1 | 2
@@ -53,6 +57,7 @@ export abstract class VisualizerRenderer {
  * Main rendering container that wraps a VisualizerRenderInstance in a web worker.
  */
 export class VisualizerWorkerRenderer extends VisualizerRenderer {
+    readonly isWorker: true = true;
     private readonly worker: Worker;
 
     constructor(data: VisualizerSettingsData) {
@@ -111,6 +116,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
  * Fallback rendering container used when web workers are unavailable.
  */
 export class VisualizerFallbackRenderer extends VisualizerRenderer {
+    readonly isWorker: false = false;
     private readonly renderer: VisualizerRenderInstance;
 
     constructor(data: VisualizerSettingsData) {
@@ -142,6 +148,8 @@ export type VisualizerRendererFrameResults = {
     valueMin: number
     valueMinMaxDiff: number
     approximatePeak: number
+    renderTime: number
+    debugText: string[]
 }
 
 /**
@@ -166,16 +174,15 @@ class VisualizerRenderInstance {
 
     playing: boolean = false;
     debugInfo: 0 | 1 | 2 = 0;
-    private readonly frames: number[] = [];
-    private readonly fpsHistory: number[] = [];
-    private readonly timingsHistory: number[] = [];
     private readonly debugText: string[] = [];
 
     frameResult: VisualizerRendererFrameResults = {
         valueMax: 0,
         valueMin: 0,
         valueMinMaxDiff: 0,
-        approximatePeak: 0
+        approximatePeak: 0,
+        renderTime: 0,
+        debugText: []
     };
 
     constructor(canvas: OffscreenCanvas, data: VisualizerSettingsData) {
@@ -260,44 +267,18 @@ class VisualizerRenderInstance {
                 if (buf[i] > frameResultMax) frameResultMax = buf[i];
             }
         }
+        // track performance metrics
+        const endTime = performance.now();
+        if (this.playing && this.debugInfo == 2) this.printDebugInfo(buffer);
+        // finalize
         this.frameResult = {
             valueMin: frameResultMin,
             valueMax: frameResultMax,
             valueMinMaxDiff: frameResultMax - frameResultMin,
-            approximatePeak: buffer instanceof Float32Array ? (frameResultMax - frameResultMin) / 2 : frameResultMax / 255
-        };
-        // track performance metrics
-        const endTime = performance.now();
-        this.frames.push(endTime);
-        this.timingsHistory.push(endTime - startTime);
-        while (this.frames[0] + 1000 <= endTime) {
-            this.frames.shift();
-            this.timingsHistory.shift();
-            this.fpsHistory.shift();
+            approximatePeak: buffer instanceof Float32Array ? (frameResultMax - frameResultMin) / 2 : frameResultMax / 255,
+            renderTime: endTime - startTime,
+            debugText: this.debugText
         }
-        this.fpsHistory.push(this.frames.length);
-        if (this.debugInfo > 0) {
-            if (this.playing && this.debugInfo == 2) this.printDebugInfo(buffer);
-            this.ctx.resetTransform();
-            this.ctx.font = '14px monospace';
-            const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
-            const text = [
-                isInWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
-                `Playing: ${this.playing}`,
-                `FPS: ${this.frames.length} (${avgArr(this.fpsHistory).toFixed(1)} / [${Math.min(...this.fpsHistory)} - ${Math.max(...this.fpsHistory)}])`,
-                `Timings: ${(endTime - startTime).toFixed(1)}ms (${avgArr(this.timingsHistory).toFixed(1)}ms / [${Math.min(...this.timingsHistory).toFixed(1)}ms - ${Math.max(...this.timingsHistory).toFixed(1)}ms])`,
-                ...this.debugText
-            ];
-            this.ctx.fillStyle = '#333333AA';
-            this.ctx.fillRect(8, 8, Math.max(...text.map((t) => this.ctx.measureText(t).width + 8)), text.length * 16 + 6);
-            this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.textAlign = 'left';
-            this.ctx.textBaseline = 'top';
-            for (let i = 0; i < text.length; i++) {
-                this.ctx.fillText(text[i], 12, 12 + i * 16);
-            }
-        }
-        // finalize
         this.resized = undefined;
         this.dataUpdated = false;
     }
@@ -843,7 +824,6 @@ class VisualizerRenderInstance {
         console.debug({
             width: this.canvas.width,
             height: this.canvas.height,
-            timings: this.timingsHistory,
             debug: this.debugText,
             data: this.data,
             buffer: buffer

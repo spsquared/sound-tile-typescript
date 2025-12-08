@@ -136,10 +136,24 @@ export class Visualizer {
     }
 
     private drawing: boolean = false;
+    private readonly debug: {
+        startTime: number
+        readonly frames: number[]
+        readonly fpsHistory: number[]
+        readonly rendererTimingHistory: number[]
+        readonly totalTimingHistory: number[]
+    } = ({
+        startTime: 0,
+        frames: [],
+        fpsHistory: [],
+        rendererTimingHistory: [],
+        totalTimingHistory: []
+    });
     private async draw(): Promise<void> {
         if (this.drawing || this.data.buffer === null || !this.visible.value) return;
         // spam-resizing hopefully doesn't cause a bunch of performance issues? it stops flickering...
         this.drawing = true;
+        this.debug.startTime = performance.now();
         if (this.audioBuffer === null) {
             this.ctx.reset();
             const boxSize = Math.min(this.canvas.width, this.canvas.height);
@@ -196,7 +210,44 @@ export class Visualizer {
             this.ctx.reset();
             this.drawErrorText('Invalid mode');
         }
+        this.drawDebugOverlay();
         this.drawing = false;
+    }
+    private drawDebugOverlay(): void {
+        const endTime = performance.now();
+        const frameTime = endTime - this.debug.startTime;
+        const renderTime = this.renderer.frameResult.value.renderTime;
+        this.debug.frames.push(endTime);
+        this.debug.rendererTimingHistory.push(renderTime);
+        this.debug.totalTimingHistory.push(frameTime);
+        while (this.debug.frames[0] + 1000 <= endTime) {
+            this.debug.frames.shift();
+            this.debug.rendererTimingHistory.shift();
+            this.debug.totalTimingHistory.shift();
+            this.debug.fpsHistory.shift();
+        }
+        this.debug.fpsHistory.push(this.debug.frames.length);
+        if (Visualizer.debugInfo > 0) {
+            const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
+            const text = [
+                this.renderer.isWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
+                `Playing: ${Visualizer.playing}`,
+                `FPS: ${this.debug.frames.length} (${avgArr(this.debug.fpsHistory).toFixed(1)} / [${Math.min(...this.debug.fpsHistory)} - ${Math.max(...this.debug.fpsHistory)}])`,
+                `Total:  ${(frameTime).toFixed(1)}ms (${avgArr(this.debug.totalTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.totalTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.totalTimingHistory).toFixed(1)}ms])`,
+                `Render: ${(renderTime).toFixed(1)}ms (${avgArr(this.debug.rendererTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.rendererTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.rendererTimingHistory).toFixed(1)}ms])`,
+                ...this.renderer.frameResult.value.debugText
+            ];
+            this.ctx.resetTransform();
+            this.ctx.font = '14px monospace';
+            this.ctx.fillStyle = '#333333AA';
+            this.ctx.fillRect(8, 8, Math.max(...text.map((t) => this.ctx.measureText(t).width + 8)), text.length * 16 + 6);
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'top';
+            for (let i = 0; i < text.length; i++) {
+                this.ctx.fillText(text[i], 12, 12 + i * 16);
+            }
+        }
     }
     private drawErrorText(text: string): void {
         this.ctx.resetTransform();
@@ -297,9 +348,15 @@ export class Visualizer {
         await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
     }
 
+    static get debugInfo(): 0 | 1 | 2 {
+        return VisualizerRenderer.state.debugInfo; // lol
+    }
+    static set debugInfo(v: | 0 | 1 | 2) {
+        VisualizerRenderer.state.debugInfo = v;
+    }
     static {
         document.addEventListener('keydown', (e) => {
-            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) VisualizerRenderer.state.debugInfo = (VisualizerRenderer.state.debugInfo + 1) % 3 as any;
+            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) Visualizer.debugInfo = (Visualizer.debugInfo + 1) % 3 as any;
         }, { passive: true });
     }
 }

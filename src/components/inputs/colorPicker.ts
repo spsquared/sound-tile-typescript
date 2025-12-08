@@ -20,10 +20,10 @@ export class ColorPicker {
         color: string
         /**Alpha/opacity, from 0-1 */
         alpha: number
-    } = {
-            color: '#FFFFFF',
-            alpha: 1
-        };
+    } = ({
+        color: '#FFFFFF',
+        alpha: 1
+    });
     gradientData: {
         /**CSS pattern of gradient */
         pattern: 'linear' | 'radial' | 'conic',
@@ -44,14 +44,14 @@ export class ColorPicker {
         radius: number,
         /**Angle of linear and conic gradients in degrees */
         angle: number
-    } = {
-            pattern: 'linear',
-            stops: [{ t: 0, c: '#FFFFFF', a: 1 }],
-            x: 0.5,
-            y: 0.5,
-            radius: 1,
-            angle: 0
-        };
+    } = ({
+        pattern: 'linear',
+        stops: [{ t: 0, c: '#FFFFFF', a: 1 }],
+        x: 0.5,
+        y: 0.5,
+        radius: 1,
+        angle: 0
+    });
 
     open: boolean = false;
 
