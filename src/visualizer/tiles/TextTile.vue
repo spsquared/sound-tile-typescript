@@ -20,13 +20,13 @@ const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', comput
 
 const setText = useThrottleFn((v: string) => {
     props.tile.text = v;
-}, 50);
+}, 50, true, true);
 
 // text still has to be sanitized to avoid XSS through saving payloads in a file
 watch(() => props.tile.text, useThrottleFn(async (dirty) => {
     const clean = await sanitize(dirty);
     sanitizedText.value = clean;
-}, 100), { immediate: true });
+}, 100, true, true), { immediate: true });
 const sanitizedText = ref('');
 </script>
 
