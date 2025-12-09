@@ -36,10 +36,10 @@ export class BeepboxVisualizer {
     /**
      * Attempt to extract BeepBox song data from a JSON object. 
      * @param raw An object (e.g., parsed from a JSON string)
+     * @returns Converted and filtered song data, marked raw to avoid unnecessary reactivity lag
      * @throws Will throw an error if the object is not a valid BeepBox song JSON
      */
     static parseRawJSON(raw: any): BeepboxVisualizerData['song'] {
-        const start = performance.now();
         // we probably don't need such a bulletproof data valiation thing but like...
         // it's also probably not bulletproof
         if (raw == undefined) throw new TypeError('Invalid song data: data is nullish');
@@ -93,7 +93,6 @@ export class BeepboxVisualizer {
                 } satisfies NonNullable<BeepboxVisualizerData['song']>['channels'][number];
             })
         };
-        console.debug(`Loaded BeepBox in ${performance.now() - start}ms`);
         return markRaw(song);
     }
 

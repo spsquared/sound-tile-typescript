@@ -97,10 +97,10 @@ function setIdentifyTile(v: boolean) {
     <div :class="{ tile: true, tileInCollapsedGroup: inCollapsedGroup }" ref="tile">
         <slot name="content"></slot>
         <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup) && !TileEditor.state.hideTabs">
-            <input type="button" class="tileEditButton" title="Edit tile options" @click="toggleEditTile"></input>
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
             <div class="tileDrag" v-if="!destroyDisabled" title="Move tile" @mousedown="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
+            <input type="button" class="tileEditButton" title="Edit tile options" @click="toggleEditTile"></input>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">
         </div>
         <input type="button" class="tileFloatingEditButton" ref="editButton" v-if="!props.hideEdit && (!inCollapsedGroup || props.ignoreCollapsedGroup) && !TileEditor.state.hideTabs" title="Edit tile options" @click="toggleEditTile">
@@ -206,7 +206,7 @@ function setIdentifyTile(v: boolean) {
 .tileEditButton {
     background-color: transparent;
     background-image: url(@/img/edit.svg);
-    background-size: 60% 60%;
+    background-size: 70% 70%;
 }
 
 .tileEditButton:hover {
