@@ -20,7 +20,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         `,
         breaking: [],
         changes: [
-
+            'Lowered the scrolling sensitivity of gain sliders',
         ],
         fixes: [
             'Fixed overflow & display issues with periodic modulator transform type',
