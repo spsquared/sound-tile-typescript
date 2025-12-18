@@ -3,6 +3,7 @@
 import { effectScope, EffectScope, reactive, ref, Ref, toRaw, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
+import perfMetrics from './drawLoop';
 
 if (!('AudioContext' in window)) {
     throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
@@ -227,7 +228,7 @@ export class Visualizer {
             this.debug.fpsHistory.shift();
         }
         this.debug.fpsHistory.push(this.debug.frames.length);
-        if (Visualizer.debugInfo > 0) {
+        if (perfMetrics.debugLevel.value > 0) {
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
                 this.renderer.isWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
@@ -307,13 +308,11 @@ export class Visualizer {
     static start(time: number = 0): void {
         this.time.startTime = this.audioContext.currentTime - time;
         this.time.playing = true;
-        VisualizerRenderer.state.playing = true;
         for (const vis of this.instances) vis.start();
         this.audioContext.resume();
     }
     static stop(): void {
         this.time.playing = false;
-        VisualizerRenderer.state.playing = false;
         for (const vis of this.instances) vis.stop();
         this.audioContext.suspend();
     }
@@ -345,21 +344,7 @@ export class Visualizer {
 
     /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
     static async draw(): Promise<void> {
-        await Promise.all(Array.from(this.instances.values()).map((v) => v.draw()));
-    }
-
-    // sort of sucks that it has to be done this way since now the BeepBoxVisualizer has to do something similar
-    // now debugInfo is in unrelated code
-    static get debugInfo(): 0 | 1 | 2 {
-        return VisualizerRenderer.state.debugInfo; // lol
-    }
-    static set debugInfo(v: | 0 | 1 | 2) {
-        VisualizerRenderer.state.debugInfo = v;
-    }
-    static {
-        document.addEventListener('keydown', (e) => {
-            if (e.key == '\\' && e.altKey && e.ctrlKey && !e.shiftKey && !e.metaKey) Visualizer.debugInfo = (Visualizer.debugInfo + 1) % 3 as any;
-        }, { passive: true });
+        await Promise.all([...this.instances.values()].map((v) => v.draw()));
     }
 }
 

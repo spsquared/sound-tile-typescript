@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, ComputedRef, inject, reactive, ref, useTemplateRef } from 'vue';
-import { watchThrottled, useElementSize } from '@vueuse/core';
+import { computed, ComputedRef, inject, ref } from 'vue';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
 import { ImageTile } from '../tiles';
@@ -17,22 +16,6 @@ const props = defineProps<{
 const modTargets = computed(() => props.tile.modulation.targets);
 
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
-
-const wrapper = useTemplateRef('imageWrapper');
-const image = useTemplateRef('image');
-const { width: wrapperWidth, height: wrapperHeight } = useElementSize(wrapper);
-const imgCss = reactive({ width: 'unset', height: 'unset' });
-function resizeImage() {
-    if (image.value === null) return;
-    if (wrapperWidth.value / wrapperHeight.value > image.value.width / image.value.height) {
-        imgCss.width = 'unset';
-        imgCss.height = wrapperHeight.value + 'px';
-    } else {
-        imgCss.width = wrapperWidth.value + 'px';
-        imgCss.height = 'unset';
-    }
-}
-watchThrottled([wrapperWidth, wrapperHeight], () => resizeImage(), { throttle: 50, trailing: true, leading: true });
 
 const uploadImageDisabled = ref(false);
 async function uploadImage() {
@@ -57,14 +40,14 @@ async function uploadImage() {
 <template>
     <Tile :tile="props.tile">
         <template #content>
-            <div class="imageWrapper" ref="imageWrapper">
+            <div class="imageWrapper">
                 <img :class="{
                     image: true,
                     // disabled for now
                     draggableImage: props.tile.editWindowOpen && !inCollapsedGroup && false
                 }" ref="image" :src="props.tile.imgSrc" :style="{
-                    transform: `translate(${modTargets.imgOffsetX.value - 50}%, ${modTargets.imgOffsetY.value - 50}%) rotateZ(${modTargets.imgRotation.value}deg) scale(${modTargets.imgScale.value})`
-                }" v-if="props.tile.imgSrc != ''" @load="resizeImage">
+                    transform: `translate(${props.tile.position.x + modTargets.imgOffsetX.value - 50}%, ${props.tile.position.y + modTargets.imgOffsetY.value - 50}%) rotateZ(${modTargets.imgRotation.value}deg) scale(${modTargets.imgScale.value})`
+                }" v-if="props.tile.imgSrc != ''">
             </div>
             <div class="imageUploadCover" v-if="props.tile.imgSrc == ''">
                 <input type="button" class="uploadButton" @click="uploadImage" value="Upload image" :disabled="uploadImageDisabled || TileEditor.lock.locked">
@@ -113,12 +96,10 @@ async function uploadImage() {
 }
 
 .image {
-    position: absolute;
-    top: v-bind("$props.tile.position.y + '%'");
-    left: v-bind("$props.tile.position.x + '%'");
-    width: v-bind("imgCss.width");
-    height: v-bind("imgCss.height");
+    width: 100%;
+    height: 100%;
     image-rendering: v-bind("$props.tile.smoothDrawing ? 'auto' : 'pixelated'");
+    object-fit: contain;
     /* transforms removed since vue spamming querySelectorAll to get all .image elements is very slow */
 }
 

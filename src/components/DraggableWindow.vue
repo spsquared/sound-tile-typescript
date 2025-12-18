@@ -23,6 +23,8 @@ const props = defineProps<{
     overflowX?: 'auto' | 'scroll' | 'clip'
     /**Scroll behavior when overflowing vertically */
     overflowY?: 'auto' | 'scroll' | 'clip'
+    /**Scroll behavior when overflowing */
+    overflow?: 'auto' | 'scroll' | 'clip'
     /**Frosted glass effect on the background */
     frosted?: boolean
 }>();
@@ -256,8 +258,8 @@ let windowIdCounter = 0;
     background-color: black;
     width: v-bind("size.w + 'px'");
     height: v-bind("size.h + 'px'");
-    overflow-x: v-bind("$props.overflowX ?? 'auto'");
-    overflow-y: v-bind("$props.overflowY ?? 'auto'");
+    overflow-x: v-bind("$props.overflow ?? $props.overflowX ?? 'auto'");
+    overflow-y: v-bind("$props.overflow ?? $props.overflowY ?? 'auto'");
 }
 
 .windowBodyFrosted {

@@ -4,7 +4,7 @@ import { sleep } from '@/components/utils';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { GroupTile } from '@/visualizer/tiles';
-import { VisualizerRenderer } from '@/visualizer/visualizerRenderer';
+import perfMetrics from '@/visualizer/drawLoop';
 import xue9_unknown from '@/img/xue9-unknown.png';
 import FullscreenModal from '@/components/FullscreenModal.vue';
 
@@ -149,7 +149,7 @@ watch(() => TileEditor.root.label, async () => {
         spooky.value = false;
         await sleep(60);
         spooky.value = true;
-        VisualizerRenderer.state.debugInfo = 2;
+        perfMetrics.debugLevel.value = 2;
         MediaPlayer.pause();
         await sleep(100);
         spooky.value = false;
@@ -189,7 +189,7 @@ function futilelyTryClose(ok: boolean) {
     if ('terminal' in message.value) {
         spooky.value = false;
         if (hostageData !== null) TileEditor.attachRoot(hostageData);
-        VisualizerRenderer.state.debugInfo = 0;
+        perfMetrics.debugLevel.value = 0;
         hostageData = null;
         TileEditor.root.label = 'Warning';
         return;

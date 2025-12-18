@@ -6,8 +6,8 @@ import Dropdown from '@/dropdown/Dropdown.vue';
 import Sidebar from '@/sidebar/Sidebar.vue';
 import TileRoot from './TileRoot.vue';
 import TileDrag from './TileDrag.vue';
-import MemoryStats from './MemoryStats.vue';
 import ModulatorDrag from './ModulatorDrag.vue';
+import PerformanceStats from './PerformanceStats.vue';
 import TutorialMaster from './TutorialMaster.vue';
 import PatchNotes from './PatchNotes.vue';
 import ErrorQueue from './ErrorQueue.vue';
@@ -29,8 +29,8 @@ export const newVersionNumber = ref('');
     <Sidebar></Sidebar>
     <TileRoot></TileRoot>
     <TileDrag></TileDrag>
-    <MemoryStats></MemoryStats>
     <ModulatorDrag></ModulatorDrag>
+    <PerformanceStats></PerformanceStats>
     <TutorialMaster></TutorialMaster>
     <FullscreenModal v-model="showAppInfo" mode="info" effect="frost-window">
         <template #title>

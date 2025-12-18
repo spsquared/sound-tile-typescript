@@ -12,15 +12,29 @@ type PatchNoteEntry = {
 };
 
 export const patchNotes: readonly PatchNoteEntry[] = [
+    // {
+    //     version: '2.1.0',
+    //     releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.1.0',
+    //     headline: 'The BeepBox Tile Update',
+    //     description: `
+    //     `,
+    //     breaking: [],
+    //     changes: [
+    //     ],
+    //     fixes: [
+    //     ],
+    //     notes: []
+    // },
     {
-        version: '2.1.0',
-        releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.1.0',
-        headline: 'The BeepBox Tile Update',
+        version: '2.0.2',
+        releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.0.2',
+        headline: 'Performance & More QoL',
         description: `
         `,
         breaking: [],
         changes: [
             'Lowered the scrolling sensitivity of gain sliders',
+            'Code-split to clean up code and added more performance information'
         ],
         fixes: [
             'Fixed overflow & display issues with periodic modulator transform type',
@@ -33,7 +47,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
     {
         version: '2.0.1',
         releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.0.1',
-        headline: 'QoL improvements',
+        headline: 'QoL Improvements',
         description: `
             <p>
                 Per user feedback, some minor changes have been made to make Sound Tile smoother to use.
