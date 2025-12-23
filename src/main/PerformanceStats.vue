@@ -124,13 +124,17 @@ onMounted(() => {
                 const now = performance.now();
                 ctx.transform(-canvas.width / 10000, 0, 0, -(canvas.height - 2) / max, canvas.width, canvas.height - 1);
                 ctx.beginPath();
-                ctx.moveTo(10000, perfMetrics.jsTimingHistory[0]);
+                let v = Math.min(max, perfMetrics.jsTimingHistory[0]);
+                ctx.moveTo(10000, v);
+                ctx.lineTo(now - perfMetrics.frames[0], v);
                 for (let i = 1; i < perfMetrics.jsTimingHistory.length; i++) {
                     const v = Math.min(max, perfMetrics.jsTimingHistory[i]);
                     ctx.lineTo(now - perfMetrics.frames[i - 1], v);
                     ctx.lineTo(now - perfMetrics.frames[i], v);
                 }
-                ctx.moveTo(10000, perfMetrics.frameTimingHistory[0]);
+                v = Math.min(max, perfMetrics.frameTimingHistory[0]);
+                ctx.moveTo(10000, v);
+                ctx.lineTo(now - perfMetrics.frames[0], v);
                 for (let i = 1; i < perfMetrics.frameTimingHistory.length; i++) {
                     const v = Math.min(max, perfMetrics.frameTimingHistory[i]);
                     ctx.lineTo(now - perfMetrics.frames[i - 1], v);
