@@ -1,4 +1,4 @@
-export const copyright = 'Copyleft (ɔ) 2025 Sampleprovider(sp)';
+export const copyright = 'Copyleft (ɔ) 2026 Sampleprovider(sp)';
 export const version = __VERSION__;
 export const repositoryURL = "https://github.com/spsquared/sound-tile-typescript";
 export const dreamberd = 'DreamBerd';
