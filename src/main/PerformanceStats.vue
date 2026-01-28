@@ -7,6 +7,8 @@ const fpsCanvas = useTemplateRef('fpsCanvas');
 const timingsCanvas = useTemplateRef('timingsCanvas');
 const memCanvas = useTemplateRef('memCanvas');
 
+const memoryProfilingAvailable = 'memory' in performance;
+
 function resizeCanvas(canvas: HTMLCanvasElement) {
     canvas.width = 280 * window.devicePixelRatio;
     canvas.height = 60 * window.devicePixelRatio;
@@ -172,7 +174,7 @@ onMounted(() => {
         let lastHeapSize = 0;
         const memoryHistory: number[] = [];
         const allocationRateHistory: number[] = [];
-        if ('memory' in performance) frameCbs.add(() => {
+        if (memoryProfilingAvailable) frameCbs.add(() => {
             const heapSize = (performance as any).memory.usedJSHeapSize / 1048576;
             memoryHistory.push(heapSize);
             const allocRate = heapSize - lastHeapSize;
@@ -211,11 +213,6 @@ onMounted(() => {
             memoryAvg.value = avg(memoryHistory);
             allocationRateAvg.value = avg(allocationRateHistory);
         });
-        else {
-            ctx.font = '18px monospace';
-            ctx.fillStyle = 'red';
-            ctx.fillText('Memory profiling not available', 0, 0);
-        }
     } else canvasFailed = true;
     if (canvasFailed) console.error('A performance profiling canvas failed to initialize!');
     window.addEventListener('resize', () => {
@@ -240,8 +237,11 @@ onMounted(() => {
             <div>Over: {{ `${overheadTimingsVal[0].toFixed(1)}ms (${overheadTimingsVal[1].toFixed(1)} / [${overheadTimingsVal[2].toFixed(1)} - ${overheadTimingsVal[3].toFixed(1)}])` }}</div>
             <div class="header">-- Memory --</div>
             <canvas ref="memCanvas"></canvas>
-            <div>Heap size: {{ heapSizeVal.toFixed(2) }}MB ({{ memoryAvg.toFixed(2) }}MB)</div>
-            <div>Alloc. rate: {{ allocationRateAvg.toFixed(2) }}MB/s</div>
+            <template v-if="memoryProfilingAvailable">
+                <div>Heap size: {{ heapSizeVal.toFixed(2) }}MB ({{ memoryAvg.toFixed(2) }}MB)</div>
+                <div>Alloc. rate: {{ allocationRateAvg.toFixed(2) }}MB/s</div>
+            </template>
+            <div v-else style="color: red;">Memory profiling not available</div>
         </div>
     </DraggableWindow>
 </template>

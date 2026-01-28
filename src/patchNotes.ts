@@ -40,7 +40,8 @@ export const patchNotes: readonly PatchNoteEntry[] = [
             'Fixed overflow & display issues with periodic modulator transform type',
             ['Fixed text offset modulation being relative to text size instead of tile size', [
                 'This is somewhat breaking as text modulations may be amplified'
-            ]]
+            ]],
+            'Fixed various CSS issues on Firefox'
         ],
         notes: []
     },

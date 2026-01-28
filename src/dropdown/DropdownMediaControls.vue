@@ -61,6 +61,8 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime
     display: grid;
     grid-template-rows: 58px 4px 58px;
     grid-template-columns: 50px 4px 58px 66px 58px min-content 1fr;
+    /* firefox fix */
+    min-width: fit-content;
     border-left: 4px solid white;
 }
 

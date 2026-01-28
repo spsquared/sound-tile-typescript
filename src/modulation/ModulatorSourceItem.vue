@@ -35,13 +35,14 @@ function startDrag(key: string) {
 
 <style scoped>
 .sourceDrag {
+    display: flex;
     width: 48px;
     height: 32px;
     border-radius: 8px;
     background-color: var(--logo-green);
     cursor: grab;
-    align-content: center;
-    justify-items: center;
+    align-items: center;
+    justify-content: center;
 }
 
 .sourceDrag::after {

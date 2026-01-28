@@ -77,7 +77,7 @@ function removeStop(i: number) {
             </div>
             <div class="pickerBody pickerSolid" v-if="props.picker.type == 'solid'">
                 <ColorInput class="pickerSolidColorSwatch" v-model="props.picker.solidData.color" title="Select color"></ColorInput>
-                <input type="button" class="pickerEyedropperButton" title="Pick color using eyedropper tool" @click="runEyedropperSolid()" v-if="eyedropper.isSupported">
+                <input type="button" class="pickerEyedropperButton" title="Pick color using eyedropper tool" @click="runEyedropperSolid()" v-if="eyedropper.isSupported.value">
                 <label title="Opacity of solid color">
                     Opacity:
                     <StrictNumberInput v-model="props.picker.solidData.alpha" :min="0" :max="1" :step="0.01"></StrictNumberInput>
@@ -110,7 +110,7 @@ function removeStop(i: number) {
                     <div v-for="(stop, i) of props.picker.gradientData.stops" :key="i" class="pickerGradientStop">
                         <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.t" :min="0" :max="1" :step="0.1" :strict-step="0.01" title="Position of stop (0-1)"></StrictNumberInput>
                         <ColorInput class="pickerGradientStopColor" v-model="stop.c" title="Color of stop"></ColorInput>
-                        <input type="button" class="pickerGradientStopEyedropper" title="Pick color of stop using eyedropper tool" @click="runEyedropperStop(i)" v-if="eyedropper.isSupported">
+                        <input type="button" class="pickerGradientStopEyedropper" title="Pick stop color using eyedropper tool" @click="runEyedropperStop(i)" v-if="eyedropper.isSupported.value">
                         <StrictNumberInput class="pickerGradientStopNumber" v-model="stop.a" :min="0" :max="1" :step="0.1" :strict-step="0.01" title="Opacity of stop"></StrictNumberInput>
                         <input type="button" class="pickerGradientStopUp" title="Move stop up" @click="moveStopUp(i)" :disabled="i == 0">
                         <input type="button" class="pickerGradientStopDown" title="Move stop down" @click="moveStopDown(i)" :disabled="i == props.picker.gradientData.stops.length - 1">

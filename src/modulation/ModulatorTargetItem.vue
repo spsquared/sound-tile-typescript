@@ -71,6 +71,7 @@ let globalHoverId = 0;
 
 <style scoped>
 .targetDrop {
+    display: flex;
     width: 48px;
     height: 32px;
     border-radius: 8px;
@@ -79,8 +80,8 @@ let globalHoverId = 0;
     background-position: 10% 50%, 90% 50%;
     background-size: 40% 40%;
     background-repeat: no-repeat;
-    align-content: center;
-    justify-items: center;
+    align-items: center;
+    justify-content: center;
     transition: 200ms ease background-position;
 }
 
