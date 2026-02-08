@@ -1,5 +1,5 @@
-import { encode, decode, ExtensionCodec } from "@msgpack/msgpack";
-import { parse, stringify, validate } from "uuid";
+import { encode, decode, ExtensionCodec } from '@msgpack/msgpack';
+import { parse, stringify, validate } from 'uuid';
 
 export const soundtileMsgpackExtensions = new ExtensionCodec();
 

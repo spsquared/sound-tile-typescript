@@ -1,5 +1,5 @@
-import { computed, ref } from "vue";
-import TileEditor from "@/visualizer/editor";
+import { computed, ref } from 'vue';
+import TileEditor from '@/visualizer/editor';
 
 type ReusedSourceResult = [ArrayBuffer, string];
 export namespace ReuseVisualizerSource {

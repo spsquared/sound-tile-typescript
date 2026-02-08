@@ -99,7 +99,7 @@ export class MediaPlayer {
         watch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
             if (this.playing.value && Visualizer.duration > 0) {
                 if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
-                else Visualizer.start(this.internalTimer.currentTime); // reactivity runs this with the above line and restarts playback
+                else Visualizer.start(this.internalTimer.currentTime); // setTime(0) updates startTime and restarts playback here
                 this.wakeLock.request('screen');
             } else if (wasPlaying) {
                 Visualizer.stop();

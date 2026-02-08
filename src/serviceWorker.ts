@@ -59,7 +59,7 @@ async function getCached(req: Request): Promise<Response> {
         return await cache.match(req) ?? Response.error();
     });
 }
-self2.addEventListener("fetch", (e) => {
+self2.addEventListener('fetch', (e) => {
     if (e.request.method != 'GET') return;
     if (e.request.url.startsWith(self.location.origin)) {
         e.respondWith(getCached(e.request));

@@ -1,6 +1,6 @@
 import { version } from './constants';
-import ErrorQueue from "./errorQueue";
-import { newVersionNumber, newVersionReload, showNewVersionNotice } from "./main/App.vue";
+import ErrorQueue from './errorQueue';
+import { newVersionNumber, newVersionReload, showNewVersionNotice } from './main/App.vue';
 
 export async function setupServiceWorker() {
     try {

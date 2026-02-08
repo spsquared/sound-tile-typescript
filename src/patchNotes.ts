@@ -1,4 +1,4 @@
-import { repositoryURL } from "./constants";
+import { repositoryURL } from './constants';
 
 type PatchNoteEntry = {
     readonly version: string

@@ -1,5 +1,3 @@
-
-
 import { effectScope, EffectScope, reactive, ref, Ref, toRaw, watch, watchEffect } from 'vue';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
@@ -41,6 +39,7 @@ export class Visualizer {
     readonly renderer: VisualizerRenderer;
     readonly canvas: HTMLCanvasElement;
     readonly ctx: CanvasRenderingContext2D;
+
     /**Sets if the visualizer is visible/playable */
     readonly visible: Ref<boolean> = ref(false);
 
@@ -295,7 +294,7 @@ export class Visualizer {
 
     /**All **VISIBLE** instances of visualizers - maintained by the visualizer instances themselves */
     private static readonly instances: Set<Visualizer> = new Set();
-    /**Internal timekeeping to synchronize visualizer playback */
+    /**Internal timekeeping to synchronize visualizer playback - time is in audio context time and not playback time */
     private static readonly time: {
         startTime: number
         duration: number

@@ -6,7 +6,7 @@ import App from '@/main/App.vue';
 import { setupServiceWorker } from './serviceWorkerClient';
 
 const app = createApp(App);
-app.mount("#root");
+app.mount('#root');
 if (import.meta.env.PROD) setupServiceWorker();
 
 import '@/visualizer/drawLoop';
