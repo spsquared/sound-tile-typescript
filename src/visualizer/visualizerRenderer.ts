@@ -118,7 +118,7 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
         this.renderer.playing = Visualizer.playing;
         this.renderer.debugInfo = perfMetrics.debugLevel.value;
         this.renderer.draw(buffer);
-        return this.renderer.frameResult;
+        return this.frameResult.value = this.renderer.frameResult;
     }
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
