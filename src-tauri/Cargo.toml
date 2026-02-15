@@ -3,7 +3,7 @@ name = "sound-tile"
 version = "2.0.0"
 description = "Tile-based music visualizer"
 authors = ["spsquared"]
-edition = "2025"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
