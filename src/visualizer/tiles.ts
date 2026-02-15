@@ -5,7 +5,7 @@ import { MediaSchema } from './mediaSchema';
 import Visualizer from './visualizer';
 import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
 import { BeepboxVisualizer } from './beepbox';
-import { BeepboxVisualizerData, createDefaultBeepboxVisualizerData } from './beepboxData';
+import { BeepboxData, createDefaultBeepboxVisualizerData } from './beepboxData';
 import Modulation from './modulation';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -317,6 +317,51 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     }
 }
 
+export class BeepboxTile extends Tile {
+    static readonly id: string = 'bb';
+    static readonly component = BeepboxTileComponent;
+    static readonly name: string = 'BeepBox Tile';
+    static readonly image: string = beepboxTileImg;
+    readonly class: typeof BeepboxTile = BeepboxTile;
+    static { this.registerTile(this); }
+
+    label: string = BeepboxTile.name;
+    /**Canvas element maintained by tile instance, as component mount-unmount would create and destroy it */
+    readonly canvas: HTMLCanvasElement;
+    /**Visualizer instance attached */
+    readonly visualizer: BeepboxVisualizer;
+
+    constructor(data?: BeepboxData) {
+        super();
+        this.canvas = document.createElement('canvas');
+        this.visualizer = new BeepboxVisualizer(data ?? createDefaultBeepboxVisualizerData(), this.canvas);
+        // see VisualizerTile
+        this.mountedListeners.add(() => this.visualizer.visible.value = true);
+        this.unmountedListeners.add(async () => {
+            await nextTick();
+            if (this.element === null) this.visualizer.visible.value = false;
+        });
+    }
+
+    getSchemaData(): MediaSchema.BeepboxTile {
+        return {
+            ...super.getSchemaData()
+        };
+    }
+    static fromSchemaData(data: MediaSchema.BeepboxTile): BeepboxTile {
+        return this.reconstitute(data, new BeepboxTile());
+    }
+    protected static reconstitute(data: MediaSchema.BeepboxTile, tile: BeepboxTile): BeepboxTile {
+        super.reconstitute(data, tile);
+        return tile;
+    }
+
+    destroy(): void {
+        super.destroy();
+        this.visualizer.destroy();
+    }
+}
+
 export class TextTile extends Tile implements Modulation.Modulatable<{
     textScale: number
     textOffsetX: number
@@ -428,47 +473,6 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
     destroy(): void {
         super.destroy();
         this.modulation.destroy();
-    }
-}
-
-export class BeepboxTile extends Tile {
-    static readonly id: string = 'bb';
-    static readonly component = BeepboxTileComponent;
-    static readonly name: string = 'BeepBox Tile';
-    static readonly image: string = beepboxTileImg;
-    readonly class: typeof BeepboxTile = BeepboxTile;
-    static { this.registerTile(this); }
-
-    label: string = BeepboxTile.name;
-    readonly visualizer: BeepboxVisualizer;
-
-    constructor(data?: BeepboxVisualizerData) {
-        super();
-        this.visualizer = new BeepboxVisualizer(data ?? createDefaultBeepboxVisualizerData());
-        // see VisualizerTile
-        this.mountedListeners.add(() => this.visualizer.visible.value = true);
-        this.unmountedListeners.add(async () => {
-            await nextTick();
-            if (this.element === null) this.visualizer.visible.value = false;
-        });
-    }
-
-    getSchemaData(): MediaSchema.BeepboxTile {
-        return {
-            ...super.getSchemaData()
-        };
-    }
-    static fromSchemaData(data: MediaSchema.BeepboxTile): BeepboxTile {
-        return this.reconstitute(data, new BeepboxTile());
-    }
-    protected static reconstitute(data: MediaSchema.BeepboxTile, tile: BeepboxTile): BeepboxTile {
-        super.reconstitute(data, tile);
-        return tile;
-    }
-
-    destroy(): void {
-        super.destroy();
-        this.visualizer.destroy();
     }
 }
 

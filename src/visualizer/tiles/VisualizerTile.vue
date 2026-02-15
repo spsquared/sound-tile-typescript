@@ -5,8 +5,8 @@ import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
 import { VisualizerTile } from '../tiles';
 import Tile from './Tile.vue';
+import Playback from '../playback';
 import { VisualizerMode } from '../visualizerData';
-import Visualizer from '../visualizer';
 import { ReuseVisualizerSource } from '@/sidebar/sources/reuseSource';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
@@ -199,7 +199,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                             <Slider length="100px" v-model="options.freqOptions.smoothing" :min="0" :max="1" :step="0.05" :scroll-speed="0.02" :title="`Smoothing: ${Math.round(options.freqOptions.smoothing * 100)}%`"></Slider>
                         </label>
                         <label title="Cutoff proportion of maximum frequency - dependent on device audio sample rate">
-                            Freq Cut<br>({{ Math.round(options.freqOptions.freqCutoff * Visualizer.audioContext.sampleRate / 2) }}Hz)
+                            Freq Cut<br>({{ Math.round(options.freqOptions.freqCutoff * Playback.audioContext.sampleRate / 2) }}Hz)
                             <StrictNumberInput v-model="options.freqOptions.freqCutoff" :min="0" :max="1" :step="0.05" :strict-step="0"></StrictNumberInput>
                         </label>
                         <label title="Cutoff threshold for minimum decibels to show on the visualizer">

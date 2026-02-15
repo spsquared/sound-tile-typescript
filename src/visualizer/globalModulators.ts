@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import Modulation from './modulation';
-import MediaPlayer from './mediaPlayer';
+import Playback from './playback';
 
 /**
  * External modulation sources and targets that exist outside of the layout scope.
@@ -10,13 +10,7 @@ export type GlobalModulator = Modulation.Source<{
 }>;
 
 const playbackTime = ref(0);
-let started = false;
-/**Exists solely as a workaround for circular imports */
-export const startMediaPlayerPlaybackTime = async (player: typeof MediaPlayer) => {
-    // I love circular imports
-    if (!started) setInterval(() => playbackTime.value = player.playing.value ? player.currentTime.value : performance.now() / 1000, 10);
-    started = true;
-};
+setInterval(() => playbackTime.value = Playback.playing.value ? Playback.time.value : performance.now() / 1000, 10);
 
 export function createGlobalModulator(): GlobalModulator {
     return new Modulation.Source({

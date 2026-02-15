@@ -1,25 +1,14 @@
 import { effectScope, EffectScope, reactive, ref, Ref, toRaw, watch, watchEffect } from 'vue';
+import { webWorkerSupported } from '@/constants';
+import Playback from './playback';
+import perfMetrics from './drawLoop';
 import { VisualizerData, VisualizerMode } from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
-import perfMetrics from './drawLoop';
-
-if (!('AudioContext' in window)) {
-    throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
-}
-
-const webWorkerSupported = 'Worker' in window;
 
 /**
  * Audio and visual rendering context of visualizer tiles.
  */
 export class Visualizer {
-    static readonly audioContext: AudioContext = new AudioContext({ sampleRate: 48000 });
-    static readonly gain: GainNode = Visualizer.audioContext.createGain();
-
-    static {
-        this.gain.connect(this.audioContext.destination);
-    }
-
     /**
      * Cache decoded audio so audio buffers can be reused. The promise prevents
      * decoding the same buffer a second time while the first is still loading.
@@ -49,11 +38,18 @@ export class Visualizer {
         this.data = reactive(initData);
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
-        this.gain = Visualizer.audioContext.createGain();
-        this.gain.connect(Visualizer.gain);
+        this.gain = Playback.audioContext.createGain();
+        this.gain.connect(Playback.gain);
         this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
         this.effectScope = effectScope();
         this.effectScope.run(() => {
+            watch(this.visible, () => {
+                if (this.visible.value) Visualizer.instances.add(this);
+                else Visualizer.instances.delete(this);
+                Visualizer.recalculateDuration();
+                if (this.audioBuffer !== null && Playback.playing.value && this.visible.value) this.start();
+                else this.stop();
+            }, { immediate: true });
             watch(() => this.data.buffer, async () => {
                 this.audioBuffer = null;
                 if (this.data.buffer !== null) {
@@ -62,24 +58,17 @@ export class Visualizer {
                         this.audioBuffer = await Visualizer.decodedAudioCache.get(this.data.buffer)!;
                     } else {
                         // buffer is sliced as browser consumes the buffer in decoding
-                        const promise = Visualizer.audioContext.decodeAudioData(this.data.buffer.slice());
+                        const promise = Playback.audioContext.decodeAudioData(this.data.buffer.slice());
                         Visualizer.decodedAudioCache.set(this.data.buffer, promise);
                         this.audioBuffer = await promise;
                     }
                 }
                 Visualizer.recalculateDuration();
-                if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();
+                if (this.audioBuffer !== null && Playback.playing.value && this.visible.value) this.start();
                 else this.stop();
             }, { immediate: true });
-            watch(this.visible, () => {
-                if (this.visible.value) Visualizer.instances.add(this);
-                else Visualizer.instances.delete(this);
-                Visualizer.recalculateDuration();
-                if (this.audioBuffer !== null && Visualizer.time.playing && this.visible.value) this.start();
-                else this.stop();
-            });
             watchEffect(() => this.gain.gain.value = this.data.gain);
-            watchEffect(() => this.data.mute ? this.gain.disconnect(Visualizer.gain) : this.gain.connect(Visualizer.gain));
+            watchEffect(() => this.data.mute ? this.gain.disconnect(Playback.gain) : this.gain.connect(Playback.gain));
             watch([() => this.data.mode, () => this.data.levelOptions.channels, () => this.data.buffer], ([], [lastMode, lastChannels, lastBuffer]) => {
                 // this could blow up very easily!!
                 if (this.data.mode == VisualizerMode.CHANNEL_PEAKS && (lastMode != VisualizerMode.CHANNEL_PEAKS || this.data.levelOptions.channels != lastChannels)) {
@@ -87,11 +76,11 @@ export class Visualizer {
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     else for (const a of this.analyzers) this.gain.disconnect(a);
                     const channels = Math.max(1, this.data.levelOptions.channels);
-                    this.splitter = Visualizer.audioContext.createChannelSplitter(channels);
+                    this.splitter = Playback.audioContext.createChannelSplitter(channels);
                     this.gain.connect(this.splitter);
                     this.analyzers.length = 0;
                     for (let i = 0; i < channels; i++) {
-                        const analyzer = Visualizer.audioContext.createAnalyser();
+                        const analyzer = Playback.audioContext.createAnalyser();
                         analyzer.fftSize = 1024;
                         analyzer.maxDecibels = 0;
                         this.splitter.connect(analyzer, i);
@@ -103,7 +92,7 @@ export class Visualizer {
                     this.splitter?.disconnect();
                     this.splitter = null;
                     this.analyzers.length = 0;
-                    const analyzer = Visualizer.audioContext.createAnalyser();
+                    const analyzer = Playback.audioContext.createAnalyser();
                     this.analyzers.push(analyzer);
                     analyzer.fftSize = this.data.fftSize;
                     analyzer.maxDecibels = 0;
@@ -131,7 +120,7 @@ export class Visualizer {
         });
         // who cares about resource leak lmao this is a joke
         if (window.localStorage.getItem('wtfmode') !== null) setInterval(() => {
-            this.source?.playbackRate.linearRampToValueAtTime(Math.sin(performance.now() / 50) * 0.2 + 1, Visualizer.audioContext.currentTime + 0.05);
+            this.source?.playbackRate.linearRampToValueAtTime(Math.sin(performance.now() / 50) * 0.2 + 1, Playback.audioContext.currentTime + 0.05);
         }, 50);
     }
 
@@ -231,7 +220,7 @@ export class Visualizer {
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
                 this.renderer.isWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
-                `Playing: ${Visualizer.playing}`,
+                `Playing: ${Playback.playing.value}`,
                 `FPS: ${this.debug.frames.length} (${avgArr(this.debug.fpsHistory).toFixed(1)} / [${Math.min(...this.debug.fpsHistory)} - ${Math.max(...this.debug.fpsHistory)}])`,
                 `Total:  ${(frameTime).toFixed(1)}ms (${avgArr(this.debug.totalTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.totalTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.totalTimingHistory).toFixed(1)}ms])`,
                 `Render: ${(renderTime).toFixed(1)}ms (${avgArr(this.debug.rendererTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.rendererTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.rendererTimingHistory).toFixed(1)}ms])`,
@@ -269,10 +258,10 @@ export class Visualizer {
     private start(): void {
         this.stop();
         if (this.audioBuffer == null) return;
-        this.source = Visualizer.audioContext.createBufferSource();
+        this.source = Playback.audioContext.createBufferSource();
         this.source.buffer = this.audioBuffer;
         this.source.connect(this.gain);
-        this.source.start(Visualizer.audioContext.currentTime, Visualizer.audioContext.currentTime - Visualizer.time.startTime);
+        this.source.start(Playback.audioContext.currentTime, Playback.time.value);
     }
     private stop(): void {
         this.source?.stop();
@@ -294,49 +283,23 @@ export class Visualizer {
 
     /**All **VISIBLE** instances of visualizers - maintained by the visualizer instances themselves */
     private static readonly instances: Set<Visualizer> = new Set();
-    /**Internal timekeeping to synchronize visualizer playback - time is in audio context time and not playback time */
-    private static readonly time: {
-        startTime: number
-        duration: number
-        playing: boolean
-    } = reactive({
-        startTime: 0,
-        duration: 0,
-        playing: false
-    });
-    static start(time: number = 0): void {
-        this.time.startTime = this.audioContext.currentTime - time;
-        this.time.playing = true;
-        for (const vis of this.instances) vis.start();
-        this.audioContext.resume();
-    }
-    static stop(): void {
-        this.time.playing = false;
-        for (const vis of this.instances) vis.stop();
-        this.audioContext.suspend();
-    }
+    private static readonly internalDuration: Ref<number> = ref(0);
     private static recalculateDuration(): void {
         let time = 0;
         for (const vis of this.instances) {
             if (vis.duration > time) time = vis.duration;
         }
-        this.time.duration = time;
+        this.internalDuration.value = time;
     }
     static get duration(): number {
-        return this.time.duration;
-    }
-    static get playing(): boolean {
-        return this.time.playing;
+        return this.internalDuration.value;
     }
     static {
-        // suspend as not playing initially
-        this.audioContext.suspend();
-        this.audioContext.addEventListener('statechange', () => {
-            // sort of splits playback controls across MediaPlayer and Visualizer classes...
-            const contextPlaying = this.audioContext.state == 'running';
-            if (contextPlaying != this.time.playing) {
-                if (contextPlaying) this.start(this.audioContext.currentTime - this.time.startTime);
-                else this.stop();
+        watch([Playback.playing, Playback.startTime], () => {
+            if (Playback.playing.value) {
+                for (const vis of this.instances) vis.start();
+            } else {
+                for (const vis of this.instances) vis.stop();
             }
         });
     }

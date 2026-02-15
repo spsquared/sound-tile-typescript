@@ -1,4 +1,4 @@
-import { ColorData } from "@/components/inputs/colorPicker";
+import { ColorData } from '@/components/inputs/colorPicker';
 
 export enum ScaleKeys {
     'C',
@@ -18,7 +18,7 @@ export enum ScaleKeys {
 /**
  * BeepBox song data and visualizer configurations for a BeepBox tile.
  */
-export interface BeepboxVisualizerData {
+export interface BeepboxData {
     song: {
         /**Root key of song - basically a pitch shift */
         key: ScaleKeys
@@ -47,11 +47,18 @@ export interface BeepboxVisualizerData {
             sequence: number[]
         }[]
     } | null;
+    /**Styling for individual channels */
     channelStyles: {
         color: ColorData
     }[]
     /**How many times the loop loops */
     loopCount: number
+    /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
+    rotate: boolean
+    /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
+    flipX: boolean
+    /**Flip the visualizer's Y-axis - applied after rotation (top becomes bottom) */
+    flipY: boolean
 }
 
 /**
@@ -87,10 +94,13 @@ export type BeepboxJsonSkeleton = {
     }[]
 }
 
-export function createDefaultBeepboxVisualizerData(): BeepboxVisualizerData {
+export function createDefaultBeepboxVisualizerData(): BeepboxData {
     return {
         song: null,
         channelStyles: [],
-        loopCount: 1
+        loopCount: 1,
+        rotate: false,
+        flipX: false,
+        flipY: false
     };
 }

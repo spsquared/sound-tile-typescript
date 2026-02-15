@@ -12,19 +12,20 @@ type PatchNoteEntry = {
 };
 
 export const patchNotes: readonly PatchNoteEntry[] = [
-    // {
-    //     version: '2.1.0',
-    //     releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.1.0',
-    //     headline: 'The BeepBox Tile Update',
-    //     description: `
-    //     `,
-    //     breaking: [],
-    //     changes: [
-    //     ],
-    //     fixes: [
-    //     ],
-    //     notes: []
-    // },
+    {
+        version: '2.1.0',
+        releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.1.0',
+        headline: 'The BeepBox Tile Update',
+        description: `
+        `,
+        breaking: [],
+        changes: [
+        ],
+        fixes: [
+            'Refactored playback timers to fix issues with desync and maintainability'
+        ],
+        notes: []
+    },
     {
         version: '2.0.2',
         releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.0.2',

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue';
 import { matchTextInput } from '@/constants';
+import Playback from '@/visualizer/playback';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { pipEnabled } from '@/visualizer/pipPlayer';
 import Slider from '@/components/inputs/Slider.vue';
@@ -16,32 +17,32 @@ function keydown(e: KeyboardEvent) {
     if (matchTextInput(e.target)) return;
     const key = e.key.toLowerCase();
     if (key == ' ' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        MediaPlayer.playing.value = !MediaPlayer.playing.value;
+        Playback.playing.value = !Playback.playing.value;
         e.preventDefault();
     } else if (key == 'arrowleft' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        MediaPlayer.currentTime.value -= e.shiftKey ? 10 : 5;
+        Playback.time.value -= e.shiftKey ? 10 : 5;
         e.preventDefault();
     } else if (key == 'arrowright' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        MediaPlayer.currentTime.value += e.shiftKey ? 10 : 5;
+        Playback.time.value += e.shiftKey ? 10 : 5;
         e.preventDefault();
     }
 }
 onMounted(() => document.addEventListener('keydown', keydown));
 onUnmounted(() => document.removeEventListener('keydown', keydown));
 
-const timeStr = computed(() => `${MediaPlayer.formatTime(MediaPlayer.currentTime.value)} / ${MediaPlayer.formatTime(MediaPlayer.currentDuration.value)}`);
+const timeStr = computed(() => `${MediaPlayer.formatTime(Playback.time.value)} / ${MediaPlayer.formatTime(Playback.duration.value)}`);
 </script>
 
 <template>
     <div id="mediaControls">
         <Slider id="volumeSlider" v-model="MediaPlayer.state.volume" :title="`Volume: ${Math.round(MediaPlayer.state.volume * 100)}%`" :min="0" :max="1.5" :step="0.01" vertical :scroll-speed="0.05" length="120px" track-width="10px" thumb-length="15px" thumb-width="30px" side-border-width="2px" end-border-width="0px" :icon="volumeIcon"></Slider>
-        <Slider id="seekSlider" v-model="MediaPlayer.currentTime.value" :title="timeStr" :min="0" :max="MediaPlayer.currentDuration.value" :step="0.01" :scroll-speed="4" track-width="58px" thumb-length="20px" thumb-width="58px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
+        <Slider id="seekSlider" v-model="Playback.time.value" :title="timeStr" :min="0" :max="Playback.duration.value" :step="0.01" :scroll-speed="4" track-width="58px" thumb-length="20px" thumb-width="58px" thumb-radius="0px" color2="#555" color3="#DDD" color4="#EEE" side-border-width="0px" end-border-width="0px"></Slider>
         <div id="mediaControlsBorder1"></div>
         <div id="mediaControlsBorder2"></div>
-        <input type="checkbox" id="playCheckbox" v-model="MediaPlayer.playing.value">
-        <label button id="playButton" for="playCheckbox" :title="MediaPlayer.playing.value ? 'Pause' : 'Play'" tabindex="0"></label>
+        <input type="checkbox" id="playCheckbox" v-model="Playback.playing.value" :disabled="Playback.duration.value == 0">
+        <label button id="playButton" for="playCheckbox" :title="Playback.playing.value ? 'Pause' : 'Play'" tabindex="0"></label>
         <div id="mediaControlsTimeContainer">
-            <span :title="timeStr">{{ MediaPlayer.formatTime(MediaPlayer.currentTime.value) }}</span>
+            <span :title="timeStr">{{ MediaPlayer.formatTime(Playback.time.value) }}</span>
             <Toggle v-model="MediaPlayer.state.loop" :icon="loopIcon" title="Loop song"></Toggle>
         </div>
         <input type="checkbox" id="pipCheckbox" :disabled="!pipEnabled">

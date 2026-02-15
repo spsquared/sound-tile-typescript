@@ -85,7 +85,7 @@ export class TileEditor {
         this.state.tileTypes[t.id] = { Tile: t, visible: visible };
     }
 
-    private constructor() {}; // no constructor 4 u
+    private constructor() { }; // no constructor 4 u
 
     /**
      * Root node of current layout on screen, wrapped inside a `Reactive` object.
@@ -435,12 +435,6 @@ export class TileEditor {
         this.modulatorDrag.sourceKey = key;
         this.modulatorDrag.target = null;
         return true;
-    }
-    static updateModulatorDrag(): void
-    static updateModulatorDrag<Props extends Modulation.TargetPropertyMap, Key extends keyof Props & string>(target: Modulation.Target<Props>, key: Key): void
-    static updateModulatorDrag<Props extends Modulation.TargetPropertyMap, Key extends keyof Props & string>(target?: Modulation.Target<Props>, key?: Key): void {
-        this.modulatorDrag.target = target ?? null;
-        this.modulatorDrag.targetKey = key ?? '';
     }
     static endModulatorDrag(): boolean {
         if (this.modulatorDrag.source === null) return false;

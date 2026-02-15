@@ -1,18 +1,17 @@
-import { computed, ComputedRef, reactive, ref, Ref, watch, WritableComputedRef } from 'vue';
-import { Media, defaultCoverArt } from './media';
-import Visualizer from './visualizer';
+import { reactive, watch } from 'vue';
 import { useLocalStorage, useWakeLock } from '@vueuse/core';
+import { Media, defaultCoverArt } from './media';
 import TileEditor from './editor';
 import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
-import { VisualizerMode } from './visualizerData';
+import Playback from './playback';
 import Modulation from './modulation';
-import { startMediaPlayerPlaybackTime } from './globalModulators';
+import { VisualizerMode } from './visualizerData';
 
 /**
  * Global media controls, coordinates visualizer & controls.
  */
-export class MediaPlayer {
-    static readonly state: {
+export namespace MediaPlayer {
+    export const state: {
         shuffle: boolean
         loop: boolean
         volume: number
@@ -25,7 +24,7 @@ export class MediaPlayer {
         volume: useLocalStorage('volume', 1),
         mediaDataTabOpen: false
     });
-    static readonly media: {
+    export const media: {
         current: Media
     } = reactive({
         current: new Media({
@@ -34,110 +33,40 @@ export class MediaPlayer {
             coverArt: defaultCoverArt
         })
     }) as any; // how the fuck was there no error with GroupTile until changed an unrelated thing and then there was an error
-    private static readonly internalTimer = reactive<{
-        // setting startTime essentially determines the offset of the audio
-        startTime: number
-        // actual current time, so it can be frozen when paused
-        currentTime: number
-        // just performance.now() / 1000 but updated every 20ms
-        now: number
-    }>({
-        startTime: 0,
-        currentTime: 0,
-        now: 0
-    });
-    static readonly playing: Ref<boolean> = ref(false);
-    static readonly currentTime: WritableComputedRef<number> = computed({
-        get: () => this.internalTimer.currentTime,
-        set: (t) => this.setTime(t)
-    });
-    static readonly currentDuration: ComputedRef<number> = computed(() => Visualizer.duration);
-    private static readonly wakeLock = useWakeLock();
 
-    static play(t?: number): void {
-        if (t !== undefined) this.setTime(t);
-        this.playing.value = true;
-        this.updateTime();
-    }
-    static pause(): void {
-        this.playing.value = false;
-        this.updateTime();
-    }
-    static setTime(t: number): void {
-        const clamped = Math.max(0, Math.min(t, Visualizer.duration));
-        this.internalTimer.startTime = this.internalTimer.now - clamped;
-        this.internalTimer.currentTime = clamped;
-        this.updateTime();
-    }
-    private static updateTime(): void {
-        if (Visualizer.duration == 0) {
-            this.playing.value = false;
-        } else if (this.playing.value) {
-            this.internalTimer.currentTime = this.internalTimer.now - this.internalTimer.startTime;
-            if (this.internalTimer.currentTime >= Visualizer.duration) {
-                if (this.state.loop) {
-                    this.setTime(0);
-                } else {
-                    this.playing.value = false;
-                    this.setTime(Visualizer.duration);
-                }
-            }
-        } else {
-            this.internalTimer.startTime = this.internalTimer.now - this.internalTimer.currentTime;
-        }
-    }
+    const wakeLock = useWakeLock();
 
-    static formatTime(t: number): string {
+    export function formatTime(t: number): string {
         const minutes = Math.floor(t / 60);
         const seconds = ((Math.floor(t) % 60) / 100).toFixed(2).substring(2);
         return `${minutes}:${seconds}`;
     }
 
-    // playback
-    static {
-        watch(() => this.state.volume, () => Visualizer.gain.gain.value = this.state.volume, { immediate: true });
-        watch([this.playing, () => this.internalTimer.startTime], ([], [wasPlaying]) => {
-            if (this.playing.value && Visualizer.duration > 0) {
-                if (this.internalTimer.currentTime + 0.01 >= Visualizer.duration) this.setTime(0);
-                else Visualizer.start(this.internalTimer.currentTime); // setTime(0) updates startTime and restarts playback here
-                this.wakeLock.request('screen');
-            } else if (wasPlaying) {
-                Visualizer.stop();
-                this.wakeLock.release();
-            }
-        });
-        watch(() => Visualizer.duration, () => {
-            if (this.internalTimer.currentTime >= Visualizer.duration) this.setTime(Visualizer.duration);
-        });
-        watch(() => Visualizer.playing, () => {
-            // handles audio context interruptions
-            if (Visualizer.playing != this.playing.value) this.playing.value = Visualizer.playing;
-        });
-        setInterval(() => {
-            this.internalTimer.now = performance.now() / 1000;
-            this.updateTime();
-        }, 10);
-    }
+    watch(() => state.volume, () => Playback.gain.gain.value = state.volume, { immediate: true });
+    watch(Playback.playing, () => {
+        if (Playback.playing.value) wakeLock.request('screen');
+        else wakeLock.release();
+        // looping
+        if (state.loop && Playback.time.value + 0.01 >= Playback.duration.value) Playback.start();
+    });
 
     // playlist and session
-    static {
-        watch(() => this.media.current, async (_session, oldSession) => {
-            // put the old tree back into old session
-            await TileEditor.lock.acquire();
-            oldSession.tree = TileEditor.detachRoot();
-            this.media.current.tree = TileEditor.attachRoot(this.media.current.tree);
-            TileEditor.lock.release();
-            this.state.mediaDataTabOpen = this.media.current.title.trim().length > 0;
-        });
-        watch([() => this.media.current.title, () => this.media.current.subtitle], () => {
-            const nowPlaying = [
-                this.media.current.title.trim(),
-                this.media.current.subtitle.trim()
-            ].map((s) => s.length > 32 ? s.substring(0, 32) + '...' : s).filter((s) => s.length > 0).join(' - ');
-            const title = [nowPlaying, 'Sound Title'].filter((s) => s.length > 0).join(' | ');
-            document.title = title;
-        });
-    }
+    watch(() => media.current, async (_session, oldSession) => {
+        // put the old tree back into old session
+        await TileEditor.lock.acquire();
+        oldSession.tree = TileEditor.detachRoot();
+        media.current.tree = TileEditor.attachRoot(media.current.tree);
+        TileEditor.lock.release();
+        state.mediaDataTabOpen = media.current.title.trim().length > 0;
+    });
+    watch([() => media.current.title, () => media.current.subtitle], () => {
+        const nowPlaying = [
+            media.current.title.trim(),
+            media.current.subtitle.trim()
+        ].map((s) => s.length > 32 ? s.substring(0, 32) + '...' : s).filter((s) => s.length > 0).join(' - ');
+        const title = [nowPlaying, 'Sound Title'].filter((s) => s.length > 0).join(' | ');
+        document.title = title;
+    });
 }
 
 // default state
@@ -170,7 +99,5 @@ export class MediaPlayer {
         coverArt: defaultCoverArt
     }, root);
 };
-
-startMediaPlayerPlaybackTime(MediaPlayer);
 
 export default MediaPlayer;

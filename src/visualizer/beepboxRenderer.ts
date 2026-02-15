@@ -3,24 +3,23 @@ import { watchThrottled } from '@vueuse/core';
 import { cloneDeep } from 'lodash-es';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
-import VisualizerRenderInstance from './visualizerRenderInstance';
-import { VisualizerData } from './visualizerData';
+import BeepboxRenderInstance from './beepboxRenderInstance';
+import { BeepboxData } from './beepboxData';
 
-export type VisualizerSettingsData = Omit<VisualizerData, 'buffer' | 'gain'>;
+// much of this is just a copy of visualizerRenderer.ts
+// what are you gonna do about it? complain?
+
+export type BeepboxSettingsData = BeepboxData; // idk nothing to omit
 
 /**
- * A rendering container that accepts raw AnalyzerNode data and settings.
- * Creates its own canvas as to not irreversibly break outside canvases.
+ * A rendering container that accepts song data. Rendering is stateless and only depends on a time
+ * input. Creates its own canvas as to not irreversibly break outside canvases.
  */
-export abstract class VisualizerRenderer {
+export abstract class BeepboxRenderer {
     abstract readonly isWorker: boolean;
     /**Reactive data of visualizer, should be a reference to the same object used in the visualizer instance */
-    readonly data: VisualizerSettingsData;
-    readonly frameResult: Ref<VisualizerRendererFrameResults> = ref<VisualizerRendererFrameResults>({
-        valueMax: 0,
-        valueMin: 0,
-        valueMinMaxDiff: 0,
-        approximatePeak: 0,
+    readonly data: BeepboxSettingsData;
+    readonly frameResult: Ref<BeepboxRendererFrameResults> = ref<BeepboxRendererFrameResults>({
         renderTime: 0,
         debugText: []
     });
@@ -28,13 +27,13 @@ export abstract class VisualizerRenderer {
 
     private readonly stopWatching: WatchStopHandle;
 
-    constructor(data: VisualizerSettingsData) {
+    constructor(data: BeepboxSettingsData) {
         this.data = reactive(data);
         this.canvas = document.createElement('canvas');
         this.stopWatching = watchThrottled(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
-    abstract draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults>
+    abstract draw(time: number): Promise<BeepboxRendererFrameResults>
     abstract resize(w: number, h: number): void
     protected abstract updateData(): void
 
@@ -44,40 +43,39 @@ export abstract class VisualizerRenderer {
 }
 
 /**
- * Main rendering container that wraps a VisualizerRenderInstance in a web worker.
+ * Main rendering container that wraps a BeepboxRenderInstance in a web worker.
  */
-export class VisualizerWorkerRenderer extends VisualizerRenderer {
+export class BeepboxWorkerRenderer extends BeepboxRenderer {
     readonly isWorker: true = true;
     private readonly worker: Worker;
 
-    constructor(data: VisualizerSettingsData) {
+    constructor(data: BeepboxSettingsData) {
         super(data);
-        this.worker = new Worker(new URL('./visualizerRenderInstance.ts', import.meta.url), { type: 'module' });
+        this.worker = new Worker(new URL('./beepboxRenderInstance.ts', import.meta.url), { type: 'module' });
         // initialize worker with canvas immediately, this sets up communications as well
         const workerCanvas = this.canvas.transferControlToOffscreen();
-        const cleanData = cloneDeep({ ...this.data, buffer: undefined });
-        this.worker.postMessage([workerCanvas, cleanData satisfies VisualizerSettingsData], [workerCanvas]);
+        const cleanData = cloneDeep(this.data);
+        this.worker.postMessage([workerCanvas, cleanData satisfies BeepboxSettingsData], [workerCanvas]);
         this.worker.onerror = (e) => {
             console.error(e.error);
             throw new Error(`Worker error: ${e.message} (${e.filename} ${e.lineno}:${e.colno})`);
-        }
+        };
     }
 
-    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
+    async draw(time: number): Promise<BeepboxRendererFrameResults> {
         this.frameResult.value = await this.postMessageWithAck('draw', 'drawResponse', {
-            buffer: buffer,
+            time: time,
             playing: Playback.playing.value,
             debug: perfMetrics.debugLevel.value
-        }, Array.isArray(buffer) ? buffer.map((b) => b.buffer) : [buffer.buffer]);
+        });
         return this.frameResult.value;
     }
     resize(w: number, h: number): void {
         this.postMessage('resize', { w: w, h: h });
     }
     protected updateData(): void {
-        // even though typing is fine, object is passed in from outside and could have buffer properties
-        const clean = cloneDeep({ ...this.data, buffer: undefined });
-        this.postMessage('settings', { data: clean satisfies VisualizerSettingsData });
+        const clean = cloneDeep(this.data);
+        this.postMessage('settings', { data: clean satisfies BeepboxSettingsData });
     }
 
     private postMessage<Event extends RendererMessageData['type']>(e: Event, data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>, transfers?: Transferable[]): void {
@@ -105,26 +103,26 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
 /**
  * Fallback rendering container used when web workers are unavailable.
  */
-export class VisualizerFallbackRenderer extends VisualizerRenderer {
+export class BeepboxFallbackRenderer extends BeepboxRenderer {
     readonly isWorker: false = false;
-    private readonly renderer: VisualizerRenderInstance;
+    private readonly renderer: BeepboxRenderInstance;
 
-    constructor(data: VisualizerSettingsData) {
+    constructor(data: BeepboxSettingsData) {
         super(data);
-        this.renderer = new VisualizerRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep({ ...this.data, buffer: undefined }));
+        this.renderer = new BeepboxRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
     }
 
-    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
+    async draw(time: number): Promise<BeepboxRendererFrameResults> {
         this.renderer.playing = Playback.playing.value;
         this.renderer.debugInfo = perfMetrics.debugLevel.value;
-        this.renderer.draw(buffer);
+        this.renderer.draw(time);
         return this.frameResult.value = this.renderer.frameResult;
     }
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
     }
     protected updateData(): void {
-        this.renderer.updateData(cloneDeep({ ...this.data, buffer: undefined }));
+        this.renderer.updateData(cloneDeep(this.data));
     }
 
     destroy(): void {
@@ -133,29 +131,25 @@ export class VisualizerFallbackRenderer extends VisualizerRenderer {
 }
 
 // quite limited in terms of modulation options but it'll do
-export type VisualizerRendererFrameResults = {
-    valueMax: number
-    valueMin: number
-    valueMinMaxDiff: number
-    approximatePeak: number
+export type BeepboxRendererFrameResults = {
     renderTime: number
     debugText: string[]
 }
 
 export type RendererMessageData = {
     type: 'draw'
-    buffer: Uint8Array | Float32Array | Uint8Array[]
+    time: number
     playing: boolean
     debug: 0 | 1 | 2
 } | ({
     type: 'drawResponse'
-} & VisualizerRendererFrameResults) | {
+} & BeepboxRendererFrameResults) | {
     type: 'resize'
     w: number
     h: number
 } | {
     type: 'settings',
-    data: VisualizerSettingsData
+    data: BeepboxSettingsData
 } | {
     type: 'stop'
 };

@@ -9,6 +9,7 @@ const app = createApp(App);
 app.mount('#root');
 if (import.meta.env.PROD) setupServiceWorker();
 
+import '@/visualizer/playback';
 import '@/visualizer/drawLoop';
 
 import TileEditor from './visualizer/editor';

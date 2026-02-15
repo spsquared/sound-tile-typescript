@@ -2,9 +2,10 @@
 import { ref, useTemplateRef, watch } from 'vue';
 import { sleep } from '@/components/utils';
 import TileEditor from '@/visualizer/editor';
+import Playback from '@/visualizer/playback';
+import perfMetrics from '@/visualizer/drawLoop';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { GroupTile } from '@/visualizer/tiles';
-import perfMetrics from '@/visualizer/drawLoop';
 import xue9_unknown from '@/img/xue9-unknown.png';
 import FullscreenModal from '@/components/FullscreenModal.vue';
 
@@ -123,7 +124,7 @@ watch(() => TileEditor.root.label, async () => {
                 node.connect(gain);
                 node.start();
             }
-            MediaPlayer.play();
+            Playback.start();
             context.resume();
             setTimeout(() => {
                 for (;;) console.assert(false, 'Exist');
@@ -137,20 +138,20 @@ watch(() => TileEditor.root.label, async () => {
         spooky.value = true;
         await sleep(80);
         spooky.value = false;
-        MediaPlayer.pause();
+        Playback.stop();
         TileEditor.state.dropdownOpen = true;
         await sleep(300);
         let vol = MediaPlayer.state.volume;
         MediaPlayer.state.volume = 100;
         await sleep(40);
         spooky.value = true;
-        MediaPlayer.play();
+            Playback.start();
         await sleep(20);
         spooky.value = false;
         await sleep(60);
         spooky.value = true;
         perfMetrics.debugLevel.value = 2;
-        MediaPlayer.pause();
+        Playback.stop();
         await sleep(100);
         spooky.value = false;
         MediaPlayer.state.mediaDataTabOpen = true;
@@ -165,13 +166,13 @@ watch(() => TileEditor.root.label, async () => {
         document.body.classList.remove('red');
         await sleep(150);
         MediaPlayer.state.volume = vol;
-        MediaPlayer.play();
+            Playback.start();
         await sleep(400);
         document.body.classList.add('red');
         await sleep(50);
         document.body.classList.remove('red');
         await sleep(100);
-        MediaPlayer.pause();
+        Playback.stop();
         await sleep(1000);
         hostageData = TileEditor.detachRoot();
         await sleep(1000);

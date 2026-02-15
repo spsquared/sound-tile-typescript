@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, useTemplateRef } from 'vue';
-import DraggableWindow from '@/components/DraggableWindow.vue';
 import perfMetrics from '@/visualizer/drawLoop';
+import DraggableWindow from '@/components/DraggableWindow.vue';
 
 const fpsCanvas = useTemplateRef('fpsCanvas');
 const timingsCanvas = useTemplateRef('timingsCanvas');
