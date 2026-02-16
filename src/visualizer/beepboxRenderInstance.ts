@@ -166,8 +166,9 @@ class BeepboxRenderInstance {
         const tickLUT: typeof this.tickLookupPoints = [];
         let length = 0;
         // reference for modulator enum:
-        // https://github.com/ultraabox/ultrabox_typescript/blob/main/synth/SynthConfig.ts
+        // https://github.com/ultraabox/ultrabox_typescript/blob/main/synth/SynthConfig.ts#L1563
         // channel -1 is song, modulator 2 is tempo and 4 is next bar
+        
         this.tickLookupPoints = tickLUT;
         this.songLength = length;
     }

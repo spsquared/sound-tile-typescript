@@ -118,9 +118,10 @@ class BeepboxVisualizer {
      * @returns Converted and filtered song data, **MARKED RAW** to avoid unnecessary reactivity lag
      * @throws Will throw an error if the object is not a valid BeepBox song JSON
      */
-    static parseRawJSON(raw: any): BeepboxData['song'] {
+    static parseRawJSON(raw: any): BeepboxData.Song {
         // we probably don't need such a bulletproof data valiation thing but like...
         // it's also probably not bulletproof
+        const start = performance.now();
         if (raw == undefined) throw new TypeError('Invalid song data: data is nullish');
         const json = raw as DeepPartial<BeepboxJsonSkeleton>;
         if (BeepboxData.ScaleKeys[json.key as BeepboxData.ScaleKeys] === undefined) console.warn(`Unrecognized key ${json.key}, will default to C`);
@@ -135,7 +136,10 @@ class BeepboxVisualizer {
         const abortInvalidNoteData = (): never => {
             throw new TypeError('Invalid song data: invalid note data');
         };
-        const song: BeepboxData['song'] = {
+        const abortInvalidInstrumentData = (): never => {
+            throw new TypeError('Invalid song data: invalid instrument data');
+        };
+        const song: BeepboxData.Song = {
             key: BeepboxData.ScaleKeys[json.key as BeepboxData.ScaleKeys] ?? BeepboxData.ScaleKeys.C,
             tickSpeed: json.beatsPerMinute * json.ticksPerBeat / 60,
             barLength: json.beatsPerBar * json.ticksPerBeat,
@@ -153,10 +157,60 @@ class BeepboxVisualizer {
                     type: channel.type!,
                     name: channel.name?.length! > 0 ? channel.name! : `${channel.type![0].toUpperCase()}${channel.type!.substring(1)} ${i + 1}`,
                     instruments: channel.instruments.map((instrument) => {
-                        if (!allowedInstrumentTypes.has((instrument.type ?? '').toLowerCase())) throw new TypeError(`Invalid song data: unrecognized instrument type ${instrument.type}`);
-                        return {
-                            type: instrument.type!.toLowerCase() as any
-                        };
+                        const type = instrument.type?.toLowerCase() ?? '';
+                        if (!allowedInstrumentTypes.has(type)) throw new TypeError(`Invalid song data: unrecognized instrument type ${instrument.type}`);
+                        if (type == 'mod') return {
+                            type: 'mod',
+                            modChannels: !Array.isArray(instrument.modChannels) ? abortInvalidInstrumentData() : instrument.modChannels,
+                            modInstruments: !Array.isArray(instrument.modInstruments) ? abortInvalidInstrumentData() : instrument.modInstruments,
+                            modSettings: !Array.isArray(instrument.modSettings) ? abortInvalidInstrumentData() : instrument.modSettings,
+                        } satisfies BeepboxData.Song['channels'][number]['instruments'][number] & { type: 'mod' };
+                        else return {
+                            type: type,
+                            envelopes: instrument.envelopes?.map((env) => {
+                                if (env.target === undefined) return abortInvalidInstrumentData();
+                                const dictEntry = BeepboxData.EnvelopeData.beepboxEnvelopeTable[env.envelope as keyof typeof BeepboxData.EnvelopeData.beepboxEnvelopeTable];
+                                if (dictEntry === undefined) return abortInvalidInstrumentData();
+                                const invert = env.inverse ?? env.envelopeInverse ?? false;
+                                const boundMin = env.perEnvelopeLowerBound ?? dictEntry.min ?? 0;
+                                const boundMax = env.perEnvelopeUpperBound ?? dictEntry.max ?? 1;
+                                const partial = {
+                                    target: env.target,
+                                    min: invert ? boundMax : boundMin,
+                                    max: invert ? boundMin : boundMax,
+                                    speed: env.perEnvelopeSpeed ?? dictEntry.speed ?? 1,
+                                    discrete: env.discrete ?? env.discreteEnvelope ?? false
+                                };
+                                switch (dictEntry.envelope) {
+                                    case BeepboxData.EnvelopeType.PITCH:
+                                        return {
+                                            ...partial,
+                                            envelope: BeepboxData.EnvelopeType.PITCH,
+                                            pitchMin: env.pitchEnvelopeStart ?? 0,
+                                            pitchMax: env.pitchEnvelopeEnd ?? 96,
+                                        };
+                                    case BeepboxData.EnvelopeType.RANDOM:
+                                        return {
+                                            ...partial,
+                                            envelope: BeepboxData.EnvelopeType.RANDOM,
+                                            randomType: (['time', 'pitch', 'note', 'time smooth'] as const)[env.waveform ?? 0],
+                                            seed: env.seed ?? 2,
+                                            steps: env.steps ?? 2
+                                        };
+                                    case BeepboxData.EnvelopeType.LFO:
+                                        return {
+                                            ...partial,
+                                            envelope: BeepboxData.EnvelopeType.LFO,
+                                            waveform: (['sine', 'square', 'triangle', 'sawtooth', 'trapezoid', 'stepped saw', 'stepped tri'] as const)[env.waveform ?? 0]
+                                        };
+                                    default:
+                                        return {
+                                            ...partial,
+                                            envelope: dictEntry.envelope
+                                        };
+                                }
+                            }) ?? abortInvalidInstrumentData()
+                        } satisfies Exclude<BeepboxData.Song['channels'][number]['instruments'][number], { type: 'mod' }>;
                     }),
                     patterns: channel.patterns.map((pattern) => {
                         if (pattern == null) throw new TypeError('Invalid song data: null pattern data');
@@ -174,15 +228,16 @@ class BeepboxVisualizer {
                                         volume: pt.volume ?? abortInvalidNoteData(),
                                     })),
                                     continueLast: dat.continuesLastPattern ?? false,
-                                } satisfies NonNullable<BeepboxData['song']>['channels'][number]['patterns'][number]['notes'][number]; // buh
+                                } satisfies BeepboxData.Song['channels'][number]['patterns'][number]['notes'][number]; // buh
                             }),
                             instruments: pattern.instruments!
                         }
                     }),
                     sequence: channel.sequence as number[]
-                } satisfies NonNullable<BeepboxData['song']>['channels'][number];
+                } satisfies BeepboxData.Song['channels'][number];
             })
         };
+        if (perfMetrics.debugLevel.value > 0) console.debug('Loaded BeepBox JSON in ' + (performance.now() - start) + 'ms');
         return markRaw(song);
     }
 
