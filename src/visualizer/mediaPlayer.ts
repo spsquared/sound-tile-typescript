@@ -47,7 +47,7 @@ namespace MediaPlayer {
         if (Playback.playing.value) wakeLock.request('screen');
         else wakeLock.release();
         // looping
-        if (state.loop && Playback.time.value + 0.01 >= Playback.duration.value) Playback.start();
+        if (state.loop && Playback.time.value + 0.01 >= Playback.duration.value && Playback.duration.value > 0) Playback.start();
     });
 
     // playlist and session

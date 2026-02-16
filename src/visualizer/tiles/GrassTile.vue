@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
-import { refThrottled, useElementSize } from '@vueuse/core';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { useSessionStorage } from '@vueuse/core';
 import { GrassTile } from '../tiles';
 import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
@@ -10,23 +10,18 @@ const props = defineProps<{
     tile: GrassTile
 }>();
 
-const src = ref('https://webcama1.watching-grass-grow.com/current.jpg');
+const useWebcamB = useSessionStorage('useWebcamB', false);
+const src = ref(`https://webcam${useWebcamB.value ? 'b2' : 'a1'}.watching-grass-grow.com/current.jpg`);
 let updateLoop: NodeJS.Timeout = setInterval(() => { });
-onMounted(() => updateLoop = setInterval(() => src.value = 'https://webcama1.watching-grass-grow.com/current.jpg?' + Math.random(), 5000));
+onMounted(() => updateLoop = setInterval(() => src.value = `https://webcam${useWebcamB.value ? 'b2' : 'a1'}.watching-grass-grow.com/current.jpg?${Math.random()}`, 5000));
 onUnmounted(() => clearInterval(updateLoop));
-
-const wrapper = useTemplateRef('wrapper');
-const { width: wrapperWidth, height: wrapperHeight } = useElementSize(wrapper);
-const aspectRatio = refThrottled(computed(() => wrapperWidth.value / wrapperHeight.value), 50);
-const width = computed(() => aspectRatio.value > 16 / 9 ? 'unset' : '100%');
-const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
 </script>
 
 <template>
     <Tile :tile="props.tile">
         <template #content>
-            <div class="grassWrapper" ref="wrapper">
-                <img :src="src" :style="{ width: width, height: height }">
+            <div class="grassWrapper">
+                <img class="grass" :src="src" @error="useWebcamB = true">
             </div>
         </template>
         <template #options>
@@ -51,6 +46,12 @@ const height = computed(() => aspectRatio.value > 16 / 9 ? '100%' : 'unset');
     height: 100%;
     align-items: center;
     justify-content: center;
+}
+
+.grass {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .grassCoolBackground {

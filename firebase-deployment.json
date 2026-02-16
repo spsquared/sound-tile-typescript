@@ -13,7 +13,7 @@
                 "headers": [
                     {
                         "key": "Content-Security-Policy",
-                        "value": "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg https://www.watching-grass-grow.com/watching-grass-grow.gif;"
+                        "value": "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg https://webcamb2.watching-grass-grow.com/current.jpg https://www.watching-grass-grow.com/watching-grass-grow.gif;"
                     },
                     {
                         "key": "Cache-Control",

@@ -76,7 +76,7 @@ export default defineConfig(async () => ({
         } : undefined,
         headers: {
             // emulating headers of firebase deployment
-            'Content-Security-Policy': "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg https://www.watching-grass-grow.com/watching-grass-grow.gif;",
+            'Content-Security-Policy': "default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://webcama1.watching-grass-grow.com/current.jpg https://webcamb2.watching-grass-grow.com/current.jpg https://www.watching-grass-grow.com/watching-grass-grow.gif;",
             // 'Cross-Origin-Opener-Policy': 'same-origin',
             // 'Cross-Origin-Embedder-Policy': 'require-corp',
             // 'Permissions-Policy': "cross-origin-isolated=self",

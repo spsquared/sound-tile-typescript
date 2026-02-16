@@ -130,6 +130,10 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(Playback.time.value)} /
     background-color: #0A0;
 }
 
+#playButton[disabled=true] {
+    background-color: #A00;
+}
+
 #mediaControlsTimeContainer {
     display: flex;
     flex-direction: column;
@@ -169,14 +173,8 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(Playback.time.value)} /
     background-image: url(@/img/picture-in-picture-exit.svg);
 }
 
-#playButton[disabled=true],
 #pipButton[disabled=true] {
     background-color: var(--input-disabled-color);
-}
-
-#playButton[disabled=true]:hover,
-#pipButton[disabled=true]:hover {
-    background-color: #666;
 }
 
 #mediaControlsFullTimeContainer {

@@ -1,6 +1,7 @@
 import { computed, reactive, watch } from "vue";
 import Visualizer from "./visualizer";
 import BeepboxVisualizer from "./beepbox";
+import { AsyncLock } from "@/components/lock";
 
 /**
  * Playback timer and audio context for visualizer/audio synchronization.
@@ -10,6 +11,9 @@ namespace Playback {
     export const gain: GainNode = audioContext.createGain();
     gain.connect(audioContext.destination);
     audioContext.suspend();
+
+    // suspend/resume is async so we have to guard against race conditions
+    const contextStateLock = new AsyncLock();
 
     /**Playback is active and audio context is running */
     export const playing = computed<boolean>({
@@ -48,36 +52,48 @@ namespace Playback {
     });
 
     /**Start playback from the current time, or the beginning if at the end */
-    export function start(): void {
+    export async function start(): Promise<void> {
         if (time.value + 0.01 >= duration.value) setTime(0);
         internalTimer.playing = true;
         updateTime();
-        audioContext.resume();
+        if (internalTimer.playing) {
+            // don't put changes to timer state in lock as it delays UI response and should be fine anyway
+            await contextStateLock.acquire();
+            await audioContext.resume();
+            contextStateLock.release();
+        }
     }
     /**Pause playback */
-    export function stop(): void {
+    export async function stop(): Promise<void> {
         internalTimer.playing = false;
         updateTime();
-        audioContext.suspend();
+        await contextStateLock.acquire();
+        await audioContext.suspend();
+        contextStateLock.release();
     }
     /**Seek playback to a certain time */
-    export function setTime(t: number): void {
+    export async function setTime(t: number): Promise<void> {
         const clamped = Math.max(0, Math.min(t, internalTimer.duration));
         internalTimer.startTime = internalTimer.now - clamped;
         internalTimer.currentTime = clamped;
-        updateTime();
+        await updateTime();
     }
 
-    function updateTime(): void {
+    async function updateTime(): Promise<void> {
         if (internalTimer.duration == 0) {
             internalTimer.playing = false;
-            audioContext.suspend();
+            internalTimer.currentTime = 0;
+            await contextStateLock.acquire();
+            await audioContext.suspend();
+            contextStateLock.release();
         } else if (internalTimer.playing) {
             internalTimer.currentTime = internalTimer.now - internalTimer.startTime;
             if (internalTimer.currentTime >= internalTimer.duration) {
                 internalTimer.playing = false;
                 setTime(internalTimer.duration);
-                audioContext.suspend();
+                await contextStateLock.acquire();
+                await audioContext.suspend();
+                contextStateLock.release();
             }
         } else {
             internalTimer.startTime = internalTimer.now - internalTimer.currentTime;
@@ -88,10 +104,14 @@ namespace Playback {
         updateTime();
     }, 10);
     // defer to after loading
-    setTimeout(() => watch([() => Visualizer.duration, () => BeepboxVisualizer.duration], (durations) => internalTimer.duration = Math.max(...durations)));
+    setTimeout(() => watch([() => Visualizer.duration, () => BeepboxVisualizer.duration], (durations) => {
+        internalTimer.duration = Math.max(...durations);
+        updateTime();
+    }));
 
     // handle audio context interruptions that would cause desync
     audioContext.addEventListener('statechange', () => {
+        if (audioContext.state == 'closed') throw new Error('Audio context was lost. Please reload Sound Tile to reenable playback');
         const contextPlaying = audioContext.state == 'running';
         if (contextPlaying != internalTimer.playing) {
             if (contextPlaying) internalTimer.playing = true;
