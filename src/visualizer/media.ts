@@ -55,18 +55,18 @@ export class Media implements MediaMetadata {
                 coverArt: new Uint8Array(0).buffer
             };
             // conversion recursion actually happens in the tile code
-            const root: MediaSchema.GroupTile = this.tree.getSchemaData();
+            const root: MediaSchema.Current.GroupTile = this.tree.getSchemaData();
             // image sources will be compressed
-            const imageTiles: Set<MediaSchema.ImageTile> = new Set();
+            const imageTiles: Set<MediaSchema.Current.ImageTile> = new Set();
             // move all visualizer sources to reference array, same source buffer will reference same position
             const sources: ArrayBuffer[] = [];
-            const stack: MediaSchema.Tile[] = [root];
+            const stack: MediaSchema.Current.Tile[] = [root];
             while (stack.length > 0) {
                 const curr = stack.pop()!;
                 if (curr.type == GroupTile.id) {
-                    stack.push(...(curr as MediaSchema.GroupTile).children);
+                    stack.push(...(curr as MediaSchema.Current.GroupTile).children);
                 } else if (curr.type == VisualizerTile.id) {
-                    const v = (curr as MediaSchema.VisualizerTile).data;
+                    const v = (curr as MediaSchema.Current.VisualizerTile).data;
                     if (typeof v.buffer == 'number' || v.buffer === null) continue; // shouldn't be number
                     const index = sources.indexOf(v.buffer);
                     if (index == -1) {
@@ -76,7 +76,7 @@ export class Media implements MediaMetadata {
                         v.buffer = index;
                     }
                 } else if (curr.type == ImageTile.id) {
-                    imageTiles.add(curr as MediaSchema.ImageTile);
+                    imageTiles.add(curr as MediaSchema.Current.ImageTile);
                 }
             }
             // compress source buffers and images
@@ -119,8 +119,8 @@ export class Media implements MediaMetadata {
             // free resources and obliterate tree
             if (consume) this.destroy();
             // msgpack it
-            const data: MediaSchema.SchemaV2 = {
-                version: 2,
+            const data: MediaSchema.SchemaV3 = {
+                version: 3,
                 metadata: metadata,
                 sources: sources,
                 tree: root,
@@ -147,7 +147,7 @@ export class Media implements MediaMetadata {
             // if the data is invalid then it'll probably crash and then we return null
             const stream = file instanceof File ? file.stream() : new ReadableStream(new Blob([new Uint8Array(file)]).stream());
             const data: MediaSchema.Schema = await decodeMsgpackAsync(stream, { extensionCodec: soundtileMsgpackExtensions }) as any;
-            const methods = [this.decompressV0, this.decompressV1, this.decompressV2] as ((data: MediaSchema.Schema) => Promise<Media | null>)[];
+            const methods = [this.decompressV0, this.decompressV1, this.decompressV2, this.decompressV3] as ((data: MediaSchema.Schema) => Promise<Media | null>)[];
             return await methods[data.version]?.call(this, data) ?? null;
         } catch (err) {
             console.error('Failed to decompress media');
@@ -161,31 +161,31 @@ export class Media implements MediaMetadata {
     private static async decompressV0(data: MediaSchema.SchemaV0): Promise<Media> {
         const metaroot = new GroupTile(); // not actually the root
         // tuple of tree node and parent tile - use queue to preserve ordering of children
-        const queue: [MediaSchema.LegacyTree, GroupTile][] = [[data.root, metaroot]];
+        const queue: [MediaSchema.Legacy.LegacyTree, GroupTile][] = [[data.root, metaroot]];
         while (queue.length > 0) {
             const [curr, parent] = queue.shift()!;
             if ('children' in curr) {
                 const tile = new GroupTile();
-                tile.orientation = curr.orientation ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
+                tile.orientation = curr.orientation ? GroupTile.Orientation.VERTICAL : GroupTile.Orientation.HORIZONTAL;
                 tile.size = curr.flex ?? curr.flexGrow ?? 1;
                 parent.addChild(tile);
-                queue.push(...curr.children.map<[MediaSchema.LegacyTree, GroupTile]>((v) => [v, tile]));
+                queue.push(...curr.children.map<[MediaSchema.Legacy.LegacyTree, GroupTile]>((v) => [v, tile]));
             } else {
                 // default is "unknown tile" error tile
                 let tile: Tile = new TextTile();
                 switch (curr.type) {
                     case 'v': {
-                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
+                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.Legacy.translateVisualizerData(curr.visualizer) : undefined);
                         tile = visualizer;
                         break;
                     }
                     case 'vi': {
                         const group = new GroupTile();
                         group.label = 'Visualizer Image Tile (converted)';
-                        group.orientation = curr.imageBackground ? GroupTile.COLLAPSED : GroupTile.VERTICAL;
+                        group.orientation = curr.imageBackground ? GroupTile.Orientation.COLLAPSED : GroupTile.Orientation.VERTICAL;
                         group.hideBorders = true;
-                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
-                        visualizer.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
+                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.Legacy.translateVisualizerData(curr.visualizer) : undefined);
+                        visualizer.backgroundColor.colorData = MediaSchema.Legacy.translateColorData(curr.backgroundColor);
                         const image = new ImageTile();
                         image.backgroundColor.colorData = visualizer.backgroundColor.colorData;
                         image.imgSrc = curr.image ?? '';
@@ -209,10 +209,10 @@ export class Media implements MediaMetadata {
                     case 'vt': {
                         const group = new GroupTile();
                         group.label = 'Visualizer Text Tile (converted)';
-                        group.orientation = GroupTile.VERTICAL;
+                        group.orientation = GroupTile.Orientation.VERTICAL;
                         group.hideBorders = true;
-                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
-                        visualizer.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
+                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.Legacy.translateVisualizerData(curr.visualizer) : undefined);
+                        visualizer.backgroundColor.colorData = MediaSchema.Legacy.translateColorData(curr.backgroundColor);
                         const text = new TextTile();
                         // legacy font size is relative to viewport height, not tile height, so the conversion is sort of arbitrary
                         const textAlign = curr.textAlign == 1 ? 'right' : curr.textAlign == 0.5 ? 'center' : 'left';
@@ -234,7 +234,7 @@ export class Media implements MediaMetadata {
                         break;
                     }
                     case 'cp': {
-                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
+                        const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.Legacy.translateVisualizerData(curr.visualizer) : undefined);
                         visualizer.label = 'Channel Peaks Tile';
                         visualizer.modulator.label = visualizer.label; // outside reactivity, update is manual
                         visualizer.visualizer.data.mode = VisualizerData.Mode.CHANNEL_PEAKS; // if tile has no data mode isn't set
@@ -282,7 +282,7 @@ export class Media implements MediaMetadata {
                         };
                     }
                 }
-                tile.backgroundColor.colorData = MediaSchema.translateLegacyColorData(curr.backgroundColor);
+                tile.backgroundColor.colorData = MediaSchema.Legacy.translateColorData(curr.backgroundColor);
                 tile.size = curr.flex ?? 1;
                 parent.addChild(tile);
             }
@@ -299,7 +299,7 @@ export class Media implements MediaMetadata {
         const { root, metadata } = data;
         const { decompress, decompressSync } = await fflate;
         // mirroring legacy code, decompress all buffers and then run v0 decompression
-        const stack: MediaSchema.LegacyTree[] = [root];
+        const stack: MediaSchema.Legacy.LegacyTree[] = [root];
         const promises: Promise<any>[] = [];
         while (stack.length > 0) {
             const curr = stack.pop()!;
@@ -330,6 +330,43 @@ export class Media implements MediaMetadata {
         return media;
     }
     private static async decompressV2(data: MediaSchema.SchemaV2): Promise<Media> {
+        // since the enums were changed to not use ordinals when saving, V2 files won't load properly anymore
+        // we have to convert the old enums to the new ones to load them
+        const v2OrientationTranslator = [
+            GroupTile.Orientation.HORIZONTAL,
+            GroupTile.Orientation.VERTICAL,
+            GroupTile.Orientation.COLLAPSED,
+        ] as const;
+        const v2ModeTranslator = [
+            VisualizerData.Mode.FREQ_BAR,
+            VisualizerData.Mode.FREQ_LINE,
+            VisualizerData.Mode.FREQ_FILL,
+            VisualizerData.Mode.FREQ_LUMINANCE,
+            VisualizerData.Mode.WAVE_DIRECT,
+            VisualizerData.Mode.WAVE_CORRELATED,
+            VisualizerData.Mode.SPECTROGRAM,
+            VisualizerData.Mode.CHANNEL_PEAKS,
+        ] as const;
+        const stack: MediaSchema.V2.Tile[] = [data.tree];
+        while (stack.length > 0) {
+            const curr = stack.pop()!;
+            if (curr.type == GroupTile.id) {
+                stack.push(...(curr as MediaSchema.V3.GroupTile).children);
+                (curr as MediaSchema.V3.GroupTile).orientation = v2OrientationTranslator[(curr as MediaSchema.V2.GroupTile).orientation];
+            } else if (curr.type == VisualizerTile.id) {
+                (curr as MediaSchema.V3.VisualizerTile).data.mode = v2ModeTranslator[(curr as MediaSchema.V2.VisualizerTile).data.mode];
+            } else if (curr.type == ImageTile.id) {
+                (curr as MediaSchema.V3.ImageTile).position = { x: 50, y: 50, rotation: 0, scale: 1 };
+            }
+        }
+        // this is just part of an "upgrade chain"
+        return await this.decompressV3({
+            // scuff
+            ...data as any,
+            version: 3
+        });
+    }
+    private static async decompressV3(data: MediaSchema.SchemaV3): Promise<Media> {
         const { sources, tree, modulations } = data;
         const { decompress, decompressSync } = await fflate;
         const metadata: MediaMetadata = {
@@ -337,12 +374,12 @@ export class Media implements MediaMetadata {
             coverArt: ''
         };
         // gather image tiles for decompression
-        const imageTiles: Set<MediaSchema.ImageTile> = new Set();
-        const stack: MediaSchema.Tile[] = [tree];
+        const imageTiles: Set<MediaSchema.V3.ImageTile> = new Set();
+        const stack: MediaSchema.V3.Tile[] = [tree];
         while (stack.length > 0) {
             const curr = stack.pop()!;
-            if (curr.type == GroupTile.id) stack.push(...(curr as MediaSchema.GroupTile).children);
-            else if (curr.type == ImageTile.id) imageTiles.add(curr as MediaSchema.ImageTile);
+            if (curr.type == GroupTile.id) stack.push(...(curr as MediaSchema.V3.GroupTile).children);
+            else if (curr.type == ImageTile.id) imageTiles.add(curr as MediaSchema.V3.ImageTile);
         }
         // decompress source buffers and images
         const decompressBuffer: (buffer: ArrayBuffer, cb: (res: ArrayBuffer) => any) => Promise<void> = webWorkerSupported ? (
@@ -363,9 +400,9 @@ export class Media implements MediaMetadata {
         while (stack.length > 0) {
             const curr = stack.pop()!;
             if (curr.type == GroupTile.id) {
-                stack.push(...(curr as MediaSchema.GroupTile).children);
+                stack.push(...(curr as MediaSchema.V3.GroupTile).children);
             } else if (curr.type == VisualizerTile.id) {
-                const v = (curr as MediaSchema.VisualizerTile).data;
+                const v = (curr as MediaSchema.V3.VisualizerTile).data;
                 if (v.buffer instanceof ArrayBuffer || v.buffer === null) continue; // shouldn't be buffer
                 v.buffer = sources[v.buffer] ?? null;
                 if (v.buffer === null) console.error('Visualizer buffer resolution failed');

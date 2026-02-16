@@ -30,7 +30,7 @@ onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElement
     left: 0px;
     width: 100vw;
     height: 100vh;
-    padding: v-bind("TileEditor.root.orientation != TileEditor.root.class.COLLAPSED && !TileEditor.root.hideBorders ? '4px 4px' : '0px'");
+    padding: v-bind("TileEditor.root.orientation != TileEditor.root.class.Orientation.COLLAPSED && !TileEditor.root.hideBorders ? '4px 4px' : '0px'");
     background: v-bind("TileEditor.root.borderColor.cssStyle");
     align-items: stretch;
     justify-content: stretch;

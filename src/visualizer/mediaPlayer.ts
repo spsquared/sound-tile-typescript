@@ -71,12 +71,13 @@ namespace MediaPlayer {
 
 export default MediaPlayer;
 
+
 // default state
 {
     const root = new GroupTile();
     const subA = new GroupTile();
     const subB = new GroupTile();
-    subA.orientation = GroupTile.VERTICAL;
+    subA.orientation = GroupTile.Orientation.VERTICAL;
     subA.addChild(new VisualizerTile());
     const img = new ImageTile();
     subB.addChild(img);

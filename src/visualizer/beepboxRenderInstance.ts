@@ -59,6 +59,10 @@ class BeepboxRenderInstance {
         // TODO: THINGS
         this.createColorScale
         this.createColorStyle
+        this.songLength
+        this.lookupTicks
+        this.ticksToBar
+        this.ticksInBar
         // TODO: THINGS
         // TODO: THINGS
         // TODO: THINGS

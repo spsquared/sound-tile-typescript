@@ -134,14 +134,14 @@ namespace VisualizerData {
      * Possible visualizer types and styles.
      */
     export enum Mode {
-        FREQ_BAR,
-        FREQ_LINE,
-        FREQ_FILL,
-        FREQ_LUMINANCE,
-        WAVE_DIRECT,
-        WAVE_CORRELATED,
-        SPECTROGRAM,
-        CHANNEL_PEAKS
+        FREQ_BAR = 'FREQ_BAR',
+        FREQ_LINE = 'FREQ_LINE',
+        FREQ_FILL = 'FREQ_FILL',
+        FREQ_LUMINANCE = 'FREQ_LUMINANCE',
+        WAVE_DIRECT = 'WAVE_DIRECT',
+        WAVE_CORRELATED = 'WAVE_CORRELATED',
+        SPECTROGRAM = 'SPECTROGRAM',
+        CHANNEL_PEAKS = 'CHANNEL_PEAKS'
     }
 
     export function createDefault(): VisualizerData {

@@ -40,10 +40,20 @@ namespace BeepboxData {
             name: string
             instruments: ({
                 type: 'chip' | 'custom chip' | 'pwm' | 'supersaw' | 'fm' | 'fm6op' | 'harmonics' | 'picked string' | 'spectrum' | 'noise' | 'drumset'
-                envelopes: {
+                envelopes: ({
                     target: string // only here for UI, not used in rendering
-
-                }[]
+                    envelope: EnvelopeType
+                    min: number
+                    max: number
+                    speed: number
+                    discrete: boolean
+                } & ({} | {
+                    envelope: EnvelopeType.PITCH,
+                    pitchMin: number
+                    pitchMax: number
+                } | {
+                    envelope: EnvelopeType.RANDOM
+                }))[]
             } | {
                 type: 'mod'
             })[]
@@ -64,21 +74,36 @@ namespace BeepboxData {
     }
 
     export enum ScaleKeys {
-        'C',
-        'C♯',
-        'D',
-        'D♯',
-        'E',
-        'F',
-        'F♯',
-        'G',
-        'G♯',
-        'A',
-        'A♯',
-        'B'
+        'C' = 'C',
+        'C♯' = 'C♯',
+        'D' = 'D',
+        'D♯' = 'D♯',
+        'E' = 'E',
+        'F' = 'F',
+        'F♯' = 'F♯',
+        'G' = 'G',
+        'G♯' = 'G♯',
+        'A' = 'A',
+        'A♯' = 'A♯',
+        'B' = 'B'
     }
 
     export enum EnvelopeType {
+        NONE = 'NONE',
+        NOTE_SIZE = 'NOTE_SIZE',
+        PITCH = 'PITCH',
+        RANDOM = 'RANDOM',
+        PUNCH = 'PUNCH',
+        FLARE = 'FLARE',
+        TWANG = 'TWANG',
+        SWELL = 'SWELL',
+        LFO = 'LFO',
+        DECAY = 'DECAY',
+        WIBBLE = 'WIBBLE',
+        LINEAR = 'LINEAR',
+        RISE = 'RISE',
+        BLIP = 'BLIP',
+        FALL = 'FALL'
     }
 
     export namespace EnvelopeType {
@@ -136,6 +161,8 @@ export type BeepboxJsonSkeleton = {
                 perEnvelopeSpeed: number
                 perEnvelopeLowerBound: number
                 perEnvelopeUpperBound: number
+                pitchEnvelopeStart?: number
+                pitchEnvelopeEnd?: number
                 discrete: boolean
                 waveform?: number
                 seed?: number

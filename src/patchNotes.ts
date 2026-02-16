@@ -23,6 +23,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
             'Disabled play button when there\'s nothing to play'
         ],
         fixes: [
+            'Fixed enum order-sensitive fields in Tile layout schema (this required bumping schema version)',
             'Refactored playback timers to fix issues with desync and codebase organization'
         ],
         notes: []

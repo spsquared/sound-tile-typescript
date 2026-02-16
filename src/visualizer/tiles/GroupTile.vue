@@ -11,16 +11,11 @@ const props = defineProps<{
     tile: GroupTile
 }>();
 
-const isCollapsed = computed(() => props.tile.orientation == GroupTile.COLLAPSED);
+const isCollapsed = computed(() => props.tile.orientation == GroupTile.Orientation.COLLAPSED);
 
 // group tiles within collapsed tile can't have borders because that uses background
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 provide('inCollapsedGroup', computed(() => isCollapsed.value || inCollapsedGroup.value));
-
-const tileOrientation = computed<string>({
-    get: () => props.tile.orientation.toString(),
-    set: (val) => props.tile.orientation = Number(val)
-});
 </script>
 
 <template>
@@ -46,10 +41,10 @@ const tileOrientation = computed<string>({
                 </label>
                 <label title="Layout of child tiles within the group - collapsed groups come with a few caveats">
                     Layout
-                    <select v-model="tileOrientation">
-                        <option :value="GroupTile.HORIZONTAL">Horizontal</option>
-                        <option :value="GroupTile.VERTICAL">Vertical</option>
-                        <option :value="GroupTile.COLLAPSED">Collapsed</option>
+                    <select v-model="props.tile.orientation">
+                        <option :value="GroupTile.Orientation.HORIZONTAL">Horizontal</option>
+                        <option :value="GroupTile.Orientation.VERTICAL">Vertical</option>
+                        <option :value="GroupTile.Orientation.COLLAPSED">Collapsed</option>
                     </select>
                 </label>
                 <label v-if="!inCollapsedGroup && !isCollapsed" title="Border style of tiles within the group">
@@ -77,7 +72,7 @@ const tileOrientation = computed<string>({
     height: 100%;
     background-color: black;
     background: v-bind("$props.tile.borderColor.cssStyle");
-    flex-direction: v-bind("$props.tile.orientation == GroupTile.VERTICAL ? 'column' : 'row'");
+    flex-direction: v-bind("$props.tile.orientation == GroupTile.Orientation.VERTICAL ? 'column' : 'row'");
     align-items: stretch;
     justify-content: stretch;
     gap: v-bind("$props.tile.hideBorders ? '0px' : '4px'");

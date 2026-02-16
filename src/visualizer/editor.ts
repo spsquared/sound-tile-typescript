@@ -324,7 +324,7 @@ class TileEditor {
             const halfHeight = rect.height / 2;
             const halfBoxWidth = Math.min(12 * Math.log(rect.width + 1), rect.width * 0.6);
             const halfBoxHeight = Math.min(12 * Math.log(rect.height + 1), rect.height * 0.6);
-            if (currTile.parent?.orientation === GroupTile.COLLAPSED) {
+            if (currTile.parent?.orientation === GroupTile.Orientation.COLLAPSED) {
                 // center box, special case for collapsed groups - only drop within the group or go to parent
                 if (Math.max(Math.abs(relX - halfWidth), Math.abs(relY - halfHeight)) < Math.min(halfWidth, halfHeight) / 2) {
                     this.drag.drop.tile = currTile.parent.children[currTile.parent.children.length - 1];
@@ -338,7 +338,7 @@ class TileEditor {
                 // top box
                 this.drag.drop.tile = currTile;
                 this.drag.drop.insertBefore = true;
-                if (relY < halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.VERTICAL) {
+                if (relY < halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.Orientation.VERTICAL) {
                     this.drag.drop.createGroup = false;
                 } else {
                     this.drag.drop.createGroup = true;
@@ -348,7 +348,7 @@ class TileEditor {
                 // bottom box
                 this.drag.drop.tile = currTile;
                 this.drag.drop.insertBefore = false;
-                if (relY > rect.height - halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.VERTICAL) {
+                if (relY > rect.height - halfBoxHeight / 2 && currTile.parent?.orientation === GroupTile.Orientation.VERTICAL) {
                     this.drag.drop.createGroup = false;
                 } else {
                     this.drag.drop.createGroup = true;
@@ -358,7 +358,7 @@ class TileEditor {
                 // left box
                 this.drag.drop.tile = currTile;
                 this.drag.drop.insertBefore = true;
-                if (relX < halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.HORIZONTAL) {
+                if (relX < halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.Orientation.HORIZONTAL) {
                     this.drag.drop.createGroup = false;
                 } else {
                     this.drag.drop.createGroup = true;
@@ -368,7 +368,7 @@ class TileEditor {
                 // right box
                 this.drag.drop.tile = currTile;
                 this.drag.drop.insertBefore = false;
-                if (relX > rect.width - halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.HORIZONTAL) {
+                if (relX > rect.width - halfBoxWidth / 2 && currTile.parent?.orientation === GroupTile.Orientation.HORIZONTAL) {
                     this.drag.drop.createGroup = false;
                 } else {
                     this.drag.drop.createGroup = true;
@@ -397,7 +397,7 @@ class TileEditor {
             if (this.drag.drop.tile == this.root) {
                 // special case for root tile, root has no parent and breaks
                 newGroup.copyProperties(this.root);
-                this.root.orientation = this.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
+                this.root.orientation = this.drag.drop.newGroupVertical ? GroupTile.Orientation.VERTICAL : GroupTile.Orientation.HORIZONTAL;
                 // more skipping of normal add/remove functions
                 for (const child of this.root.children) child.parent = newGroup;
                 newGroup.children.push(...this.root.children);
@@ -407,13 +407,13 @@ class TileEditor {
                 insertFn.call(this.root, this.drag.current, newGroup);
             } else {
                 newGroup.copyProperties(parent);
-                newGroup.orientation = this.drag.drop.newGroupVertical ? GroupTile.VERTICAL : GroupTile.HORIZONTAL;
+                newGroup.orientation = this.drag.drop.newGroupVertical ? GroupTile.Orientation.VERTICAL : GroupTile.Orientation.HORIZONTAL;
                 parent.replaceChild(this.drag.drop.tile, newGroup);
                 newGroup.addChild(this.drag.drop.tile);
                 const insertFn = (this.drag.drop.insertBefore ? newGroup.insertChildBefore : newGroup.insertChildAfter);
                 insertFn.call(newGroup, this.drag.current, this.drag.drop.tile);
             }
-        } else if (parent.orientation == GroupTile.COLLAPSED && !this.drag.sidebarDrop) {
+        } else if (parent.orientation == GroupTile.Orientation.COLLAPSED && !this.drag.sidebarDrop) {
             // always append to end for collapsed groups except for sidebar drops
             parent.addChild(this.drag.current);
         } else {

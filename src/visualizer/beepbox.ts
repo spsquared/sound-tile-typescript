@@ -123,7 +123,7 @@ class BeepboxVisualizer {
         // it's also probably not bulletproof
         if (raw == undefined) throw new TypeError('Invalid song data: data is nullish');
         const json = raw as DeepPartial<BeepboxJsonSkeleton>;
-        if (BeepboxData.ScaleKeys[json.key as any] === undefined) console.warn(`Unrecognized key ${json.key}, will default to C`);
+        if (BeepboxData.ScaleKeys[json.key as BeepboxData.ScaleKeys] === undefined) console.warn(`Unrecognized key ${json.key}, will default to C`);
         if (typeof json.beatsPerMinute !== 'number') throw new TypeError('Invalid song data: missing beatsPerMinute');
         if (typeof json.beatsPerBar !== 'number') throw new TypeError('Invalid song data: missing beatsPerBar');
         if (typeof json.ticksPerBeat !== 'number') throw new TypeError('Invalid song data: missing ticksPerBeat');
@@ -136,7 +136,7 @@ class BeepboxVisualizer {
             throw new TypeError('Invalid song data: invalid note data');
         };
         const song: BeepboxData['song'] = {
-            key: BeepboxData.ScaleKeys[json.key as any] as any ?? BeepboxData.ScaleKeys.C,
+            key: BeepboxData.ScaleKeys[json.key as BeepboxData.ScaleKeys] ?? BeepboxData.ScaleKeys.C,
             tickSpeed: json.beatsPerMinute * json.ticksPerBeat / 60,
             barLength: json.beatsPerBar * json.ticksPerBeat,
             loopBars: {

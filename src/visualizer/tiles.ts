@@ -21,7 +21,6 @@ import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
 import beepboxTileImg from '@/img/beepbox-tile.png';
 
-enum GroupTileOrientation { HORIZONTAL, VERTICAL, COLLAPSED }
 
 /**
  * Required props for all tile components.
@@ -73,7 +72,7 @@ export class Tile {
     }
 
     /**Dehydrate a tile to its data */
-    getSchemaData(): MediaSchema.Tile {
+    getSchemaData(): MediaSchema.Current.Tile {
         return cloneDeep({
             id: this.id,
             type: this.class.id,
@@ -83,10 +82,10 @@ export class Tile {
         });
     }
     /**Reconstitute a tile from its data */
-    static fromSchemaData(data: MediaSchema.Tile): Tile {
+    static fromSchemaData(data: MediaSchema.Current.Tile): Tile {
         return this.reconstitute(data, new Tile());
     }
-    protected static reconstitute(data: MediaSchema.Tile, tile: Tile): Tile {
+    protected static reconstitute(data: MediaSchema.Current.Tile, tile: Tile): Tile {
         (tile as any).id = data.id; // preserving id
         tile.label = data.label;
         tile.size = data.size;
@@ -111,15 +110,11 @@ export class GroupTile extends Tile {
     readonly class: typeof GroupTile = GroupTile;
     static { this.registerTile(this); }
 
-    static readonly HORIZONTAL: GroupTileOrientation = GroupTileOrientation.HORIZONTAL;
-    static readonly VERTICAL: GroupTileOrientation = GroupTileOrientation.VERTICAL;
-    static readonly COLLAPSED: GroupTileOrientation = GroupTileOrientation.COLLAPSED;
-
     label: string = GroupTile.name;
     /**Tiles inside (don't modify this manually) */
     readonly children: Tile[] = [];
-    /**If children should be laid out vertically (otherwise horizontal) */
-    orientation: GroupTileOrientation = GroupTile.HORIZONTAL;
+    /**Layout of children tiles */
+    orientation: GroupTile.Orientation = GroupTile.Orientation.HORIZONTAL;
     /**Border color of tile - has no effect on collapsed groups and groups with hidden borders */
     borderColor: ColorPicker;
     /**Disables internal borders and border gaps between tiles completely - no effect on collapsed groups */
@@ -202,10 +197,10 @@ export class GroupTile extends Tile {
         this.hideBorders = o.hideBorders;
     }
 
-    getSchemaData(): MediaSchema.GroupTile {
+    getSchemaData(): MediaSchema.Current.GroupTile {
         return {
             ...super.getSchemaData(),
-            ...cloneDeep<Omit<MediaSchema.GroupTile, keyof MediaSchema.Tile>>({
+            ...cloneDeep<Omit<MediaSchema.Current.GroupTile, keyof MediaSchema.Current.Tile>>({
                 orientation: this.orientation,
                 borderColor: this.borderColor.colorData,
                 hideBorders: this.hideBorders,
@@ -214,10 +209,10 @@ export class GroupTile extends Tile {
             children: this.children.map((c) => c.getSchemaData()) // avoid unnecessary cloning
         };
     }
-    static fromSchemaData(data: MediaSchema.GroupTile): GroupTile {
+    static fromSchemaData(data: MediaSchema.Current.GroupTile): GroupTile {
         return this.reconstitute(data, new GroupTile());
     }
-    protected static reconstitute(data: MediaSchema.GroupTile, tile: GroupTile): GroupTile {
+    protected static reconstitute(data: MediaSchema.Current.GroupTile, tile: GroupTile): GroupTile {
         super.reconstitute(data, tile);
         tile.orientation = data.orientation;
         tile.borderColor.colorData = data.borderColor;
@@ -248,6 +243,9 @@ export class GroupTile extends Tile {
         // apparently for-of isn't immune to array splicing bug
         for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
     }
+}
+export namespace GroupTile {
+    export enum Orientation { HORIZONTAL = 'H', VERTICAL = 'V', COLLAPSED = 'C' }
 }
 
 export class VisualizerTile extends Tile implements Modulation.Modulator<{
@@ -285,11 +283,11 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
         }, { tile: this });
     }
 
-    getSchemaData(): MediaSchema.VisualizerTile {
+    getSchemaData(): MediaSchema.Current.VisualizerTile {
         return {
             ...super.getSchemaData(),
             data: {
-                ...cloneDeep<MediaSchema.VisualizerTile['data']>({
+                ...cloneDeep<MediaSchema.Current.VisualizerTile['data']>({
                     ...this.visualizer.data,
                     buffer: null
                 }),
@@ -298,11 +296,11 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
             }
         };
     }
-    static fromSchemaData(data: MediaSchema.VisualizerTile): VisualizerTile {
+    static fromSchemaData(data: MediaSchema.Current.VisualizerTile): VisualizerTile {
         // visualizer data can't be set after creation so it has to be done here
         return this.reconstitute(data, new VisualizerTile(merge(VisualizerData.createDefault(), data.data)));
     }
-    protected static reconstitute(data: MediaSchema.VisualizerTile, tile: VisualizerTile): VisualizerTile {
+    protected static reconstitute(data: MediaSchema.Current.VisualizerTile, tile: VisualizerTile): VisualizerTile {
         super.reconstitute(data, tile);
         // scuffed patch for label reactivity
         reactive(tile).label = tile.label;
@@ -343,15 +341,15 @@ export class BeepboxTile extends Tile {
         });
     }
 
-    getSchemaData(): MediaSchema.BeepboxTile {
+    getSchemaData(): MediaSchema.Current.BeepboxTile {
         return {
             ...super.getSchemaData()
         };
     }
-    static fromSchemaData(data: MediaSchema.BeepboxTile): BeepboxTile {
+    static fromSchemaData(data: MediaSchema.Current.BeepboxTile): BeepboxTile {
         return this.reconstitute(data, new BeepboxTile());
     }
-    protected static reconstitute(data: MediaSchema.BeepboxTile, tile: BeepboxTile): BeepboxTile {
+    protected static reconstitute(data: MediaSchema.Current.BeepboxTile, tile: BeepboxTile): BeepboxTile {
         super.reconstitute(data, tile);
         return tile;
     }
@@ -396,20 +394,20 @@ export class TextTile extends Tile implements Modulation.Modulatable<{
         this.textColor = new ColorPicker('#FFFFFF');
     }
 
-    getSchemaData(): MediaSchema.TextTile {
+    getSchemaData(): MediaSchema.Current.TextTile {
         return {
             ...super.getSchemaData(),
-            ...cloneDeep<Omit<MediaSchema.TextTile, keyof MediaSchema.Tile>>({
+            ...cloneDeep<Omit<MediaSchema.Current.TextTile, keyof MediaSchema.Current.Tile>>({
                 textHtml: this.text,
                 textColor: this.textColor.colorData,
                 align: this.align
             })
         };
     }
-    static fromSchemaData(data: MediaSchema.TextTile): TextTile {
+    static fromSchemaData(data: MediaSchema.Current.TextTile): TextTile {
         return this.reconstitute(data, new TextTile());
     }
-    protected static reconstitute(data: MediaSchema.TextTile, tile: TextTile): TextTile {
+    protected static reconstitute(data: MediaSchema.Current.TextTile, tile: TextTile): TextTile {
         super.reconstitute(data, tile);
         tile.text = data.textHtml;
         tile.textColor.colorData = data.textColor;
@@ -451,22 +449,24 @@ export class ImageTile extends Tile implements Modulation.Modulatable<{
         super();
     }
 
-    getSchemaData(): MediaSchema.ImageTile {
+    getSchemaData(): MediaSchema.Current.ImageTile {
         return {
             ...super.getSchemaData(),
-            ...cloneDeep<Omit<MediaSchema.ImageTile, keyof MediaSchema.Tile>>({
+            ...cloneDeep<Omit<MediaSchema.Current.ImageTile, keyof MediaSchema.Current.Tile>>({
                 imgSrc: new TextEncoder().encode(this.imgSrc).buffer,
-                smoothDrawing: this.smoothDrawing
+                smoothDrawing: this.smoothDrawing,
+                position: this.position
             })
         };
     }
-    static fromSchemaData(data: MediaSchema.ImageTile): ImageTile {
+    static fromSchemaData(data: MediaSchema.Current.ImageTile): ImageTile {
         return this.reconstitute(data, new ImageTile());
     }
-    protected static reconstitute(data: MediaSchema.ImageTile, tile: ImageTile): ImageTile {
+    protected static reconstitute(data: MediaSchema.Current.ImageTile, tile: ImageTile): ImageTile {
         super.reconstitute(data, tile);
         tile.imgSrc = new TextDecoder().decode(data.imgSrc);
         tile.smoothDrawing = data.smoothDrawing;
+        tile.position = data.position;
         return tile;
     }
 
@@ -486,15 +486,15 @@ export class GrassTile extends Tile {
 
     label: string = GrassTile.name;
 
-    getSchemaData(): MediaSchema.GrassTile {
+    getSchemaData(): MediaSchema.Current.GrassTile {
         return {
             ...super.getSchemaData()
         };
     }
-    static fromSchemaData(data: MediaSchema.GrassTile): GrassTile {
+    static fromSchemaData(data: MediaSchema.Current.GrassTile): GrassTile {
         return this.reconstitute(data, new GrassTile());
     }
-    protected static reconstitute(data: MediaSchema.GrassTile, tile: GrassTile): GrassTile {
+    protected static reconstitute(data: MediaSchema.Current.GrassTile, tile: GrassTile): GrassTile {
         super.reconstitute(data, tile);
         return tile;
     }

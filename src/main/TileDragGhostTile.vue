@@ -15,7 +15,7 @@ const props = defineProps<{
         <div :class="{
             ghostTile: true,
             ghostTileGroup: props.tile instanceof GroupTile,
-            ghostTileCollapsed: props.tile instanceof GroupTile && props.tile.orientation == GroupTile.COLLAPSED
+            ghostTileCollapsed: props.tile instanceof GroupTile && props.tile.orientation == GroupTile.Orientation.COLLAPSED
         }">
             <template v-if="props.tile instanceof GroupTile">
                 <TileDragGhostTile v-for="child of props.tile.children" :key="child.id.toString()" :tile="child"></TileDragGhostTile>
@@ -51,7 +51,7 @@ const props = defineProps<{
 .ghostTileGroup {
     display: flex;
     /* ($props.tile as GroupTile) creates a syntax error on line 3 for some reason */
-    flex-direction: v-bind("$props.tile instanceof GroupTile && $props.tile.orientation == GroupTile.VERTICAL ? 'column' : 'row'");
+    flex-direction: v-bind("$props.tile instanceof GroupTile && $props.tile.orientation == GroupTile.Orientation.VERTICAL ? 'column' : 'row'");
     margin: 0px 0px;
     border: none;
     gap: 4px;
