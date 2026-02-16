@@ -159,6 +159,7 @@ onUnmounted(() => document.removeEventListener('mousemove', updateHoveredElement
 <style scoped>
 #modSplitContainerVertical,
 #modSplitContainerHorizontal {
+    contain: size;
     position: absolute;
     top: 0px;
     left: 0px;

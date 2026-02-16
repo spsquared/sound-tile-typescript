@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
-import { useElementSize } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import { GroupTile, Tile } from '@/visualizer/tiles';
 import arrowRightIcon from '@/img/arrow-right.svg';
@@ -28,11 +27,9 @@ onBeforeUnmount(() => {
 
 // text label overflow stuff
 const label = useTemplateRef('label');
-const { width: handleWidth } = useElementSize(handle);
 function resetLabelScroll() {
     if (label.value !== null) label.value.scrollLeft = 0;
 }
-const labelWidth = computed(() => (handleWidth.value - (props.tile instanceof GroupTile ? 5 : 4) * 18) + 'px');
 
 const childrenOpen = ref(true);
 function toggleChildren() {
@@ -134,7 +131,7 @@ function setIdentifyTile(v: boolean) {
 
 .editItemLabel {
     min-width: 0px;
-    width: v-bind("labelWidth");
+    width: 100%;
     flex-shrink: 1;
     border-radius: 0px;
     background-color: transparent;
@@ -156,6 +153,7 @@ function setIdentifyTile(v: boolean) {
 .editItemDrag,
 .editItemEditButton,
 .editItemDeleteButton {
+    min-width: 18px;
     width: 18px;
     height: 18px;
     flex-basis: 18px;
