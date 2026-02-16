@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { refThrottled, useElementSize } from '@vueuse/core';
 import { GrassTile } from '../tiles';
 import Tile from './Tile.vue';
 import TileOptionsSection from './options/TileOptionsSection.vue';
-import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
-import { refThrottled, useElementSize } from '@vueuse/core';
+import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 
 const props = defineProps<{
     tile: GrassTile

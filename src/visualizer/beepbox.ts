@@ -3,14 +3,14 @@ import { webWorkerSupported } from '@/constants';
 import { DeepPartial } from '@/components/utils';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
-import { BeepboxJsonSkeleton, BeepboxData, ScaleKeys } from './beepboxData';
+import BeepboxData, { BeepboxJsonSkeleton } from './beepboxData';
 import { BeepboxFallbackRenderer, BeepboxRenderer, BeepboxWorkerRenderer } from './beepboxRenderer';
 
 /**
  * Rendering context of BeepBox tiles. BeepBox tile only handles visual rendering of notes
  * in the piano roll, not synthesizing the audio. That's for BeepBox to do, not Sound Tile.
  */
-export class BeepboxVisualizer {
+class BeepboxVisualizer {
     /**Reactive state of visualizer - all settings & stuff */
     readonly data: BeepboxData;
 
@@ -113,9 +113,9 @@ export class BeepboxVisualizer {
     }
 
     /**
-     * Attempt to extract BeepBox song data from a JSON object. 
+     * Attempt to extract BeepBox song data from a JSON object.
      * @param raw An object (e.g., parsed from a JSON string)
-     * @returns Converted and filtered song data, marked raw to avoid unnecessary reactivity lag
+     * @returns Converted and filtered song data, **MARKED RAW** to avoid unnecessary reactivity lag
      * @throws Will throw an error if the object is not a valid BeepBox song JSON
      */
     static parseRawJSON(raw: any): BeepboxData['song'] {
@@ -123,7 +123,7 @@ export class BeepboxVisualizer {
         // it's also probably not bulletproof
         if (raw == undefined) throw new TypeError('Invalid song data: data is nullish');
         const json = raw as DeepPartial<BeepboxJsonSkeleton>;
-        if (ScaleKeys[json.key as any] === undefined) console.warn(`Unrecognized key ${json.key}, will default to C`);
+        if (BeepboxData.ScaleKeys[json.key as any] === undefined) console.warn(`Unrecognized key ${json.key}, will default to C`);
         if (typeof json.beatsPerMinute !== 'number') throw new TypeError('Invalid song data: missing beatsPerMinute');
         if (typeof json.beatsPerBar !== 'number') throw new TypeError('Invalid song data: missing beatsPerBar');
         if (typeof json.ticksPerBeat !== 'number') throw new TypeError('Invalid song data: missing ticksPerBeat');
@@ -131,12 +131,13 @@ export class BeepboxVisualizer {
         if (typeof json.introBars !== 'number') throw new TypeError('Invalid song data: missing introBars');
         if (!Array.isArray(json.channels)) throw new TypeError('Invalid song data: missing channel data');
         const allowedChannelTypes = new Set(['pitch', 'drum', 'mod']);
+        const allowedInstrumentTypes = new Set(['chip', 'custom chip', 'pwm', 'supersaw', 'fm', 'fm6op', 'harmonics', 'picked string', 'spectrum', 'noise', 'drumset', 'mod']);
         const abortInvalidNoteData = (): never => {
             throw new TypeError('Invalid song data: invalid note data');
         };
         const song: BeepboxData['song'] = {
-            key: ScaleKeys[json.key as any] as any ?? ScaleKeys.C,
-            bpm: json.beatsPerMinute,
+            key: BeepboxData.ScaleKeys[json.key as any] as any ?? BeepboxData.ScaleKeys.C,
+            tickSpeed: json.beatsPerMinute * json.ticksPerBeat / 60,
             barLength: json.beatsPerBar * json.ticksPerBeat,
             loopBars: {
                 length: json.loopBars,
@@ -144,29 +145,39 @@ export class BeepboxVisualizer {
             },
             channels: json.channels.map((channel, i) => {
                 if (channel == null) throw new TypeError('Invalid song data: null channel data');
-                if (!allowedChannelTypes.has(channel.type!)) throw new TypeError(`Invalid song data: unrecognized channel type ${channel?.type}`);
+                if (!allowedChannelTypes.has(channel.type!)) throw new TypeError(`Invalid song data: unrecognized channel type ${channel.type}`);
+                if (!Array.isArray(channel.instruments)) throw new TypeError('Invalid song data: Missing instrument data');
                 if (!Array.isArray(channel.patterns)) throw new TypeError('Invalid song data: Missing pattern data');
                 if (!Array.isArray(channel.sequence)) throw new TypeError('Invalid song data: Missing sequence');
                 return {
                     type: channel.type!,
                     name: channel.name?.length! > 0 ? channel.name! : `${channel.type![0].toUpperCase()}${channel.type!.substring(1)} ${i + 1}`,
+                    instruments: channel.instruments.map((instrument) => {
+                        if (!allowedInstrumentTypes.has((instrument.type ?? '').toLowerCase())) throw new TypeError(`Invalid song data: unrecognized instrument type ${instrument.type}`);
+                        return {
+                            type: instrument.type!.toLowerCase() as any
+                        };
+                    }),
                     patterns: channel.patterns.map((pattern) => {
                         if (pattern == null) throw new TypeError('Invalid song data: null pattern data');
                         if (!Array.isArray(pattern.notes)) throw new TypeError('Invalid song data: Missing note data');
-                        return pattern.notes.map((dat) => {
-                            if (dat == null) throw new TypeError('Invalid song data: null note data');
-                            if (!Array.isArray(dat.pitches)) throw new TypeError('Invalid song data: missing note pitches');
-                            if (!Array.isArray(dat.points)) throw new TypeError('Invalid song data: missing note points');
-                            return {
-                                pitches: dat.pitches!,
-                                points: dat.points.map((pt) => ({
-                                    tick: pt.tick ?? abortInvalidNoteData(),
-                                    pitchBend: pt.pitchBend ?? abortInvalidNoteData(),
-                                    volume: pt.volume ?? abortInvalidNoteData(),
-                                })),
-                                continueLast: dat.continuesLastPattern ?? false
-                            } satisfies NonNullable<BeepboxData['song']>['channels'][number]['patterns'][number][number]; // buh
-                        });
+                        return {
+                            notes: pattern.notes.map((dat) => {
+                                if (dat == null) throw new TypeError('Invalid song data: null note data');
+                                if (!Array.isArray(dat.pitches)) throw new TypeError('Invalid song data: missing note pitches');
+                                if (!Array.isArray(dat.points)) throw new TypeError('Invalid song data: missing note points');
+                                return {
+                                    pitches: dat.pitches!,
+                                    points: dat.points.map((pt) => ({
+                                        tick: pt.tick ?? abortInvalidNoteData(),
+                                        pitchBend: pt.pitchBend ?? abortInvalidNoteData(),
+                                        volume: pt.volume ?? abortInvalidNoteData(),
+                                    })),
+                                    continueLast: dat.continuesLastPattern ?? false,
+                                } satisfies NonNullable<BeepboxData['song']>['channels'][number]['patterns'][number]['notes'][number]; // buh
+                            }),
+                            instruments: pattern.instruments!
+                        }
                     }),
                     sequence: channel.sequence as number[]
                 } satisfies NonNullable<BeepboxData['song']>['channels'][number];

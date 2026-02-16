@@ -20,9 +20,10 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         `,
         breaking: [],
         changes: [
+            'Disabled play button when there\'s nothing to play'
         ],
         fixes: [
-            'Refactored playback timers to fix issues with desync and maintainability'
+            'Refactored playback timers to fix issues with desync and codebase organization'
         ],
         notes: []
     },

@@ -2,14 +2,10 @@ import { computed, reactive, watch } from "vue";
 import Visualizer from "./visualizer";
 import BeepboxVisualizer from "./beepbox";
 
-if (!('AudioContext' in window)) {
-    throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
-}
-
 /**
  * Playback timer and audio context for visualizer/audio synchronization.
  */
-export namespace Playback {
+namespace Playback {
     export const audioContext: AudioContext = new AudioContext({ sampleRate: 48000 });
     export const gain: GainNode = audioContext.createGain();
     gain.connect(audioContext.destination);
@@ -98,8 +94,8 @@ export namespace Playback {
     audioContext.addEventListener('statechange', () => {
         const contextPlaying = audioContext.state == 'running';
         if (contextPlaying != internalTimer.playing) {
-            if (contextPlaying) start();
-            else stop();
+            if (contextPlaying) internalTimer.playing = true;
+            else internalTimer.playing = false;
         }
     });
 }

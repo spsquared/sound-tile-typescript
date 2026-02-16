@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
 import TileEditor from '@/visualizer/editor';
-import { Tile } from '@/visualizer/tiles';
 import Modulation from '@/visualizer/modulation';
+import { Tile } from '@/visualizer/tiles';
 import DraggableWindow from '@/components/DraggableWindow.vue';
 import ModulatorConnectionTransformItem from './ModulatorConnectionTransformItem.vue';
 

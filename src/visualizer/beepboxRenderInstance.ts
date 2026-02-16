@@ -8,16 +8,22 @@ const isInWorker = 'importScripts' in globalThis;
 /**
  * Renderer class used by both the worker renderer and the fallback renderer.
  */
-export class BeepboxRenderInstance {
+class BeepboxRenderInstance {
     readonly canvas: OffscreenCanvas;
     readonly ctx: OffscreenCanvasRenderingContext2D;
     private data: BeepboxSettingsData;
-    private dataUpdated: boolean = false;
     private resized: [number, number] | undefined = undefined;
 
     playing: boolean = false;
     debugInfo: 0 | 1 | 2 = 0;
     private readonly debugText: string[] = [];
+
+    /**
+     * Time, progress (ticks), and tempo (ticks per second), sorted by time. Binary-searchable.
+     * Tempo linearly interpolates to the next lookup point with respect to ticks.
+     */
+    private tickLookupPoints: [number, number, number][] = [];
+    private songLength: number = 0;
 
     frameResult: BeepboxRendererFrameResults = {
         renderTime: 0,
@@ -37,8 +43,6 @@ export class BeepboxRenderInstance {
         if (this.resized !== undefined) {
             this.canvas.width = this.resized[0];
             this.canvas.height = this.resized[1];
-        }
-        if (this.resized !== undefined || this.dataUpdated) {
         }
         // move origin to bottom left and apply transforms
         this.ctx.translate(0, this.canvas.height);
@@ -67,7 +71,46 @@ export class BeepboxRenderInstance {
             debugText: this.debugText
         }
         this.resized = undefined;
-        this.dataUpdated = false;
+    }
+
+    private lookupTicks(time: number): number {
+        if (this.tickLookupPoints.length == 0) return 0;
+        if (this.tickLookupPoints.length == 1) return this.tickLookupPoints[0][2] * time;
+        // we binary search the tempo modulations to find what part of the song we're in
+        let start = 0, end = this.tickLookupPoints.length - 1;
+        // this search is a bit weird because we want the start/end to point to the before/after points
+        while (end - start > 1) {
+            const mid = Math.floor((start + end) / 2);
+            const [t, tk] = this.tickLookupPoints[mid];
+            if (t == time) return tk;
+            if (t < time) {
+                start = mid;
+            } else {
+                end = mid;
+            }
+        }
+        // the search stops early and will always have end adjacent to start
+        const [t1, tk1, tps1] = this.tickLookupPoints[start];
+        const [t2, tk2, tps2] = this.tickLookupPoints[end];
+        // I forsee an edge case if the time is after the last lookup tick
+        if (time == t1) return tk1;
+        if (time == t2) return tk2;
+        if (time > t2) return tk2 + (tps2 * (time - t2));
+        // k = tick, r = slope of tempo change with respect to k, r0 = start tempo, k0 = start tick, t0 = start time
+        // dk/dt = r(k-k0) + r0
+        // k(t) = (r0/r)e^r(t-t0) + k0 - r0/r
+        // this looks weird but it works i guess
+        // also an edge case if tempo1 and tempo2 are the same, it divides by 0
+        if (tps1 == tps2) return tk1 + (tps1 * time - t1);
+        const r = (tps2 - tps1) / (tk2 - tk1);
+        return tps1 / r * (Math.E ** (r * (time - t1))) + tk1 - tps1 / r;
+    }
+    private ticksToBar(tick: number): number {
+        // skipped beats don't cut bars short
+        return Math.floor(tick / (this.data.song?.barLength ?? 1));
+    }
+    private ticksInBar(tick: number): number {
+        return tick % (this.data.song?.barLength ?? 1);
     }
 
     private calcViewportSize(): { readonly width: number, readonly height: number } {
@@ -113,7 +156,16 @@ export class BeepboxRenderInstance {
     }
     updateData(data: BeepboxSettingsData): void {
         this.data = data;
-        this.dataUpdated = true;
+        this.createTickLUT();
+    }
+    private createTickLUT() {
+        const tickLUT: typeof this.tickLookupPoints = [];
+        let length = 0;
+        // reference for modulator enum:
+        // https://github.com/ultraabox/ultrabox_typescript/blob/main/synth/SynthConfig.ts
+        // channel -1 is song, modulator 2 is tempo and 4 is next bar
+        this.tickLookupPoints = tickLUT;
+        this.songLength = length;
     }
 
     private printDebugInfo = useThrottleFn((time: number) => {

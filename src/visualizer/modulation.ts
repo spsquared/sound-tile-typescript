@@ -4,7 +4,7 @@ import { Tile } from './tiles';
 /**
  * Mostly-abstract modular modulation system.
  */
-export namespace Modulation {
+namespace Modulation {
     export type SourcePropertyMap = Record<string, RefOrGetter>
     export type TargetPropertyMap = Record<string, any>
 

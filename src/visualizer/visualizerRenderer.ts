@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash-es';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
 import VisualizerRenderInstance from './visualizerRenderInstance';
-import { VisualizerData } from './visualizerData';
+import VisualizerData from './visualizerData';
 
 export type VisualizerSettingsData = Omit<VisualizerData, 'buffer' | 'gain'>;
 
@@ -99,6 +99,7 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     destroy() {
         super.destroy();
         this.postMessage('stop', {});
+        setTimeout(() => this.worker.terminate(), 10000);
     }
 }
 

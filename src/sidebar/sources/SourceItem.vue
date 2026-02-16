@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { VisualizerTile } from '@/visualizer/tiles';
-import { ReuseVisualizerSource } from './reuseSource';
+import ReuseVisualizerSource from './reuseSource';
 import Slider from '@/components/inputs/Slider.vue';
 
 const props = defineProps<{

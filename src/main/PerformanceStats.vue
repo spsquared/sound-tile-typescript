@@ -225,7 +225,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <DraggableWindow title="Performance" v-model="forceOpenWindow" :min-width="288" :min-height="344" overflow="clip">
+    <DraggableWindow :title="'Performance | L' + perfMetrics.debugLevel.value" v-model="forceOpenWindow" :min-width="288" :min-height="344" overflow="clip" close-on-click-out>
         <div class="wrapper">
             <div class="header">-- Framerate --</div>
             <canvas ref="fpsCanvas"></canvas>

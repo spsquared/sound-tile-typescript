@@ -4,7 +4,7 @@ import { useDebounceFn, watchDebounced, watchThrottled } from '@vueuse/core';
 import TileEditor from '@/visualizer/editor';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import { Tile, VisualizerTile } from '@/visualizer/tiles';
-import { ReuseVisualizerSource } from './reuseSource';
+import ReuseVisualizerSource from './reuseSource';
 import SidebarContentWrapper from '../SidebarContentWrapper.vue';
 import SourceItem from './SourceItem.vue';
 

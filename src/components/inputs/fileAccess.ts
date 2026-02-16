@@ -1,4 +1,4 @@
-export namespace FileAccess {
+namespace FileAccess {
     const fileAccessAvailable = 'showOpenFilePicker' in window;
 
     export async function openFilePicker(options?: OpenFilePickerOptions): Promise<File[]> {

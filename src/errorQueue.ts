@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
 
 /**Global error queue */
-export namespace ErrorQueue {
+namespace ErrorQueue {
     export type QueueEntry = (({
         type: 'error'
         message: string

@@ -1,8 +1,8 @@
 import { computed, ref } from 'vue';
 import TileEditor from '@/visualizer/editor';
 
-type ReusedSourceResult = [ArrayBuffer, string];
-export namespace ReuseVisualizerSource {
+namespace ReuseVisualizerSource {
+    export type ReusedSourceResult = [ArrayBuffer, string];
     const pickingExistingSource = ref(false);
     let pendingPromise: (buffer: ReusedSourceResult | null) => any
     export async function pickExistingSource(): Promise<ReusedSourceResult | null> {
@@ -24,3 +24,5 @@ export namespace ReuseVisualizerSource {
     }
     export const active = computed<boolean>(() => pickingExistingSource.value);
 }
+
+export default ReuseVisualizerSource;

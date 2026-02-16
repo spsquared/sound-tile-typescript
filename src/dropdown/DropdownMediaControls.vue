@@ -40,7 +40,7 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(Playback.time.value)} /
         <div id="mediaControlsBorder1"></div>
         <div id="mediaControlsBorder2"></div>
         <input type="checkbox" id="playCheckbox" v-model="Playback.playing.value" :disabled="Playback.duration.value == 0">
-        <label button id="playButton" for="playCheckbox" :title="Playback.playing.value ? 'Pause' : 'Play'" tabindex="0"></label>
+        <label button id="playButton" for="playCheckbox" :title="Playback.playing.value ? 'Pause' : 'Play'" tabindex="0" :disabled="Playback.duration.value == 0"></label>
         <div id="mediaControlsTimeContainer">
             <span :title="timeStr">{{ MediaPlayer.formatTime(Playback.time.value) }}</span>
             <Toggle v-model="MediaPlayer.state.loop" :icon="loopIcon" title="Loop song"></Toggle>
@@ -169,8 +169,14 @@ const timeStr = computed(() => `${MediaPlayer.formatTime(Playback.time.value)} /
     background-image: url(@/img/picture-in-picture-exit.svg);
 }
 
-#pipCheckbox:disabled+#pipButton {
-    background-color: gray;
+#playButton[disabled=true],
+#pipButton[disabled=true] {
+    background-color: var(--input-disabled-color);
+}
+
+#playButton[disabled=true]:hover,
+#pipButton[disabled=true]:hover {
+    background-color: #666;
 }
 
 #mediaControlsFullTimeContainer {

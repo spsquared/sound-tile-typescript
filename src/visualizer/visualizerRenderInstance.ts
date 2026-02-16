@@ -2,14 +2,14 @@ import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { ColorData } from '@/components/inputs/colorPicker';
 import type { RendererMessageData, RendererMessageEvent, VisualizerRendererFrameResults, VisualizerSettingsData } from './visualizerRenderer';
-import { VisualizerMode } from './visualizerData';
+import VisualizerData from './visualizerData';
 
 const isInWorker = 'importScripts' in globalThis;
 
 /**
  * Renderer class used by both the worker renderer and the fallback renderer.
  */
-export class VisualizerRenderInstance {
+class VisualizerRenderInstance {
     readonly canvas: OffscreenCanvas;
     readonly ctx: OffscreenCanvasRenderingContext2D;
     private data: VisualizerSettingsData;
@@ -70,35 +70,35 @@ export class VisualizerRenderInstance {
         // spaghetti v2
         this.ctx.save();
         switch (this.data.mode) {
-            case VisualizerMode.FREQ_BAR:
+            case VisualizerData.Mode.FREQ_BAR:
                 if (!(buffer instanceof Uint8Array)) break;
                 this.drawFreqBars(buffer);
                 break;
-            case VisualizerMode.FREQ_LINE:
+            case VisualizerData.Mode.FREQ_LINE:
                 if (!(buffer instanceof Uint8Array)) break;
                 this.drawFreqLines(buffer);
                 break;
-            case VisualizerMode.FREQ_FILL:
+            case VisualizerData.Mode.FREQ_FILL:
                 if (!(buffer instanceof Uint8Array)) break;
                 this.drawFreqLines(buffer, true);
                 break;
-            case VisualizerMode.FREQ_LUMINANCE:
+            case VisualizerData.Mode.FREQ_LUMINANCE:
                 if (!(buffer instanceof Uint8Array)) break;
                 this.drawFreqBars(buffer, true);
                 break;
-            case VisualizerMode.WAVE_DIRECT:
+            case VisualizerData.Mode.WAVE_DIRECT:
                 if (!(buffer instanceof Float32Array)) break;
                 this.drawWave(buffer);
                 break;
-            case VisualizerMode.WAVE_CORRELATED:
+            case VisualizerData.Mode.WAVE_CORRELATED:
                 if (!(buffer instanceof Float32Array)) break;
                 this.drawCorrWave(buffer);
                 break;
-            case VisualizerMode.SPECTROGRAM:
+            case VisualizerData.Mode.SPECTROGRAM:
                 if (!(buffer instanceof Uint8Array)) break;
                 this.drawFreqSpectrogram(buffer);
                 break;
-            case VisualizerMode.CHANNEL_PEAKS:
+            case VisualizerData.Mode.CHANNEL_PEAKS:
                 if (!Array.isArray(buffer)) break;
                 this.drawPeaks(buffer);
                 break;
@@ -109,9 +109,9 @@ export class VisualizerRenderInstance {
         this.ctx.fillRect(0, 0, width, height);
         this.ctx.globalCompositeOperation = 'source-over';
         // free up some memory by removing unused history data
-        if (this.data.mode != VisualizerMode.WAVE_CORRELATED) this.corrwaveData = null;
-        if (this.data.mode != VisualizerMode.SPECTROGRAM) this.spectogramData = null;
-        if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) this.levelsData = null;
+        if (this.data.mode != VisualizerData.Mode.WAVE_CORRELATED) this.corrwaveData = null;
+        if (this.data.mode != VisualizerData.Mode.SPECTROGRAM) this.spectogramData = null;
+        if (this.data.mode != VisualizerData.Mode.CHANNEL_PEAKS) this.levelsData = null;
         // get frame results
         let frameResultMin = Infinity, frameResultMax = -Infinity;
         const frameResultBuffers = Array.isArray(buffer) ? buffer : [buffer];

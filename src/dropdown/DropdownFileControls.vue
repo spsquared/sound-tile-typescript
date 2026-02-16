@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import TileEditor from '@/visualizer/editor';
-import { Media } from '@/visualizer/media';
+import Media from '@/visualizer/media';
 import MediaPlayer from '@/visualizer/mediaPlayer';
 import FileAccess from '@/components/inputs/fileAccess';
 import { matchTextInput } from '@/constants';

@@ -6,8 +6,8 @@ import TileEditor from '../editor';
 import { VisualizerTile } from '../tiles';
 import Tile from './Tile.vue';
 import Playback from '../playback';
-import { VisualizerMode } from '../visualizerData';
-import { ReuseVisualizerSource } from '@/sidebar/sources/reuseSource';
+import VisualizerData from '../visualizerData';
+import ReuseVisualizerSource from '@/sidebar/sources/reuseSource';
 import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
@@ -86,20 +86,20 @@ const colorSync2B = computed({ get: () => colorPicker2.colorData, set: (c) => co
 syncRef(colorSync1A, colorSync1B);
 syncRef(colorSync2A, colorSync2B);
 
-const reflectionDisabled = computed(() => options.value.mode == VisualizerMode.SPECTROGRAM || options.value.mode == VisualizerMode.FREQ_LUMINANCE);
-const barMinLengthDisabled = computed(() => options.value.freqOptions.bar.ledEffect || options.value.mode == VisualizerMode.FREQ_LUMINANCE);
+const reflectionDisabled = computed(() => options.value.mode == VisualizerData.Mode.SPECTROGRAM || options.value.mode == VisualizerData.Mode.FREQ_LUMINANCE);
+const barMinLengthDisabled = computed(() => options.value.freqOptions.bar.ledEffect || options.value.mode == VisualizerData.Mode.FREQ_LUMINANCE);
 const levelsMinLengthDisabled = computed(() => options.value.levelOptions.ledEffect);
 </script>
 <script lang="ts">
-const frequencyModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM];
-const waveformModes = [VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED];
-const spectrogramModes = [VisualizerMode.SPECTROGRAM];
-const peakModes = [VisualizerMode.CHANNEL_PEAKS];
-const barModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE];
-const lineModes = [VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL];
-const corrwaveModes = [VisualizerMode.WAVE_CORRELATED];
-const secondaryColorSupportedModes = [VisualizerMode.FREQ_FILL];
-const altColorSupportedModes = [VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM, VisualizerMode.CHANNEL_PEAKS];
+const frequencyModes = [VisualizerData.Mode.FREQ_BAR, VisualizerData.Mode.FREQ_LINE, VisualizerData.Mode.FREQ_FILL, VisualizerData.Mode.FREQ_LUMINANCE, VisualizerData.Mode.SPECTROGRAM];
+const waveformModes = [VisualizerData.Mode.WAVE_DIRECT, VisualizerData.Mode.WAVE_CORRELATED];
+const spectrogramModes = [VisualizerData.Mode.SPECTROGRAM];
+const peakModes = [VisualizerData.Mode.CHANNEL_PEAKS];
+const barModes = [VisualizerData.Mode.FREQ_BAR, VisualizerData.Mode.FREQ_LUMINANCE];
+const lineModes = [VisualizerData.Mode.FREQ_LINE, VisualizerData.Mode.FREQ_FILL];
+const corrwaveModes = [VisualizerData.Mode.WAVE_CORRELATED];
+const secondaryColorSupportedModes = [VisualizerData.Mode.FREQ_FILL];
+const altColorSupportedModes = [VisualizerData.Mode.FREQ_BAR, VisualizerData.Mode.FREQ_LUMINANCE, VisualizerData.Mode.SPECTROGRAM, VisualizerData.Mode.CHANNEL_PEAKS];
 
 const fftSizes = Array.from(new Array(11), (_v, i) => 2 ** (i + 5));
 const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
@@ -150,17 +150,17 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         <label title="Visualizer drawing style">
                             Mode
                             <select v-model="options.mode">
-                                <option :value="VisualizerMode.FREQ_BAR">Freq (Bar)</option>
-                                <option :value="VisualizerMode.FREQ_LINE">Freq (Line)</option>
-                                <option :value="VisualizerMode.FREQ_FILL">Freq (Fill)</option>
-                                <option :value="VisualizerMode.FREQ_LUMINANCE">Freq (Lumi)</option>
-                                <option :value="VisualizerMode.WAVE_DIRECT">Wave (Direct)</option>
-                                <option :value="VisualizerMode.WAVE_CORRELATED">Wave (Corr)</option>
-                                <option :value="VisualizerMode.SPECTROGRAM">Spectrogram</option>
-                                <option :value="VisualizerMode.CHANNEL_PEAKS">Channel Levels</option>
+                                <option :value="VisualizerData.Mode.FREQ_BAR">Freq (Bar)</option>
+                                <option :value="VisualizerData.Mode.FREQ_LINE">Freq (Line)</option>
+                                <option :value="VisualizerData.Mode.FREQ_FILL">Freq (Fill)</option>
+                                <option :value="VisualizerData.Mode.FREQ_LUMINANCE">Freq (Lumi)</option>
+                                <option :value="VisualizerData.Mode.WAVE_DIRECT">Wave (Direct)</option>
+                                <option :value="VisualizerData.Mode.WAVE_CORRELATED">Wave (Corr)</option>
+                                <option :value="VisualizerData.Mode.SPECTROGRAM">Spectrogram</option>
+                                <option :value="VisualizerData.Mode.CHANNEL_PEAKS">Channel Levels</option>
                             </select>
                         </label>
-                        <label title="FFT window size - larger FFT increases frequency resolution" v-if="options.mode != VisualizerMode.CHANNEL_PEAKS">
+                        <label title="FFT window size - larger FFT increases frequency resolution" v-if="options.mode != VisualizerData.Mode.CHANNEL_PEAKS">
                             FFT
                             <select v-model="options.fftSize">
                                 <option v-for="size in fftSizes" :key="size" :value="size">{{ size }}</option>

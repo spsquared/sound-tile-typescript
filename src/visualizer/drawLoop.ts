@@ -1,6 +1,6 @@
+import { Ref, ref } from 'vue';
 import Visualizer from './visualizer';
 import BeepboxVisualizer from './beepbox';
-import { Ref, ref } from 'vue';
 
 // last 10 seconds are tracked as opposed to just the last 1 second that visualizers track
 const perfMetrics: {

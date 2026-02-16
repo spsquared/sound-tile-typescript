@@ -1,23 +1,9 @@
 import { ColorData } from '@/components/inputs/colorPicker'
 
 /**
- * Possible visualizer types and styles.
- */
-export enum VisualizerMode {
-    FREQ_BAR,
-    FREQ_LINE,
-    FREQ_FILL,
-    FREQ_LUMINANCE,
-    WAVE_DIRECT,
-    WAVE_CORRELATED,
-    SPECTROGRAM,
-    CHANNEL_PEAKS
-}
-
-/**
  * Audio data and visualizer configurations for a visualizer tile.
  */
-export interface VisualizerData {
+type VisualizerData = {
     /**Audio data uploaded by user - not decoded yet */
     buffer: ArrayBuffer | null
     /**Gain value, 0-1, affects visualizer gain */
@@ -25,7 +11,7 @@ export interface VisualizerData {
     /**Mute the output without affecting the visualizer gain */
     mute: boolean
     /**Visualizer style */
-    mode: VisualizerMode
+    mode: VisualizerData.Mode
     /**Primary color */
     color: ColorData
     /**Secondary color (if available) */
@@ -141,74 +127,92 @@ export interface VisualizerData {
     flipX: boolean
     /**Flip the visualizer's Y-axis - applied after rotation (top becomes bottom) */
     flipY: boolean
-}
+};
 
-export function createDefaultVisualizerData(): VisualizerData {
-    return {
-        buffer: null,
-        gain: 1,
-        mute: false,
-        mode: VisualizerMode.FREQ_BAR,
-        color: { type: 'solid', color: '#FFFFFF', alpha: 1 },
-        color2: { type: 'solid', color: '#FFFFFF', alpha: 1 },
-        color2Alpha: 1,
-        altColorMode: false,
-        fftSize: 256,
-        paddingInline: 8,
-        paddingBlock: 8,
-        freqOptions: {
-            bar: {
+namespace VisualizerData {
+    /**
+     * Possible visualizer types and styles.
+     */
+    export enum Mode {
+        FREQ_BAR,
+        FREQ_LINE,
+        FREQ_FILL,
+        FREQ_LUMINANCE,
+        WAVE_DIRECT,
+        WAVE_CORRELATED,
+        SPECTROGRAM,
+        CHANNEL_PEAKS
+    }
+
+    export function createDefault(): VisualizerData {
+        return {
+            buffer: null,
+            gain: 1,
+            mute: false,
+            mode: VisualizerData.Mode.FREQ_BAR,
+            color: { type: 'solid', color: '#FFFFFF', alpha: 1 },
+            color2: { type: 'solid', color: '#FFFFFF', alpha: 1 },
+            color2Alpha: 1,
+            altColorMode: false,
+            fftSize: 256,
+            paddingInline: 8,
+            paddingBlock: 8,
+            freqOptions: {
+                bar: {
+                    size: 0.8,
+                    ledEffect: false,
+                    ledCount: 64,
+                    ledSize: 0.8,
+                    minLength: 4
+                },
+                line: {
+                    thickness: 2,
+                    sharpEdges: false
+                },
+                spectrogram: {
+                    historyLength: 360,
+                    quantization: 0
+                },
+                smoothing: 0.8,
+                freqCutoff: 1,
+                minDbCutoff: -100,
+                scale: 1,
+                reflect: 0,
+                useLogScale: false,
+                showScale: false,
+                symmetry: 'none'
+            },
+            waveOptions: {
+                scale: 1,
+                thickness: 2,
+                sharpEdges: false,
+                resolution: 1,
+                correlation: {
+                    samples: 32,
+                    stochasticSampling: 0,
+                    gradientDescentGain: 0.5,
+                    frameSmoothing: 0.9
+                }
+            },
+            levelOptions: {
+                channels: 2,
+                frameSmoothing: 0.5,
+                scale: 1,
+                reflect: 0,
+                useLogScale: false,
+                showScale: false,
+                showLabels: false,
                 size: 0.8,
                 ledEffect: false,
                 ledCount: 64,
                 ledSize: 0.8,
                 minLength: 4
             },
-            line: {
-                thickness: 2,
-                sharpEdges: false
-            },
-            spectrogram: {
-                historyLength: 360,
-                quantization: 0
-            },
-            smoothing: 0.8,
-            freqCutoff: 1,
-            minDbCutoff: -100,
-            scale: 1,
-            reflect: 0,
-            useLogScale: false,
-            showScale: false,
-            symmetry: 'none'
-        },
-        waveOptions: {
-            scale: 1,
-            thickness: 2,
-            sharpEdges: false,
-            resolution: 1,
-            correlation: {
-                samples: 32,
-                stochasticSampling: 0,
-                gradientDescentGain: 0.5,
-                frameSmoothing: 0.9
-            }
-        },
-        levelOptions: {
-            channels: 2,
-            frameSmoothing: 0.5,
-            scale: 1,
-            reflect: 0,
-            useLogScale: false,
-            showScale: false,
-            showLabels: false,
-            size: 0.8,
-            ledEffect: false,
-            ledCount: 64,
-            ledSize: 0.8,
-            minLength: 4
-        },
-        rotate: false,
-        flipX: false,
-        flipY: false
-    };
+            rotate: false,
+            flipX: false,
+            flipY: false
+        };
+    }
 }
+
+export default VisualizerData;

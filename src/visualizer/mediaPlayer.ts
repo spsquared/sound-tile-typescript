@@ -4,13 +4,13 @@ import { Media, defaultCoverArt } from './media';
 import TileEditor from './editor';
 import { GroupTile, VisualizerTile, ImageTile, TextTile } from './tiles';
 import Playback from './playback';
+import VisualizerData from './visualizerData';
 import Modulation from './modulation';
-import { VisualizerMode } from './visualizerData';
 
 /**
  * Global media controls, coordinates visualizer & controls.
  */
-export namespace MediaPlayer {
+namespace MediaPlayer {
     export const state: {
         shuffle: boolean
         loop: boolean
@@ -69,6 +69,8 @@ export namespace MediaPlayer {
     });
 }
 
+export default MediaPlayer;
+
 // default state
 {
     const root = new GroupTile();
@@ -84,13 +86,13 @@ export namespace MediaPlayer {
     subA.size = 2;
     root.addChild(subA);
     const visA = new VisualizerTile();
-    visA.visualizer.data.mode = VisualizerMode.WAVE_CORRELATED;
+    visA.visualizer.data.mode = VisualizerData.Mode.WAVE_CORRELATED;
     visA.visualizer.data.fftSize = 2048;
     visA.size = 2;
     visA.modulator.connect(img, 'peak', 'imgScale', [new Modulation.LinearTransform([0.5, 0.25])]);
     root.addChild(visA);
     const visB = new VisualizerTile();
-    visB.visualizer.data.mode = VisualizerMode.CHANNEL_PEAKS;
+    visB.visualizer.data.mode = VisualizerData.Mode.CHANNEL_PEAKS;
     root.addChild(visB);
     root.label = 'Root Group Tile';
     MediaPlayer.media.current = new Media({
@@ -99,5 +101,3 @@ export namespace MediaPlayer {
         coverArt: defaultCoverArt
     }, root);
 };
-
-export default MediaPlayer;

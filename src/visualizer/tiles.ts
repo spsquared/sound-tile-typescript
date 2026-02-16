@@ -1,11 +1,11 @@
 import { Component, nextTick, reactive } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import { v7 as uuidV7 } from 'uuid';
-import { MediaSchema } from './mediaSchema';
+import MediaSchema from './mediaSchema';
 import Visualizer from './visualizer';
-import { createDefaultVisualizerData, VisualizerData } from './visualizerData';
-import { BeepboxVisualizer } from './beepbox';
-import { BeepboxData, createDefaultBeepboxVisualizerData } from './beepboxData';
+import VisualizerData from './visualizerData';
+import BeepboxVisualizer from './beepbox';
+import BeepboxData from './beepboxData';
 import Modulation from './modulation';
 import ColorPicker from '@/components/inputs/colorPicker';
 import TileComponent from './tiles/Tile.vue';
@@ -272,7 +272,7 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     constructor(data?: VisualizerData) {
         super();
         this.canvas = document.createElement('canvas');
-        this.visualizer = new Visualizer(data ?? createDefaultVisualizerData(), this.canvas);
+        this.visualizer = new Visualizer(data ?? VisualizerData.createDefault(), this.canvas);
         // when dragging/moving tiles, unmount happens immediately and remount happens 1 tick later
         // nextTick stops visualizer "glitching" (sounds & behavior) when drag & drop used
         this.mountedListeners.add(() => this.visualizer.visible.value = true);
@@ -300,7 +300,7 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     }
     static fromSchemaData(data: MediaSchema.VisualizerTile): VisualizerTile {
         // visualizer data can't be set after creation so it has to be done here
-        return this.reconstitute(data, new VisualizerTile(merge(createDefaultVisualizerData(), data.data)));
+        return this.reconstitute(data, new VisualizerTile(merge(VisualizerData.createDefault(), data.data)));
     }
     protected static reconstitute(data: MediaSchema.VisualizerTile, tile: VisualizerTile): VisualizerTile {
         super.reconstitute(data, tile);
@@ -334,7 +334,7 @@ export class BeepboxTile extends Tile {
     constructor(data?: BeepboxData) {
         super();
         this.canvas = document.createElement('canvas');
-        this.visualizer = new BeepboxVisualizer(data ?? createDefaultBeepboxVisualizerData(), this.canvas);
+        this.visualizer = new BeepboxVisualizer(data ?? BeepboxData.createDefault(), this.canvas);
         // see VisualizerTile
         this.mountedListeners.add(() => this.visualizer.visible.value = true);
         this.unmountedListeners.add(async () => {

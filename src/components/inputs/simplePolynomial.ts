@@ -30,10 +30,12 @@ export function formatPolynomial(terms: { [key: number]: number }): string {
     return out;
 }
 
-export default {
-    parse: parsePolynomial,
-    format: formatPolynomial
-};
+namespace Polynomial {
+    export const parse = parsePolynomial;
+    export const format = formatPolynomial;
+}
+
+export default Polynomial;
 
 function testParse() {
     return;

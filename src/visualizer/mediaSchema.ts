@@ -1,10 +1,10 @@
 import { merge } from 'lodash-es'; // hopefully tree-shakeable
 import { DeepPartial } from '@/components/utils';
 import { ColorData } from '@/components/inputs/colorPicker';
-import { createDefaultVisualizerData, VisualizerData, VisualizerMode } from './visualizerData';
 import { GroupTile as GroupTileInstance } from './tiles';
+import VisualizerData from './visualizerData';
 
-export namespace MediaSchema {
+namespace MediaSchema {
     /**Blank tile schema-layout data */
     export type Tile = {
         // type can't be stricter without causing issues for subclasses
@@ -124,18 +124,18 @@ export namespace MediaSchema {
     };
 
     // actually wtf is this ordering
-    const legacyModeTranslator: VisualizerMode[] = [
-        VisualizerMode.FREQ_BAR,
-        VisualizerMode.FREQ_BAR,
-        VisualizerMode.FREQ_LINE,
-        VisualizerMode.FREQ_FILL,
-        VisualizerMode.WAVE_DIRECT,
-        VisualizerMode.FREQ_FILL,
-        VisualizerMode.CHANNEL_PEAKS,
-        VisualizerMode.FREQ_LINE,
-        VisualizerMode.FREQ_LUMINANCE,
-        VisualizerMode.WAVE_CORRELATED,
-        VisualizerMode.SPECTROGRAM
+    const legacyModeTranslator: VisualizerData.Mode[] = [
+        VisualizerData.Mode.FREQ_BAR,
+        VisualizerData.Mode.FREQ_BAR,
+        VisualizerData.Mode.FREQ_LINE,
+        VisualizerData.Mode.FREQ_FILL,
+        VisualizerData.Mode.WAVE_DIRECT,
+        VisualizerData.Mode.FREQ_FILL,
+        VisualizerData.Mode.CHANNEL_PEAKS,
+        VisualizerData.Mode.FREQ_LINE,
+        VisualizerData.Mode.FREQ_LUMINANCE,
+        VisualizerData.Mode.WAVE_CORRELATED,
+        VisualizerData.Mode.SPECTROGRAM
     ];
     /**
      * Convert legacy (old Sound Tile) color data into the enhanced color picker format.
@@ -187,9 +187,9 @@ export namespace MediaSchema {
      * @returns Data in new format
      */
     export function translateLegacyVisualizerData(data: LegacyVisualizerData | LegacyChannelPeaksData): VisualizerData {
-        if ('channelCount' in data) return merge<VisualizerData, DeepPartial<VisualizerData>>(createDefaultVisualizerData(), {
+        if ('channelCount' in data) return merge<VisualizerData, DeepPartial<VisualizerData>>(VisualizerData.createDefault(), {
             buffer: data.buffer,
-            mode: VisualizerMode.CHANNEL_PEAKS,
+            mode: VisualizerData.Mode.CHANNEL_PEAKS,
             gain: data.volume,
             mute: data.muteOutput,
             color: translateLegacyColorData(data.color),
@@ -205,9 +205,9 @@ export namespace MediaSchema {
             flipX: data.flippedX,
             flipY: data.flippedY
         });
-        else return merge<VisualizerData, DeepPartial<VisualizerData>>(createDefaultVisualizerData(), {
+        else return merge<VisualizerData, DeepPartial<VisualizerData>>(VisualizerData.createDefault(), {
             buffer: data.buffer,
-            mode: legacyModeTranslator[data.mode] ?? VisualizerMode.FREQ_BAR,
+            mode: legacyModeTranslator[data.mode] ?? VisualizerData.Mode.FREQ_BAR,
             gain: data.volume,
             mute: data.muted ?? data.muteOutput,
             color: translateLegacyColorData(data.color, data.altColor && [0, 1, 8].includes(data.mode), data.altColor && data.mode == 8),
@@ -349,3 +349,5 @@ export namespace MediaSchema {
     /**File layouts for all schema versions */
     export type Schema = SchemaV0 | SchemaV1 | SchemaV2;
 }
+
+export default MediaSchema;

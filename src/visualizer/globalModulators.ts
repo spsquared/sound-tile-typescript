@@ -1,6 +1,6 @@
 import { ref } from 'vue';
-import Modulation from './modulation';
 import Playback from './playback';
+import Modulation from './modulation';
 
 /**
  * External modulation sources and targets that exist outside of the layout scope.

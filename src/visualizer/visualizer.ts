@@ -2,13 +2,13 @@ import { effectScope, EffectScope, reactive, ref, Ref, toRaw, watch, watchEffect
 import { webWorkerSupported } from '@/constants';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
-import { VisualizerData, VisualizerMode } from './visualizerData';
+import VisualizerData from './visualizerData';
 import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
 
 /**
  * Audio and visual rendering context of visualizer tiles.
  */
-export class Visualizer {
+class Visualizer {
     /**
      * Cache decoded audio so audio buffers can be reused. The promise prevents
      * decoding the same buffer a second time while the first is still loading.
@@ -71,7 +71,7 @@ export class Visualizer {
             watchEffect(() => this.data.mute ? this.gain.disconnect(Playback.gain) : this.gain.connect(Playback.gain));
             watch([() => this.data.mode, () => this.data.levelOptions.channels, () => this.data.buffer], ([], [lastMode, lastChannels, lastBuffer]) => {
                 // this could blow up very easily!!
-                if (this.data.mode == VisualizerMode.CHANNEL_PEAKS && (lastMode != VisualizerMode.CHANNEL_PEAKS || this.data.levelOptions.channels != lastChannels)) {
+                if (this.data.mode == VisualizerData.Mode.CHANNEL_PEAKS && (lastMode != VisualizerData.Mode.CHANNEL_PEAKS || this.data.levelOptions.channels != lastChannels)) {
                     // yeetus analyzers-us
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     else for (const a of this.analyzers) this.gain.disconnect(a);
@@ -86,7 +86,7 @@ export class Visualizer {
                         this.splitter.connect(analyzer, i);
                         this.analyzers.push(analyzer);
                     }
-                } else if (this.data.mode != VisualizerMode.CHANNEL_PEAKS && (lastMode == VisualizerMode.CHANNEL_PEAKS || this.data.buffer != lastBuffer)) {
+                } else if (this.data.mode != VisualizerData.Mode.CHANNEL_PEAKS && (lastMode == VisualizerData.Mode.CHANNEL_PEAKS || this.data.buffer != lastBuffer)) {
                     // reset analyzer when audio source changed too
                     if (this.splitter !== null) this.gain.disconnect(this.splitter);
                     this.splitter?.disconnect();
@@ -103,17 +103,17 @@ export class Visualizer {
             }, { immediate: true });
             // watchEffect is unreliable and randomly breaks when other files change so fuck that
             watch(() => this.data.fftSize, () => {
-                if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) {
+                if (this.data.mode != VisualizerData.Mode.CHANNEL_PEAKS) {
                     for (const a of this.analyzers) a.fftSize = this.data.fftSize;
                 }
             });
             watch(() => this.data.freqOptions.minDbCutoff, () => {
-                if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) {
+                if (this.data.mode != VisualizerData.Mode.CHANNEL_PEAKS) {
                     for (const a of this.analyzers) a.minDecibels = this.data.freqOptions.minDbCutoff;
                 }
             });
             watch(() => this.data.freqOptions.smoothing, () => {
-                if (this.data.mode != VisualizerMode.CHANNEL_PEAKS) {
+                if (this.data.mode != VisualizerData.Mode.CHANNEL_PEAKS) {
                     for (const a of this.analyzers) a.smoothingTimeConstant = this.data.freqOptions.smoothing;
                 }
             });
@@ -155,7 +155,7 @@ export class Visualizer {
             this.ctx.arc(0, 0, spinnerRadius, 0, 4 / 3 * Math.PI);
             this.ctx.arc(0, 0, spinnerRadius * 0.8, 4 / 3 * Math.PI, 0, true);
             this.ctx.fill();
-        } else if ([VisualizerMode.FREQ_BAR, VisualizerMode.FREQ_LINE, VisualizerMode.FREQ_FILL, VisualizerMode.FREQ_LUMINANCE, VisualizerMode.SPECTROGRAM].includes(this.data.mode)) {
+        } else if ([VisualizerData.Mode.FREQ_BAR, VisualizerData.Mode.FREQ_LINE, VisualizerData.Mode.FREQ_FILL, VisualizerData.Mode.FREQ_LUMINANCE, VisualizerData.Mode.SPECTROGRAM].includes(this.data.mode)) {
             if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
             else {
                 const data = new Uint8Array(this.analyzers[0].frequencyBinCount);
@@ -168,7 +168,7 @@ export class Visualizer {
                 }
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
-        } else if ([VisualizerMode.WAVE_DIRECT, VisualizerMode.WAVE_CORRELATED].includes(this.data.mode)) {
+        } else if ([VisualizerData.Mode.WAVE_DIRECT, VisualizerData.Mode.WAVE_CORRELATED].includes(this.data.mode)) {
             if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
             else {
                 const data = new Float32Array(this.analyzers[0].fftSize);
@@ -181,7 +181,7 @@ export class Visualizer {
                 }
                 this.ctx.drawImage(this.renderer.canvas, 0, 0);
             }
-        } else if (this.data.mode == VisualizerMode.CHANNEL_PEAKS) {
+        } else if (this.data.mode == VisualizerData.Mode.CHANNEL_PEAKS) {
             const data: Uint8Array[] = [];
             for (const a of this.analyzers) {
                 const buffer = new Uint8Array(a.frequencyBinCount);
@@ -249,7 +249,7 @@ export class Visualizer {
     resize(w: number, h: number): void {
         this.renderer.resize(w, h);
         // only apply size when not using renderer - stops flickering
-        if (this.audioBuffer === null || VisualizerMode[this.data.mode] == undefined) {
+        if (this.audioBuffer === null || VisualizerData.Mode[this.data.mode] == undefined) {
             this.canvas.width = w;
             this.canvas.height = h;
         }

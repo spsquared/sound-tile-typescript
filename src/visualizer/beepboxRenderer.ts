@@ -4,10 +4,11 @@ import { cloneDeep } from 'lodash-es';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
 import BeepboxRenderInstance from './beepboxRenderInstance';
-import { BeepboxData } from './beepboxData';
+import BeepboxData from './beepboxData';
 
 // much of this is just a copy of visualizerRenderer.ts
 // what are you gonna do about it? complain?
+// there are some differences that make this better than Even More Abstraction
 
 export type BeepboxSettingsData = BeepboxData; // idk nothing to omit
 
@@ -97,6 +98,7 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
     destroy() {
         super.destroy();
         this.postMessage('stop', {});
+        setTimeout(() => this.worker.terminate(), 10000);
     }
 }
 

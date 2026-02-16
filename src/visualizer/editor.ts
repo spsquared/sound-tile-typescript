@@ -18,7 +18,7 @@ type LayoutHistoryEntry = Exclude<Tile, GroupTile> | {
 /**
  * Tile editing system.
  */
-export class TileEditor {
+class TileEditor {
     private static readonly idleTracker = useIdle(5000);
 
     static readonly state: {

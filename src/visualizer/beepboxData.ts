@@ -1,30 +1,33 @@
 import { ColorData } from '@/components/inputs/colorPicker';
 
-export enum ScaleKeys {
-    'C',
-    'C♯',
-    'D',
-    'D♯',
-    'E',
-    'F',
-    'F♯',
-    'G',
-    'G♯',
-    'A',
-    'A♯',
-    'B'
-}
-
 /**
  * BeepBox song data and visualizer configurations for a BeepBox tile.
  */
-export interface BeepboxData {
-    song: {
+type BeepboxData = {
+    song: BeepboxData.Song | null;
+    /**Styling for individual channels */
+    channelStyles: {
+        color: ColorData
+    }[]
+    /**How many times the loop loops */
+    loopCount: number
+    /**Remove beats skipped by "next bar" modulations */
+    cutSkippedBeats: boolean
+    /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
+    rotate: boolean
+    /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
+    flipX: boolean
+    /**Flip the visualizer's Y-axis - applied after rotation (top becomes bottom) */
+    flipY: boolean
+}
+
+namespace BeepboxData {
+    export type Song = {
         /**Root key of song - basically a pitch shift */
         key: ScaleKeys
-        /**Beats per minute of song */
-        bpm: number
-        /**Length of a bar in BeepBox ticks - calculated from song data */
+        /**ticks per second of song - calculated from ticks per beat and beats per minute */
+        tickSpeed: number
+        /**Length of a bar in BeepBox ticks - calculated from ticks per beat and beats per bar */
         barLength: number
         /**Differs from BeepBox format, defines loop points */
         loopBars: {
@@ -35,31 +38,67 @@ export interface BeepboxData {
         channels: {
             type: 'pitch' | 'drum' | 'mod'
             name: string
-            patterns: {
-                pitches: number[]
-                points: {
-                    tick: number
-                    pitchBend: number
-                    volume: number
+            instruments: ({
+                type: 'chip' | 'custom chip' | 'pwm' | 'supersaw' | 'fm' | 'fm6op' | 'harmonics' | 'picked string' | 'spectrum' | 'noise' | 'drumset'
+                envelopes: {
+                    target: string // only here for UI, not used in rendering
+
                 }[]
-                continueLast: boolean // shortened
-            }[][]
+            } | {
+                type: 'mod'
+            })[]
+            patterns: {
+                notes: {
+                    pitches: number[]
+                    points: {
+                        tick: number
+                        pitchBend: number
+                        volume: number
+                    }[]
+                    continueLast: boolean // shortened
+                }[]
+                instruments: number[]
+            }[]
             sequence: number[]
         }[]
-    } | null;
-    /**Styling for individual channels */
-    channelStyles: {
-        color: ColorData
-    }[]
-    /**How many times the loop loops */
-    loopCount: number
-    /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
-    rotate: boolean
-    /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
-    flipX: boolean
-    /**Flip the visualizer's Y-axis - applied after rotation (top becomes bottom) */
-    flipY: boolean
+    }
+
+    export enum ScaleKeys {
+        'C',
+        'C♯',
+        'D',
+        'D♯',
+        'E',
+        'F',
+        'F♯',
+        'G',
+        'G♯',
+        'A',
+        'A♯',
+        'B'
+    }
+
+    export enum EnvelopeType {
+    }
+
+    export namespace EnvelopeType {
+        // idk functions
+    }
+
+    export function createDefault(): BeepboxData {
+        return {
+            song: null,
+            channelStyles: [],
+            loopCount: 1,
+            cutSkippedBeats: true,
+            rotate: false,
+            flipX: false,
+            flipY: false
+        };
+    }
 }
+
+export default BeepboxData;
 
 /**
  * A bare-bones type definition for the BeepBox JSON export format, only
@@ -76,7 +115,33 @@ export type BeepboxJsonSkeleton = {
     channels: {
         type: 'pitch' | 'drum' | 'mod'
         name?: string
-        instruments: unknown[]
+        instruments: (({
+            type: string
+            [key: string]: unknown
+        } | {
+            type: 'mod',
+            modChannels: number[],
+            modInstruments: number[],
+            modSettings: number[],
+            modFilterTypes: number[]
+        }) & {
+            envelopeSpeed?: number
+            envelopes: ({
+                target: string
+                envelope: string
+            } | {
+                target: string
+                envelope: string
+                inverse: boolean
+                perEnvelopeSpeed: number
+                perEnvelopeLowerBound: number
+                perEnvelopeUpperBound: number
+                discrete: boolean
+                waveform?: number
+                seed?: number
+                steps?: number
+            })[]
+        })[]
         patterns: {
             notes: {
                 pitches: number[]
@@ -92,15 +157,4 @@ export type BeepboxJsonSkeleton = {
         }[]
         sequence: number[]
     }[]
-}
-
-export function createDefaultBeepboxVisualizerData(): BeepboxData {
-    return {
-        song: null,
-        channelStyles: [],
-        loopCount: 1,
-        rotate: false,
-        flipX: false,
-        flipY: false
-    };
 }

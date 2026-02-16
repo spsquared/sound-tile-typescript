@@ -3,9 +3,9 @@ const fflate = import('fflate');
 import { webWorkerSupported } from '@/constants';
 import ErrorQueue from '@/errorQueue';
 import { soundtileMsgpackExtensions } from '@/components/msgpackExtensions';
-import { MediaSchema } from './mediaSchema';
+import MediaSchema from './mediaSchema';
 import { GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
-import { VisualizerMode } from './visualizerData';
+import VisualizerData from './visualizerData';
 import Modulation from './modulation';
 import { createGlobalModulator, GlobalModulator } from './globalModulators';
 
@@ -237,7 +237,7 @@ export class Media implements MediaMetadata {
                         const visualizer = new VisualizerTile(curr.visualizer !== null ? MediaSchema.translateLegacyVisualizerData(curr.visualizer) : undefined);
                         visualizer.label = 'Channel Peaks Tile';
                         visualizer.modulator.label = visualizer.label; // outside reactivity, update is manual
-                        visualizer.visualizer.data.mode = VisualizerMode.CHANNEL_PEAKS; // if tile has no data mode isn't set
+                        visualizer.visualizer.data.mode = VisualizerData.Mode.CHANNEL_PEAKS; // if tile has no data mode isn't set
                         tile = visualizer;
                         break;
                     }
@@ -428,3 +428,5 @@ export class Media implements MediaMetadata {
         this.globalModulator.destroy();
     }
 }
+
+export default Media;
