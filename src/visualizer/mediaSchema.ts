@@ -3,6 +3,7 @@ import { DeepPartial } from '@/components/utils';
 import { ColorData } from '@/components/inputs/colorPicker';
 import { GroupTile as GroupTileInstance } from './tiles';
 import VisualizerData from './visualizerData';
+import BeepboxData from './beepboxData';
 
 namespace MediaSchema {
     /**Legacy (old Sound Tile) definitions for Schema V0 and V1 */
@@ -349,6 +350,7 @@ namespace MediaSchema {
         };
         /**BeepBox tile schema-layout data */
         export type BeepboxTile = Tile & {
+            data: DeepPartial<BeepboxData, ColorData | BeepboxData.Song>
         };
         /**Text tile schema-layout data */
         export type TextTile = Tile & {

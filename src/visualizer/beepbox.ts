@@ -122,54 +122,57 @@ class BeepboxVisualizer {
         // we probably don't need such a bulletproof data valiation thing but like...
         // it's also probably not bulletproof
         const start = performance.now();
-        if (raw == undefined) throw new TypeError('Invalid song data: data is nullish');
+        if (raw == undefined) throw new InvalidBeepBoxError('data is nullish');
         const json = raw as DeepPartial<BeepboxJsonSkeleton>;
         if (BeepboxData.ScaleKeys[json.key as BeepboxData.ScaleKeys] === undefined) console.warn(`Unrecognized key ${json.key}, will default to C`);
-        if (typeof json.beatsPerMinute !== 'number') throw new TypeError('Invalid song data: missing beatsPerMinute');
-        if (typeof json.beatsPerBar !== 'number') throw new TypeError('Invalid song data: missing beatsPerBar');
-        if (typeof json.ticksPerBeat !== 'number') throw new TypeError('Invalid song data: missing ticksPerBeat');
-        if (typeof json.loopBars !== 'number') throw new TypeError('Invalid song data: missing loopBars');
-        if (typeof json.introBars !== 'number') throw new TypeError('Invalid song data: missing introBars');
-        if (!Array.isArray(json.channels)) throw new TypeError('Invalid song data: missing channel data');
+        if (typeof json.beatsPerMinute !== 'number') throw new InvalidBeepBoxError('missing beatsPerMinute');
+        if (typeof json.beatsPerBar !== 'number') throw new InvalidBeepBoxError('missing beatsPerBar');
+        if (typeof json.ticksPerBeat !== 'number') throw new InvalidBeepBoxError('missing ticksPerBeat');
+        if (typeof json.loopBars !== 'number') throw new InvalidBeepBoxError('missing loopBars');
+        if (typeof json.introBars !== 'number') throw new InvalidBeepBoxError('missing introBars');
+        if (!Array.isArray(json.channels)) throw new InvalidBeepBoxError('missing channel data');
         const allowedChannelTypes = new Set(['pitch', 'drum', 'mod']);
-        const allowedInstrumentTypes = new Set(['chip', 'custom chip', 'pwm', 'supersaw', 'fm', 'fm6op', 'harmonics', 'picked string', 'spectrum', 'noise', 'drumset', 'mod']);
+        const allowedInstrumentTypes = new Set(Object.values(BeepboxData.InstrumentType));
         const abortInvalidNoteData = (): never => {
-            throw new TypeError('Invalid song data: invalid note data');
+            throw new InvalidBeepBoxError('invalid note data');
         };
         const abortInvalidInstrumentData = (): never => {
-            throw new TypeError('Invalid song data: invalid instrument data');
+            throw new InvalidBeepBoxError('invalid instrument data');
         };
         const song: BeepboxData.Song = {
             key: BeepboxData.ScaleKeys[json.key as BeepboxData.ScaleKeys] ?? BeepboxData.ScaleKeys.C,
             tickSpeed: json.beatsPerMinute * json.ticksPerBeat / 60,
+            beatLength: json.ticksPerBeat,
             barLength: json.beatsPerBar * json.ticksPerBeat,
+            meterLength: json.beatsPerBar,
             loopBars: {
-                length: json.loopBars,
-                offset: json.introBars
+                offset: json.introBars,
+                length: json.loopBars
             },
+            songLength: Math.max(...json.channels.map((ch) => ch.sequence?.length ?? 0)),
             channels: json.channels.map((channel, i) => {
-                if (channel == null) throw new TypeError('Invalid song data: null channel data');
-                if (!allowedChannelTypes.has(channel.type!)) throw new TypeError(`Invalid song data: unrecognized channel type ${channel.type}`);
-                if (!Array.isArray(channel.instruments)) throw new TypeError('Invalid song data: Missing instrument data');
-                if (!Array.isArray(channel.patterns)) throw new TypeError('Invalid song data: Missing pattern data');
-                if (!Array.isArray(channel.sequence)) throw new TypeError('Invalid song data: Missing sequence');
+                if (channel == null) throw new InvalidBeepBoxError('null channel data');
+                if (!allowedChannelTypes.has(channel.type!)) throw new InvalidBeepBoxError(`unrecognized channel type "${channel.type}"`);
+                if (!Array.isArray(channel.instruments)) throw new InvalidBeepBoxError('missing instrument data');
+                if (!Array.isArray(channel.patterns)) throw new InvalidBeepBoxError('missing pattern data');
+                if (!Array.isArray(channel.sequence)) throw new InvalidBeepBoxError('missing sequence');
                 return {
                     type: channel.type!,
                     name: channel.name?.length! > 0 ? channel.name! : `${channel.type![0].toUpperCase()}${channel.type!.substring(1)} ${i + 1}`,
                     instruments: channel.instruments.map((instrument) => {
-                        const type = instrument.type?.toLowerCase() ?? '';
-                        if (!allowedInstrumentTypes.has(type)) throw new TypeError(`Invalid song data: unrecognized instrument type ${instrument.type}`);
-                        if (type == 'mod') return {
-                            type: 'mod',
+                        const type = (instrument.type?.toLowerCase() ?? '') as BeepboxData.InstrumentType;
+                        if (!allowedInstrumentTypes.has(type)) throw new InvalidBeepBoxError(`unrecognized instrument type "${instrument.type}"`);
+                        if (type == BeepboxData.InstrumentType.MOD) return {
+                            type: BeepboxData.InstrumentType.MOD,
                             modChannels: !Array.isArray(instrument.modChannels) ? abortInvalidInstrumentData() : instrument.modChannels,
                             modInstruments: !Array.isArray(instrument.modInstruments) ? abortInvalidInstrumentData() : instrument.modInstruments,
                             modSettings: !Array.isArray(instrument.modSettings) ? abortInvalidInstrumentData() : instrument.modSettings,
-                        } satisfies BeepboxData.Song['channels'][number]['instruments'][number] & { type: 'mod' };
+                        } satisfies BeepboxData.Song['channels'][number]['instruments'][number] & { type: BeepboxData.InstrumentType.MOD };
                         else return {
                             type: type,
                             envelopes: instrument.envelopes?.map((env) => {
                                 if (env.target === undefined) return abortInvalidInstrumentData();
-                                const dictEntry = BeepboxData.EnvelopeData.beepboxEnvelopeTable[env.envelope as keyof typeof BeepboxData.EnvelopeData.beepboxEnvelopeTable];
+                                const dictEntry = BeepboxData.Envelope.beepboxEnvelopeTable[env.envelope as keyof typeof BeepboxData.Envelope.beepboxEnvelopeTable];
                                 if (dictEntry === undefined) return abortInvalidInstrumentData();
                                 const invert = env.inverse ?? env.envelopeInverse ?? false;
                                 const boundMin = env.perEnvelopeLowerBound ?? dictEntry.min ?? 0;
@@ -210,16 +213,16 @@ class BeepboxVisualizer {
                                         };
                                 }
                             }) ?? abortInvalidInstrumentData()
-                        } satisfies Exclude<BeepboxData.Song['channels'][number]['instruments'][number], { type: 'mod' }>;
+                        } satisfies Exclude<BeepboxData.Song['channels'][number]['instruments'][number], { type: BeepboxData.InstrumentType.MOD }>;
                     }),
                     patterns: channel.patterns.map((pattern) => {
-                        if (pattern == null) throw new TypeError('Invalid song data: null pattern data');
-                        if (!Array.isArray(pattern.notes)) throw new TypeError('Invalid song data: Missing note data');
+                        if (pattern == null) throw new InvalidBeepBoxError('null pattern data');
+                        if (!Array.isArray(pattern.notes)) throw new InvalidBeepBoxError('missing note data');
                         return {
                             notes: pattern.notes.map((dat) => {
-                                if (dat == null) throw new TypeError('Invalid song data: null note data');
-                                if (!Array.isArray(dat.pitches)) throw new TypeError('Invalid song data: missing note pitches');
-                                if (!Array.isArray(dat.points)) throw new TypeError('Invalid song data: missing note points');
+                                if (dat == null) throw new InvalidBeepBoxError('null note data');
+                                if (!Array.isArray(dat.pitches)) throw new InvalidBeepBoxError('missing note pitches');
+                                if (!Array.isArray(dat.points)) throw new InvalidBeepBoxError('missing note points');
                                 return {
                                     pitches: dat.pitches!,
                                     points: dat.points.map((pt) => ({
@@ -230,7 +233,8 @@ class BeepboxVisualizer {
                                     continueLast: dat.continuesLastPattern ?? false,
                                 } satisfies BeepboxData.Song['channels'][number]['patterns'][number]['notes'][number]; // buh
                             }),
-                            instruments: pattern.instruments!
+                            // if "different instruments per pattern" is off this just doesn't exist
+                            instruments: pattern.instruments ?? new Array(channel.instruments!.length).fill(0).map((_, i) => i)
                         }
                     }),
                     sequence: channel.sequence as number[]
@@ -255,8 +259,6 @@ class BeepboxVisualizer {
         return this.internalDuration.value;
     }
 
-    // because playback is less complex with no audio context beepbox tile just uses media player time
-
     /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
     static async draw(): Promise<void> {
         await Promise.all(Array.from(this.instances.values()).map((v) => v.draw(Playback.time.value)));
@@ -264,3 +266,11 @@ class BeepboxVisualizer {
 }
 
 export default BeepboxVisualizer;
+
+class InvalidBeepBoxError extends Error {
+    readonly name = 'InvalidBeepBoxError';
+    constructor(message: string) {
+        super('Invalid song data: ' + message);
+        if (Error.captureStackTrace) Error.captureStackTrace(this, InvalidBeepBoxError);
+    }
+}

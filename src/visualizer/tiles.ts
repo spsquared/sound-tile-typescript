@@ -1,4 +1,4 @@
-import { Component, nextTick, reactive } from 'vue';
+import { Component, nextTick } from 'vue';
 import { cloneDeep, merge } from 'lodash-es';
 import { v7 as uuidV7 } from 'uuid';
 import MediaSchema from './mediaSchema';
@@ -302,8 +302,6 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     }
     protected static reconstitute(data: MediaSchema.Current.VisualizerTile, tile: VisualizerTile): VisualizerTile {
         super.reconstitute(data, tile);
-        // scuffed patch for label reactivity
-        reactive(tile).label = tile.label;
         // if for some reason some tile extends VisualizerTile it'll have to apply visualizer data on its own
         return tile;
     }
@@ -315,7 +313,8 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     }
 }
 
-export class BeepboxTile extends Tile {
+export class BeepboxTile extends Tile implements Modulation.Modulator<{
+}> {
     static readonly id: string = 'bb';
     static readonly component = BeepboxTileComponent;
     static readonly name: string = 'BeepBox Tile';
@@ -329,6 +328,8 @@ export class BeepboxTile extends Tile {
     /**Visualizer instance attached */
     readonly visualizer: BeepboxVisualizer;
 
+    readonly modulator;
+
     constructor(data?: BeepboxData) {
         super();
         this.canvas = document.createElement('canvas');
@@ -339,15 +340,18 @@ export class BeepboxTile extends Tile {
             await nextTick();
             if (this.element === null) this.visualizer.visible.value = false;
         });
+        this.modulator = new Modulation.Source({
+        }, { tile: this });
     }
 
     getSchemaData(): MediaSchema.Current.BeepboxTile {
         return {
-            ...super.getSchemaData()
+            ...super.getSchemaData(),
+            data: cloneDeep(this.visualizer.data)
         };
     }
     static fromSchemaData(data: MediaSchema.Current.BeepboxTile): BeepboxTile {
-        return this.reconstitute(data, new BeepboxTile());
+        return this.reconstitute(data, new BeepboxTile(merge(BeepboxData.createDefault(), data.data)));
     }
     protected static reconstitute(data: MediaSchema.Current.BeepboxTile, tile: BeepboxTile): BeepboxTile {
         super.reconstitute(data, tile);

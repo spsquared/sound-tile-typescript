@@ -25,42 +25,23 @@ namespace BeepboxData {
     export type Song = {
         /**Root key of song - basically a pitch shift */
         key: ScaleKeys
-        /**ticks per second of song - calculated from ticks per beat and beats per minute */
+        /**Tempo in ticks per second of song - calculated from ticks per beat and beats per minute */
         tickSpeed: number
-        /**Length of a bar in BeepBox ticks - calculated from ticks per beat and beats per bar */
+        /**Length of a beat in ticks */
+        beatLength: number
+        /**Length of a bar in ticks - calculated from ticks per beat and beats per bar */
         barLength: number
+        /**Length of a bar in beats */
+        meterLength: number
         /**Differs from BeepBox format, defines loop points */
         loopBars: {
             length: number
             offset: number
         }
+        /**Length of song in bars */
+        songLength: number
         /**Converted channel data */
-        channels: {
-            type: 'pitch' | 'drum' | 'mod'
-            name: string
-            instruments: ({
-                type: string
-                envelopes: EnvelopeData[]
-            } | {
-                type: 'mod'
-                modChannels: number[],
-                modInstruments: number[],
-                modSettings: number[]
-            })[]
-            patterns: {
-                notes: {
-                    pitches: number[]
-                    points: {
-                        tick: number
-                        pitchBend: number
-                        volume: number
-                    }[]
-                    continueLast: boolean // shortened
-                }[]
-                instruments: number[]
-            }[]
-            sequence: number[]
-        }[]
+        channels: Channel[]
     }
 
     export enum ScaleKeys {
@@ -78,6 +59,37 @@ namespace BeepboxData {
         'B' = 'B'
     }
 
+    export type Channel = {
+        type: 'pitch' | 'drum' | 'mod'
+        name: string
+        instruments: Instrument[]
+        patterns: Pattern[]
+        sequence: number[]
+    };
+
+    export type Instrument = {
+        type: Exclude<InstrumentType, InstrumentType.MOD>
+        envelopes: Envelope[]
+    } | {
+        type: InstrumentType.MOD
+        modChannels: number[]
+        modInstruments: number[]
+        modSettings: number[]
+    };
+
+    export type Pattern = {
+        notes: {
+            pitches: number[]
+            points: {
+                tick: number
+                pitchBend: number
+                volume: number
+            }[]
+            continueLast: boolean // shortened
+        }[]
+        instruments: number[]
+    };
+
     export enum InstrumentType {
         CHIP = 'chip',
         CUSTOM_CHIP = 'custom chip',
@@ -89,7 +101,8 @@ namespace BeepboxData {
         PICKED_STRING = 'picked string',
         SPECTRUM = 'spectrum',
         NOISE = 'noise',
-        DRUMSET = 'drumset'
+        DRUMSET = 'drumset',
+        MOD = 'mod'
     }
 
     export enum EnvelopeType {
@@ -110,7 +123,7 @@ namespace BeepboxData {
         FALL = 'FALL'
     }
 
-    export type EnvelopeData = {
+    export type Envelope = {
         target: string // only here for UI, not used in rendering
         envelope: EnvelopeType
         min: number
@@ -133,7 +146,7 @@ namespace BeepboxData {
         envelope: Exclude<EnvelopeType, EnvelopeType.PITCH | EnvelopeType.RANDOM | EnvelopeType.LFO>
     });
 
-    export namespace EnvelopeData {
+    export namespace Envelope {
         // https://github.com/ultraabox/ultrabox_typescript/blob/main/synth/SynthConfig.ts#L1296
         // https://github.com/slarmoo/slarmoosbox/blob/main/synth/SynthConfig.ts#L1421
         // https://github.com/slarmoo/slarmoosbox/blob/main/synth/synth.ts#L1454
@@ -216,58 +229,69 @@ namespace BeepboxData {
             'rise': { envelope: EnvelopeType.RISE, speed: 32.0 },
             'blip': { envelope: EnvelopeType.BLIP, speed: 6.0 },
             'fall': { envelope: EnvelopeType.FALL, speed: 6.0 }
-        } as Record<string, Partial<EnvelopeData> & { envelope: EnvelopeType }>;
+        } as Record<string, Partial<Envelope> & { envelope: EnvelopeType }>;
     }
 
     // modulator settings dont actually save the setting, just the enum ordinal (really dumb)
     // if a mod changes the enum ordering it all breaks and that's not my problem
+    // https://github.com/slarmoo/slarmoosbox/blob/main/synth/SynthConfig.ts#L1790
     export const modulatorSettingNames = [
-        'None',
-        'Volume',
-        'Tempo',
-        'Reverb',
-        'Next Bar',
-        'Note Vol.',
-        'Pan',
-        'Reverb',
-        'Distortion',
-        'FM 1',
-        'FM 2',
-        'FM 3',
-        'FM 4',
+        'No Mod Setting',
+        'Song Volume',
+        'Song Tempo',
+        'Song Reverb',
+        'Go To Next Bar',
+        'Note Volume',
+        'Instrument Panning',
+        'Instrument Reverb',
+        'Instrument Distortion',
+        'FM Slider 1',
+        'FM Slider 2',
+        'FM Slider 3',
+        'FM Slider 4',
         'FM Feedback',
         'Pulse Width',
-        'Detune',
+        'Instrument Detune',
         'Vibrato Depth',
-        'Detune',
+        'Song Detune',
         'Vibrato Speed',
         'Vibrato Delay',
-        'Arp Speed',
-        'Pan Delay',
-        'Reset Arp',
-        'EQFlt',
-        'N.Flt',
-        'Bitcrush',
-        'Freq Crush',
-        'Echo',
-        'Echo Delay',
-        'Chorus',
-        'EQFlt Cut',
-        'EQFlt Peak',
-        'N.Flt Cut',
-        'N.Flt Peak',
+        'Arpeggio Speed',
+        'Panning Delay',
+        'Reset Arpeggio',
+        'EQ Filter',
+        'Note Filter',
+        'Instrument Bit Crush',
+        'Instrument Frequency Crush',
+        'Instrument Echo Sustain',
+        'Instrument Echo Delay',
+        'Instrument Chorus',
+        'EQ Filter Cutoff Frequency',
+        'EQ Filter Peak Gain',
+        'Note Filter Cutoff Frequency',
+        'Note Filter Peak Gain',
         'Pitch Shift',
-        'Sustain',
-        'Mix Vol.',
-        'FM 5',
-        'FM 6',
+        'Picked String Sustain',
+        'Mix Volume',
+        'FM Slider 5',
+        'FM Slider 6',
         'Decimal Offset',
-        'EnvelopeSpd',
-        'Dynamism',
-        'Spread',
-        'Saw Shape',
+        'Envelope Speed',
+        'Supersaw Dynamism',
+        'Supersaw Spread',
+        'Supersaw Shape',
+        'Individual Envelope Speed',
+        'Song EQ Filter',
+        'Reset Envelope',
+        'Ring Modulation',
+        'Ring Modulation (Hertz)',
+        'Granular',
+        'Grain Count',
+        'Grain Size',
+        'Grain Range',
+        'Individual Envelope Lower Bound',
+        'Individual Envelope Upper Bound',
     ] as const;
-
 
     export function createDefault(): BeepboxData {
         return {
@@ -304,10 +328,11 @@ export type BeepboxJsonSkeleton = {
             [key: string]: unknown
         } | {
             type: 'mod',
-            modChannels: number[],
-            modInstruments: number[],
-            modSettings: number[],
+            modChannels: number[]
+            modInstruments: number[]
+            modSettings: number[]
             modFilterTypes: number[]
+            modEnvelopeNumbers?: number[]
         }) & {
             envelopeSpeed?: number
             envelopes: {
@@ -338,7 +363,7 @@ export type BeepboxJsonSkeleton = {
                 }[]
                 continuesLastPattern: boolean
             }[]
-            instruments: number[]
+            instruments?: number[]
         }[]
         sequence: number[]
     }[]
