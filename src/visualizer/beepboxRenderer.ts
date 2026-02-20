@@ -25,6 +25,10 @@ export abstract class BeepboxRenderer {
         debugText: []
     });
     readonly canvas: HTMLCanvasElement;
+    readonly loadResult: Ref<BeepboxRendererLoadResults> = ref<BeepboxRendererLoadResults>({
+        songLength: 0,
+        loadTime: 0
+    });
 
     private readonly stopWatching: WatchStopHandle;
 
@@ -61,6 +65,13 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
             console.error(e.error);
             throw new Error(`Worker error: ${e.message} (${e.filename} ${e.lineno}:${e.colno})`);
         };
+        this.worker.addEventListener('message', (e: RendererMessageEvent) => {
+            switch (e.data.type) {
+                case 'loadResult':
+                    this.loadResult.value = e.data;
+                    break;
+            }
+        });
     }
 
     async draw(time: number): Promise<BeepboxRendererFrameResults> {
@@ -124,7 +135,7 @@ export class BeepboxFallbackRenderer extends BeepboxRenderer {
         this.renderer.resize(w, h);
     }
     protected updateData(): void {
-        this.renderer.updateData(cloneDeep(this.data));
+        this.loadResult.value = this.renderer.updateData(cloneDeep(this.data));
     }
 
     destroy(): void {
@@ -132,10 +143,13 @@ export class BeepboxFallbackRenderer extends BeepboxRenderer {
     }
 }
 
-// quite limited in terms of modulation options but it'll do
 export type BeepboxRendererFrameResults = {
     renderTime: number
     debugText: string[]
+}
+export type BeepboxRendererLoadResults = {
+    songLength: number
+    loadTime: number
 }
 
 export type RendererMessageData = {
@@ -150,11 +164,14 @@ export type RendererMessageData = {
     w: number
     h: number
 } | {
-    type: 'settings',
+    type: 'settings'
     data: BeepboxSettingsData
-} | {
+} | ({
+    type: 'loadResult'
+} & BeepboxRendererLoadResults) | {
     type: 'stop'
 };
+
 export interface RendererMessageEvent extends MessageEvent {
     readonly data: RendererMessageData
 }

@@ -155,11 +155,12 @@ export type RendererMessageData = {
     w: number
     h: number
 } | {
-    type: 'settings',
+    type: 'settings'
     data: VisualizerSettingsData
 } | {
     type: 'stop'
 };
+
 export interface RendererMessageEvent extends MessageEvent {
     readonly data: RendererMessageData
 }

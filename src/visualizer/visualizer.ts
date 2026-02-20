@@ -143,6 +143,14 @@ class Visualizer {
         // spam-resizing hopefully doesn't cause a bunch of performance issues? it stops flickering...
         this.drawing = true;
         this.debug.startTime = performance.now();
+        const copyCanvas = () => {
+            this.ctx.reset();
+            if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
+                this.canvas.width = this.renderer.canvas.width;
+                this.canvas.height = this.renderer.canvas.height;
+            }
+            this.ctx.drawImage(this.renderer.canvas, 0, 0);
+        };
         if (this.audioBuffer === null) {
             this.ctx.reset();
             const boxSize = Math.min(this.canvas.width, this.canvas.height);
@@ -161,12 +169,7 @@ class Visualizer {
                 const data = new Uint8Array(this.analyzers[0].frequencyBinCount);
                 this.analyzers[0].getByteFrequencyData(data);
                 await this.renderer.draw(data);
-                this.ctx.reset();
-                if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
-                    this.canvas.width = this.renderer.canvas.width;
-                    this.canvas.height = this.renderer.canvas.height;
-                }
-                this.ctx.drawImage(this.renderer.canvas, 0, 0);
+                copyCanvas();
             }
         } else if ([VisualizerData.Mode.WAVE_DIRECT, VisualizerData.Mode.WAVE_CORRELATED].includes(this.data.mode)) {
             if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
@@ -174,12 +177,7 @@ class Visualizer {
                 const data = new Float32Array(this.analyzers[0].fftSize);
                 this.analyzers[0].getFloatTimeDomainData(data);
                 await this.renderer.draw(data);
-                this.ctx.reset();
-                if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
-                    this.canvas.width = this.renderer.canvas.width;
-                    this.canvas.height = this.renderer.canvas.height;
-                }
-                this.ctx.drawImage(this.renderer.canvas, 0, 0);
+                copyCanvas();
             }
         } else if (this.data.mode == VisualizerData.Mode.CHANNEL_PEAKS) {
             const data: Uint8Array[] = [];
@@ -189,12 +187,7 @@ class Visualizer {
                 data.push(buffer);
             }
             await this.renderer.draw(data);
-            this.ctx.reset();
-            if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
-                this.canvas.width = this.renderer.canvas.width;
-                this.canvas.height = this.renderer.canvas.height;
-            }
-            this.ctx.drawImage(this.renderer.canvas, 0, 0);
+            copyCanvas();
         } else {
             this.ctx.reset();
             this.drawErrorText('Invalid mode');

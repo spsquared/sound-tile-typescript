@@ -40,6 +40,11 @@ class BeepboxVisualizer {
                 this.duration = 0;
                 BeepboxVisualizer.recalculateDuration();
             }, { immediate: true, deep: false });
+            watch(this.renderer.loadResult, () => {
+                const res = this.renderer.loadResult.value;
+                this.duration = res.songLength;
+                BeepboxVisualizer.recalculateDuration();
+            });
         });
     }
 
@@ -57,12 +62,17 @@ class BeepboxVisualizer {
         rendererTimingHistory: [],
         totalTimingHistory: []
     });
-    private async draw(_time: number): Promise<void> {
+    private async draw(time: number): Promise<void> {
         if (this.drawing || this.data.song === null || !this.visible.value) return;
-        // beepbox tile uses workers if possible since some note effects will involve a lot of
-        // cpu-heavy searching + note/texture building will also be cpu heavy
         this.drawing = true;
         this.debug.startTime = performance.now();
+        await this.renderer.draw(time);
+        this.ctx.reset();
+        if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
+            this.canvas.width = this.renderer.canvas.width;
+            this.canvas.height = this.renderer.canvas.height;
+        }
+        this.ctx.drawImage(this.renderer.canvas, 0, 0);
         this.drawDebugOverlay();
         this.drawing = false;
     }
@@ -88,7 +98,8 @@ class BeepboxVisualizer {
                 `FPS: ${this.debug.frames.length} (${avgArr(this.debug.fpsHistory).toFixed(1)} / [${Math.min(...this.debug.fpsHistory)} - ${Math.max(...this.debug.fpsHistory)}])`,
                 `Total:  ${(frameTime).toFixed(1)}ms (${avgArr(this.debug.totalTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.totalTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.totalTimingHistory).toFixed(1)}ms])`,
                 `Render: ${(renderTime).toFixed(1)}ms (${avgArr(this.debug.rendererTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.rendererTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.rendererTimingHistory).toFixed(1)}ms])`,
-                ...this.renderer.frameResult.value.debugText
+                ...this.renderer.frameResult.value.debugText,
+                `Load: ${this.renderer.loadResult.value.loadTime.toFixed(2)}ms`
             ];
             this.ctx.resetTransform();
             this.ctx.font = '14px monospace';

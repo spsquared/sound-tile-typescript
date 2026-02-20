@@ -1,7 +1,7 @@
 import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { ColorData } from '@/components/inputs/colorPicker';
-import type { RendererMessageData, RendererMessageEvent, BeepboxRendererFrameResults, BeepboxSettingsData } from './beepboxRenderer';
+import type { RendererMessageData, RendererMessageEvent, BeepboxRendererFrameResults, BeepboxSettingsData, BeepboxRendererLoadResults } from './beepboxRenderer';
 import BeepboxData from './beepboxData';
 
 const isInWorker = 'importScripts' in globalThis;
@@ -159,9 +159,15 @@ class BeepboxRenderInstance {
     resize(w: number, h: number): void {
         this.resized = [w, h];
     }
-    updateData(data: BeepboxSettingsData): void {
+    updateData(data: BeepboxSettingsData): BeepboxRendererLoadResults {
         this.data = data;
+        const start = performance.now();
         this.createTickLUT();
+        const loadTime = performance.now() - start;
+        return {
+            songLength: this.songLength,
+            loadTime: loadTime
+        };
     }
     private createTickLUT() {
         const keyframes: typeof this.tickLookupKeyframes = [];
@@ -329,7 +335,8 @@ class BeepboxRenderInstance {
             height: this.canvas.height,
             debug: this.debugText,
             data: this.data,
-            time: time
+            time: time,
+            tickLut: this.tickLookupKeyframes
         });
     }, 500);
 }
@@ -363,7 +370,11 @@ if (isInWorker) {
                     renderer.resize(e.data.w, e.data.h);
                     break;
                 case 'settings':
-                    renderer.updateData(e.data.data);
+                    const res = renderer.updateData(e.data.data);
+                    postMessage({
+                        type: 'loadResult',
+                        ...res
+                    } satisfies RendererMessageData);
                     break;
                 case 'stop':
                     // everything should be blocking in the worker, no async, so no need for locks

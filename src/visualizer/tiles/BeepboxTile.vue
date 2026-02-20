@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ComputedRef, inject, ref } from 'vue';
+import { computed, ComputedRef, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { useElementSize, useThrottleFn } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import ErrorQueue from '@/errorQueue';
 import TileEditor from '../editor';
@@ -14,6 +15,20 @@ const props = defineProps<{
     tile: BeepboxTile
 }>();
 const options = computed(() => props.tile.visualizer.data);
+
+const wrapper = useTemplateRef('canvasWrapper');
+onMounted(() => {
+    wrapper.value?.appendChild(props.tile.canvas);
+});
+props.tile.canvas.classList.add('visualizerCanvas');
+
+const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
+const onResize = useThrottleFn(() => {
+    props.tile.visualizer.resize(canvasWidth.value * window.devicePixelRatio, canvasHeight.value * window.devicePixelRatio);
+}, 50, true, true);
+watch([canvasWidth, canvasHeight], onResize);
+onMounted(() => window.addEventListener('resize', onResize, { passive: true }));
+onUnmounted(() => window.removeEventListener('resize', onResize));
 
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
@@ -43,7 +58,7 @@ async function uploadJson() {
 <template>
     <Tile :tile="props.tile" :options-window="{ minWidth: 400, minHeight: 300, resizeable: true }">
         <template #content>
-            such beep and even more box
+            <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="beepboxUploadCover" v-if="options.song === null">
                 <input type="button" class="uploadButton" @click="uploadJson" value="Upload JSON song data" title="Upload a JSON export of your BeepBox project" :disabled="uploadJsonDisabled || TileEditor.lock.locked">
             </div>
@@ -78,7 +93,18 @@ async function uploadJson() {
     </Tile>
 </template>
 
+<style>
+.beepboxCanvas {
+    width: 100%;
+    height: 100%;
+}
+</style>
 <style scoped>
+.canvasWrapper {
+    width: 100%;
+    height: 100%;
+}
+
 .beepboxUploadCover {
     display: flex;
     flex-direction: column;
