@@ -67,6 +67,8 @@ class BeepboxRenderInstance {
         // TODO: THINGS
         // TODO: THINGS
         // TODO: THINGS
+        const tick = this.lookupTicks(time);
+        if (this.debugInfo > 0) this.debugText.push(`Tick=${this.ticksToBar(tick)}/${this.ticksInBar(tick).toFixed(2)} (${tick.toFixed(2)})`);
         // track performance metrics
         const endTime = performance.now();
         if (this.playing && this.debugInfo == 2) this.printDebugInfo(time);
@@ -106,7 +108,7 @@ class BeepboxRenderInstance {
         // k(t) = (r0/r)e^r(t-t0) + k0 - r0/r
         // this looks weird but it works i guess
         // also an edge case if tempo1 and tempo2 are the same, it divides by 0
-        if (tps1 == tps2) return tk1 + (tps1 * time - t1);
+        if (tps1 == tps2) return tk1 + tps1 * (time - t1);
         const r = (tps2 - tps1) / (tk2 - tk1);
         return tps1 / r * (Math.E ** (r * (time - t1))) + tk1 - tps1 / r;
     }
@@ -198,13 +200,13 @@ class BeepboxRenderInstance {
                 for (const channel of modChannels) {
                     if (channel.sequence[seqIndex] == 0) continue; // 0 pattern
                     const pattern = channel.patterns[channel.sequence[seqIndex] - 1];
-                    if (pattern === undefined) throw new CorruptSongError(`pattern ${channel.sequence[seqIndex]} at ${seqIndex}`);
+                    if (pattern === undefined) throw new CorruptSongError(`pattern ${channel.sequence[seqIndex]} at ${seqIndex} (in ${channel.name})`);
                     // lower mod channels will override and splice existing keyframes to be consistent
                     // with how Jummbox/derivatives handle conflicts
                     // next bar modulators immediately place a keyframe and... go to the next bar
                     // next bar is also deferred to after tempo mods are processed
-                    const instrument = channel.instruments[pattern.instruments[0]]; // only one instrument can be active for mod
-                    if (instrument === undefined || instrument.type !== BeepboxData.InstrumentType.MOD) throw new CorruptSongError(`instrument ${pattern.instruments[0]} at ${seqIndex}`);
+                    const instrument = channel.instruments[pattern.instruments[0] - 1]; // only one instrument can be active for mod
+                    if (instrument === undefined || instrument.type !== BeepboxData.InstrumentType.MOD) throw new CorruptSongError(`instrument ${pattern.instruments[0]} at ${seqIndex} (in ${channel.name})`);
                     // me when I next bar my chip wave (not checking channel here)
                     for (let j = 0; j < instrument.modSettings.length; j++) {
                         // reference for modulator enum:
@@ -296,7 +298,13 @@ class BeepboxRenderInstance {
                 if (barKeyframes.length > 0 && prevFrame[2] != barKeyframes[0][1] && prevFrame[1] != tickOffset) {
                     const tk = barKeyframes[0][0] + tickOffset;
                     const t = prevFrame[0] + (tk - prevFrame[1]) / prevFrame[2]; // hold tempo
-                    keyframes.push([t, tk, prevFrame[2]]);
+                    // additional optimization - move the previous frame if same tempo as the frame before that
+                    if (keyframes.length > 1 && prevFrame[2] == keyframes[keyframes.length - 2][2]) {
+                        prevFrame[0] = t;
+                        prevFrame[1] = tk;
+                    } else {
+                        keyframes.push([t, tk, prevFrame[2]]);
+                    }
                 }
                 // now finalize our keyframes into the lookup table
                 let [t, tk1, tps1] = keyframes[keyframes.length - 1];

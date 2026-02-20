@@ -52,6 +52,8 @@ namespace MediaPlayer {
 
     // playlist and session
     watch(() => media.current, async (_session, oldSession) => {
+        // pause (this is a bit of a bandaid for not pausing but the root cause is just deferred updates)
+        Playback.stop();
         // put the old tree back into old session
         await TileEditor.lock.acquire();
         oldSession.tree = TileEditor.detachRoot();

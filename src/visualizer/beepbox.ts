@@ -245,7 +245,7 @@ class BeepboxVisualizer {
                                 } satisfies BeepboxData.Song['channels'][number]['patterns'][number]['notes'][number]; // buh
                             }),
                             // if "different instruments per pattern" is off this just doesn't exist
-                            instruments: pattern.instruments ?? new Array(channel.instruments!.length).fill(0).map((_, i) => i)
+                            instruments: pattern.instruments ?? new Array(channel.instruments!.length).fill(0).map((_, i) => i + 1)
                         }
                     }),
                     sequence: channel.sequence as number[]
