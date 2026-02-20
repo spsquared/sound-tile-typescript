@@ -7,7 +7,10 @@ import { AsyncLock } from "@/components/lock";
  * Playback timer and audio context for visualizer/audio synchronization.
  */
 namespace Playback {
-    export const audioContext: AudioContext = new AudioContext({ sampleRate: 48000 });
+    export const audioContext: AudioContext = new AudioContext({
+        latencyHint: 'playback',
+        sampleRate: 48000
+    });
     export const gain: GainNode = audioContext.createGain();
     gain.connect(audioContext.destination);
     audioContext.suspend();
