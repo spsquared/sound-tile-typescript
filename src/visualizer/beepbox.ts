@@ -39,6 +39,8 @@ class BeepboxVisualizer {
             watch(() => this.data.song, () => {
                 this.duration = 0;
                 BeepboxVisualizer.recalculateDuration();
+                this.data.channelStyles.length = this.data.song?.channels.reduce((ct, { type }) => ct + (type != 'mod' ? 1 : 0), 0) ?? 0;
+                this.data.channelStyles = this.data.channelStyles.map((style) => style ?? BeepboxData.createDefaultChannelStyle());
             }, { immediate: true, deep: false });
             watch(this.renderer.loadResult, () => {
                 const res = this.renderer.loadResult.value;
@@ -117,10 +119,10 @@ class BeepboxVisualizer {
         this.renderer.resize(w, h);
     }
 
-
     destroy(): void {
         this.effectScope.stop();
         BeepboxVisualizer.instances.delete(toRaw(this));
+        BeepboxVisualizer.recalculateDuration();
     }
 
     /**

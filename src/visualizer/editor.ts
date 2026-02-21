@@ -515,8 +515,8 @@ export default TileEditor;
 // tiles that get displayed in drag-and-drop source
 TileEditor.registerTile(GroupTile, false);
 TileEditor.registerTile(VisualizerTile, true);
+TileEditor.registerTile(BeepboxTile, true);
 TileEditor.registerTile(TextTile, true);
 TileEditor.registerTile(ImageTile, true);
-TileEditor.registerTile(BeepboxTile, true);
 TileEditor.registerTile(Tile, true);
 TileEditor.registerTile(GrassTile, false);
