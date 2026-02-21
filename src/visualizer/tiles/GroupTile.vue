@@ -71,7 +71,7 @@ provide('inCollapsedGroup', computed(() => isCollapsed.value || inCollapsedGroup
     width: 100%;
     height: 100%;
     background-color: black;
-    background: v-bind("$props.tile.borderColor.cssStyle");
+    background: v-bind("$props.tile.hideBorders ? 'transparent' : $props.tile.borderColor.cssStyle");
     flex-direction: v-bind("$props.tile.orientation == GroupTile.Orientation.VERTICAL ? 'column' : 'row'");
     align-items: stretch;
     justify-content: stretch;

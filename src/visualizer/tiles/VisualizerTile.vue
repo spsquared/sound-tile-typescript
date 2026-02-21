@@ -120,6 +120,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 <div class="optionsRows">
                     <div>
                         <input type="button" class="uploadButton" @click="uploadSource" :value="options.buffer === null ? 'Upload source' : 'Replace source'" :title="`${options.buffer === null ? 'Upload an' : 'Replace the'} audio source file`" :disabled="uploadSourceDisabled || TileEditor.lock.locked">
+                        <span>- OR -</span>
                         <input type="button" @click="reuseSource" value="Reuse source" title="Reuse an existing audio source from a different tile for this one" :disabled="uploadSourceDisabled || ReuseVisualizerSource.active.value || TileEditor.lock.locked">
                     </div>
                     <div class="optionsGrid">

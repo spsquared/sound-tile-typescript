@@ -29,7 +29,8 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         fixes: [
             'Fixed ResizeObserver errors (infinite resizing loops) in "edit" panel of sidebar',
             'Fixed enum order-sensitive fields in Tile layout schema (this required bumping schema version)',
-            'Refactored playback timers to fix issues with desync and codebase organization'
+            'Refactored playback timers to fix issues with desync and codebase organization',
+            'Fixed unintended border colors in group tiles with "hide borders" on stemming from rare CSS rounding error'
         ],
         notes: []
     },
