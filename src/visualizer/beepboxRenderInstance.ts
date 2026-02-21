@@ -53,11 +53,6 @@ class BeepboxRenderInstance {
         if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
         // spaghetti v2
         // TODO: THINGS
-        // TODO: THINGS
-        // TODO: THINGS
-        // TODO: THINGS
-        // TODO: THINGS
-        // TODO: THINGS
         this.createColorScale
         this.createColorStyle
         this.songLength
@@ -65,10 +60,10 @@ class BeepboxRenderInstance {
         this.ticksToBar
         this.ticksInBar
         // TODO: THINGS
-        // TODO: THINGS
-        // TODO: THINGS
         const tick = this.lookupTicks(time);
-        if (this.debugInfo > 0) this.debugText.push(`Tick=${this.ticksToBar(tick)}/${this.ticksInBar(tick).toFixed(2)} (${tick.toFixed(2)})`);
+        if (this.debugInfo > 0) this.debugText.push(`Tick=${this.ticksToBar(tick)}/${this.ticksInBar(tick).toFixed(2)} (${tick.toFixed(2)}) KF=${this.tickLookupKeyframes.length}`);
+        // TODO: THINGS
+        // TODO: THINGS
         // track performance metrics
         const endTime = performance.now();
         if (this.playing && this.debugInfo == 2) this.printDebugInfo(time);

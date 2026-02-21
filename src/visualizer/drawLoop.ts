@@ -28,10 +28,14 @@ window.addEventListener('load', async () => {
             else setTimeout(() => resolve(), 100);
         });
         const jsStart = performance.now();
-        if (!document.hidden) {
-            Visualizer.draw();
-            BeepboxVisualizer.draw();
-        }
+        if (!document.hidden) await Promise.all([
+            Visualizer.draw(),
+            BeepboxVisualizer.draw()
+        ]);
+        // if (!document.hidden) {
+        //     Visualizer.draw();
+        //     BeepboxVisualizer.draw();
+        // }
         const end = performance.now();
         perfMetrics.frames.push(end);
         perfMetrics.jsTimingHistory.push(end - jsStart);

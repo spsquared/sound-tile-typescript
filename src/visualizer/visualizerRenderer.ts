@@ -49,6 +49,7 @@ export abstract class VisualizerRenderer {
 export class VisualizerWorkerRenderer extends VisualizerRenderer {
     readonly isWorker: true = true;
     private readonly worker: Worker;
+    private readonly responsePromises: Map<RendererMessageData['type'], ((value: RendererMessageData) => void)> = new Map();
 
     constructor(data: VisualizerSettingsData) {
         super(data);
@@ -57,10 +58,17 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
         const workerCanvas = this.canvas.transferControlToOffscreen();
         const cleanData = cloneDeep({ ...this.data, buffer: undefined });
         this.worker.postMessage([workerCanvas, cleanData satisfies VisualizerSettingsData], [workerCanvas]);
-        this.worker.onerror = (e) => {
+        this.worker.addEventListener('error', (e) => {
             console.error(e.error);
             throw new Error(`Worker error: ${e.message} (${e.filename} ${e.lineno}:${e.colno})`);
-        }
+        });
+        this.worker.addEventListener('message', (e: RendererMessageEvent) => {
+            const resolve = this.responsePromises.get(e.data.type);
+            if (resolve !== undefined) {
+                resolve(e.data);
+                this.responsePromises.delete(e.data.type);
+            }
+        });
     }
 
     async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
@@ -83,15 +91,10 @@ export class VisualizerWorkerRenderer extends VisualizerRenderer {
     private postMessage<Event extends RendererMessageData['type']>(e: Event, data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>, transfers?: Transferable[]): void {
         this.worker.postMessage({ type: e, ...data }, { transfer: transfers });
     }
-    private async postMessageWithAck<Event extends RendererMessageData['type'], ResEvent extends RendererMessageData['type']>(e: Event, res: ResEvent, data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>, transfers?: Transferable[]): Promise<Omit<Extract<RendererMessageData, { type: ResEvent }>, 'type'>> {
-        return await new Promise((resolve) => {
-            const listener = (e: RendererMessageEvent) => {
-                if (e.data.type == res) {
-                    resolve(e.data as any); // dont care, code is private anyway
-                    this.worker.removeEventListener('message', listener);
-                }
-            };
-            this.worker.addEventListener('message', listener);
+    private async postMessageWithAck<Event extends RendererMessageData['type'], ResEvent extends RendererMessageData['type']>(e: Event, res: ResEvent, data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>, transfers?: Transferable[]): Promise<Extract<RendererMessageData, { type: ResEvent }>> {
+        return await new Promise((resolve, reject) => {
+            if (this.responsePromises.has(res)) reject(`Previous response for ${res} not recieved`);
+            this.responsePromises.set(res, resolve as any);
             this.postMessage(e, data, transfers);
         });
     }

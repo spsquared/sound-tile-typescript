@@ -20,7 +20,11 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         `,
         breaking: [],
         changes: [
-            'Disabled play button when there\'s nothing to play'
+            'Disabled play button when there\'s nothing to play',
+            ['Global render loop now waits for all tiles to complete their draw function before resolving', [
+                'This now forces all tiles to run at the same frame rate rather than individually dropping frames',
+                'This should only affect a few edge cases - invidiual frame drops are rare as the GPU is usually the bottleneck'
+            ]]
         ],
         fixes: [
             'Fixed ResizeObserver errors (infinite resizing loops) in "edit" panel of sidebar',

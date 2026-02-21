@@ -7,12 +7,24 @@ type BeepboxData = {
     song: BeepboxData.Song | null;
     /**Styling for individual channels */
     channelStyles: {
-        color: ColorData
+        /**Foreground color of notes */
+        noteColor: ColorData
+        /**Note width is scaled by note size pins */
+        noteSizeEnabled: boolean
     }[]
     /**How many times the loop loops */
     loopCount: number
     /**Remove beats skipped by "next bar" modulations */
     cutSkippedBeats: boolean
+    /**Piano playhead settings */
+    piano: {
+        /**Show a piano keyboard for the playhead instead of a line */
+        enabled: boolean
+        /**Label each octave starting on a specific key, or no labels if null */
+        octaveLabels: BeepboxData.ScaleKeys | null
+    }
+    /**Range [0-1] interpolating from only showing notes in the future and only showing notes that have been played */
+    playheadPosition: number
     /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
     rotate: boolean
     /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
@@ -299,6 +311,11 @@ namespace BeepboxData {
             channelStyles: [],
             loopCount: 1,
             cutSkippedBeats: true,
+            piano: {
+                enabled: false,
+                octaveLabels: ScaleKeys.C
+            },
+            playheadPosition: 0,
             rotate: false,
             flipX: false,
             flipY: false
