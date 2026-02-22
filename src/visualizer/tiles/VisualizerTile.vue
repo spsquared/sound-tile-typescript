@@ -433,6 +433,8 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 }
 </style>
 <style scoped>
+@import url(./options/shared.css);
+
 .canvasWrapper {
     width: 100%;
     height: 100%;
@@ -449,58 +451,6 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
     height: 100%;
     align-items: center;
     justify-content: center;
-}
-
-.optionsRows {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    row-gap: 4px;
-}
-
-.optionsRows>div {
-    display: flex;
-    flex-direction: row;
-    column-gap: 12px;
-}
-
-.optionsGrid {
-    display: grid !important;
-    grid-auto-rows: min-content;
-    grid-auto-columns: max-content;
-    grid-auto-flow: column;
-    width: 100%;
-    align-items: center;
-    row-gap: 2px;
-    column-gap: 12px;
-}
-
-.optionsGrid>label {
-    grid-row: span 2;
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-template-columns: 1fr;
-    align-items: center;
-    justify-items: center;
-    text-align: center;
-}
-
-.optionsGrid>.optionsGrid {
-    grid-template-columns: subgrid;
-    /* if there's more than 1000 items there will be bigger problems */
-    grid-column: 1 / 1000;
-}
-
-.uploadButton {
-    background-color: dodgerblue;
-}
-
-.uploadButton:hover {
-    background-color: color-mix(in hsl, dodgerblue 80%, cyan 20%);
-}
-
-.uploadButton:disabled {
-    background-color: gray;
 }
 
 /**Inputs are all sorts of weird lengths here */

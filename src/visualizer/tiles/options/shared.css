@@ -1,0 +1,76 @@
+.optionsRows {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    row-gap: 4px;
+}
+
+.optionsRows>div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    row-gap: 4px;
+    column-gap: 12px;
+}
+
+.optionsGrid {
+    display: grid !important;
+    grid-auto-rows: min-content;
+    grid-auto-columns: max-content;
+    grid-auto-flow: column;
+    width: 100%;
+    row-gap: 4px;
+    column-gap: 12px;
+}
+
+.optionsGrid>label {
+    grid-row: span 2;
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-template-columns: 1fr;
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+}
+
+.optionsGrid>.optionsGrid {
+    grid-template-columns: subgrid;
+    /* if there's more than 1000 items there will be bigger problems */
+    grid-column: 1 / 1000;
+}
+
+.optionsTable {
+    display: grid !important;
+    grid-auto-rows: min-content;
+    grid-auto-columns: max-content;
+    grid-auto-flow: row;
+    width: 100%;
+    row-gap: 4px;
+    column-gap: 12px;
+}
+
+.optionsTable>label {
+    grid-column: span 2;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: subgrid;
+    align-items: center;
+    justify-content: center;
+    text-align: right;
+}
+
+.optionsTable>label>*:last-child {
+    justify-self: start;
+}
+
+.uploadButton {
+    background-color: dodgerblue;
+}
+
+.uploadButton:hover {
+    background-color: color-mix(in hsl, dodgerblue 80%, cyan 20%);
+}
+
+.uploadButton:disabled {
+    background-color: gray;
+}

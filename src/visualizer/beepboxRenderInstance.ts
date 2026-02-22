@@ -52,18 +52,10 @@ class BeepboxRenderInstance {
         this.ctx.translate(this.data.flipX ? -this.canvas.width : 0, this.data.flipY ? -this.canvas.height : 0);
         if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
         // spaghetti v2
-        // TODO: THINGS
-        this.createColorScale
-        this.createColorStyle
-        this.songLength
-        this.lookupTicks
-        this.ticksToBar
-        this.ticksInBar
-        // TODO: THINGS
+        this.ctx.save();
         const tick = this.lookupTicks(time);
         if (this.debugInfo > 0) this.debugText.push(`Tick=${this.ticksToBar(tick)}/${this.ticksInBar(tick).toFixed(2)} (${tick.toFixed(2)}) KF=${this.tickLookupKeyframes.length}`);
-        // TODO: THINGS
-        // TODO: THINGS
+        this.drawStaticNotes(tick);
         // track performance metrics
         const endTime = performance.now();
         if (this.playing && this.debugInfo == 2) this.printDebugInfo(time);
@@ -73,6 +65,12 @@ class BeepboxRenderInstance {
             debugText: this.debugText
         }
         this.resized = undefined;
+    }
+
+    private drawStaticNotes(tick: number): void {
+
+        this.createColorScale
+        this.createColorStyle
     }
 
     private lookupTicks(time: number): number {
@@ -329,7 +327,7 @@ class BeepboxRenderInstance {
             keyframes.push([prevFrame[0] + (finalLength - prevFrame[1]) / prevFrame[2], finalLength, prevFrame[2]]);
         }
         this.tickLookupKeyframes = keyframes;
-        this.songLength = keyframes[keyframes.length - 1][0];
+        this.songLength = keyframes.length > 0 ? keyframes[keyframes.length - 1][0] : 0;
     }
 
     private printDebugInfo = useThrottleFn((time: number) => {

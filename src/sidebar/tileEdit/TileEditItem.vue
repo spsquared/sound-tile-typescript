@@ -230,7 +230,7 @@ function setIdentifyTile(v: boolean) {
 .editItemGroupLine {
     position: absolute;
     top: 0px;
-    left: 8px;
+    left: 6px;
     width: 2px;
     height: calc(100% - 3px);
     background-color: #333;

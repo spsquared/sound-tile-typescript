@@ -1,6 +1,7 @@
 import { reactive, ref, Ref, WatchStopHandle } from 'vue';
 import { watchThrottled } from '@vueuse/core';
 import { cloneDeep } from 'lodash-es';
+import { AsyncLock } from '@/components/lock';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
 import BeepboxRenderInstance from './beepboxRenderInstance';
@@ -54,6 +55,7 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
     readonly isWorker: true = true;
     private readonly worker: Worker;
     private readonly responsePromises: Map<RendererMessageData['type'], ((value: RendererMessageData) => void)> = new Map();
+    private readonly responseLocks: Map<RendererMessageData['type'], AsyncLock> = new Map();
 
     constructor(data: BeepboxSettingsData) {
         super(data);
@@ -68,10 +70,7 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
         });
         this.worker.addEventListener('message', (e: RendererMessageEvent) => {
             const resolve = this.responsePromises.get(e.data.type);
-            if (resolve !== undefined) {
-                resolve(e.data);
-                this.responsePromises.delete(e.data.type);
-            }
+            if (resolve !== undefined) resolve(e.data);
         });
     }
 
@@ -97,9 +96,16 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
         this.worker.postMessage({ type: e, ...data }, { transfer: transfers });
     }
     private async postMessageWithAck<Event extends RendererMessageData['type'], ResEvent extends RendererMessageData['type']>(e: Event, res: ResEvent, data: Omit<Extract<RendererMessageData, { type: Event }>, 'type'>, transfers?: Transferable[]): Promise<Extract<RendererMessageData, { type: ResEvent }>> {
+        if (!this.responseLocks.has(e)) this.responseLocks.set(e, new AsyncLock());
+        const lock = this.responseLocks.get(e)!;
+        await lock.acquire();
         return await new Promise((resolve, reject) => {
             if (this.responsePromises.has(res)) reject(`Previous response for ${res} not recieved`);
-            this.responsePromises.set(res, resolve as any);
+            this.responsePromises.set(res, (dat) => {
+                resolve(dat as any);
+                this.responsePromises.delete(res);
+                lock.release();
+            });
             this.postMessage(e, data, transfers);
         });
     }

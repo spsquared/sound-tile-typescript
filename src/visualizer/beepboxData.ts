@@ -5,26 +5,42 @@ import { ColorData } from '@/components/inputs/colorPicker';
  */
 type BeepboxData = {
     song: BeepboxData.Song | null;
-    /**Styling for individual channels */
+    /**
+     * Styling for individual channels. Can be reordered to change the rendering order of channels, with
+     * earlier channels being rendered below later ones.
+     * 
+     * *This is not included in song data as new settings need defaults to merge with, and song data doesn't have defaults*
+     */
     channelStyles: {
-        /**Foreground color of notes */
-        noteColor: ColorData
-        /**Note width is scaled by note size pins */
-        noteSizeEnabled: boolean
+        /**Allow styling each instrument separately */
+        separateInstrumentStyles: boolean
+        /**Styles for each instrument - if separate styles are off, all instruments use one style */
+        instruments: {
+            /**Foreground color of notes */
+            noteColor: ColorData
+            /**Note width is scaled by note size pins */
+            noteSizeEnabled: boolean
+        }[]
+        /**The corresponding channel index in the song of this channel - set on creation, NEVER changes */
+        readonly index: number
     }[]
     /**How many times the loop loops */
     loopCount: number
-    /**Remove beats skipped by "next bar" modulations */
-    cutSkippedBeats: boolean
     /**Piano playhead settings */
     piano: {
         /**Show a piano keyboard for the playhead instead of a line */
         enabled: boolean
         /**Label each octave starting on a specific key, or no labels if null */
         octaveLabels: BeepboxData.ScaleKeys | null
+        /**Place the piano roll so the playhead is "above" the keys (on the side of black keys) instead of below (default) */
+        playheadSide: boolean
+        /**Flip the alignment of piano keys to make the keyboard "upside down" */
+        flip: boolean
     }
     /**Range [0-1] interpolating from only showing notes in the future and only showing notes that have been played */
     playheadPosition: number
+    /**Remove beats skipped by "next bar" modulations */
+    cutSkippedBeats: boolean
     /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
     rotate: boolean
     /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
@@ -310,15 +326,31 @@ namespace BeepboxData {
             song: null,
             channelStyles: [],
             loopCount: 1,
-            cutSkippedBeats: true,
             piano: {
                 enabled: false,
-                octaveLabels: ScaleKeys.C
+                octaveLabels: ScaleKeys.C,
+                playheadSide: false,
+                flip: false
             },
             playheadPosition: 0,
+            cutSkippedBeats: true,
             rotate: false,
             flipX: false,
             flipY: false
+        };
+    }
+
+    export function createDefaultChannelStyle(index: number): BeepboxData['channelStyles'][number] {
+        return {
+            separateInstrumentStyles: false,
+            instruments: [],
+            index: index
+        };
+    }
+    export function createDefaultInstrumentStyle(): BeepboxData['channelStyles'][number]['instruments'][number] {
+        return {
+            noteColor: { type: 'solid', color: '#ffffff', alpha: 1 },
+            noteSizeEnabled: true
         };
     }
 }

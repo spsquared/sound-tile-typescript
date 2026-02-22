@@ -90,6 +90,8 @@ async function uploadImage() {
 </template>
 
 <style scoped>
+@import url(./options/shared.css);
+
 .imageWrapper {
     width: 100%;
     height: 100%;
@@ -121,17 +123,5 @@ async function uploadImage() {
     height: 100%;
     align-items: center;
     justify-content: center;
-}
-
-.uploadButton {
-    background-color: dodgerblue;
-}
-
-.uploadButton:hover {
-    background-color: color-mix(in hsl, dodgerblue 80%, cyan 20%);
-}
-
-.uploadButton:disabled {
-    background-color: gray;
 }
 </style>

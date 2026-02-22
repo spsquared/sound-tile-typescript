@@ -86,6 +86,8 @@ const sanitizedText = ref('');
 </template>
 
 <style scoped>
+@import url(./options/shared.css);
+
 .textContain {
     /* NO CSS PUTTING STUFF OUTSIDE THE BOX */
     contain: strict;
@@ -114,20 +116,5 @@ const sanitizedText = ref('');
 pre {
     /* no scrollbar 4 u */
     overflow-x: hidden;
-}
-
-.optionsRows {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    row-gap: 4px;
-}
-
-.optionsRows>div {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    column-gap: 12px;
-    row-gap: 4px;
 }
 </style>

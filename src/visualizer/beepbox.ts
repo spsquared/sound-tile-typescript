@@ -1,4 +1,4 @@
-import { effectScope, EffectScope, markRaw, reactive, Ref, ref, toRaw, watch } from 'vue';
+import { effectScope, EffectScope, reactive, Ref, ref, toRaw, watch } from 'vue';
 import { webWorkerSupported } from '@/constants';
 import { DeepPartial } from '@/components/utils';
 import Playback from './playback';
@@ -39,8 +39,35 @@ class BeepboxVisualizer {
             watch(() => this.data.song, () => {
                 this.duration = 0;
                 BeepboxVisualizer.recalculateDuration();
-                this.data.channelStyles.length = this.data.song?.channels.reduce((ct, { type }) => ct + (type != 'mod' ? 1 : 0), 0) ?? 0;
-                this.data.channelStyles = this.data.channelStyles.map((style) => style ?? BeepboxData.createDefaultChannelStyle());
+                // we populate all the channel/instrument-linked settings fields on load
+                const channelCount = this.data.song?.channels.reduce((ct, { type }) => ct + (type != 'mod' ? 1 : 0), 0) ?? 0;
+                if (channelCount > this.data.channelStyles.length) {
+                    // creating more channels we don't have to sort the channels as collision is not possible
+                    const fillCount = channelCount - this.data.channelStyles.length;
+                    this.data.channelStyles.push(...new Array(fillCount).fill(0).map((_, i) =>
+                        BeepboxData.createDefaultChannelStyle(this.data.channelStyles.length + i)
+                    ));
+                } else {
+                    // removing channels unsorted can result in channels that dont exist so we need manual loop
+                    for (let i = this.data.channelStyles.length; --i >= 0;) { // what the battlecode
+                        if (this.data.channelStyles[i].index >= channelCount) this.data.channelStyles.splice(i, 1);
+                    }
+                }
+                if (this.data.song !== null) {
+                    for (let i = 0; i < channelCount; i++) {
+                        const channel = this.data.channelStyles[i];
+                        const instruments = channel.instruments;
+                        const instrumentCount = this.data.song.channels[channel.index].instruments.length;
+                        if (instrumentCount > instruments.length) {
+                            instruments.push(...new Array(instrumentCount - instruments.length).fill(0).map(() =>
+                                BeepboxData.createDefaultInstrumentStyle()
+                            ));
+                        } else {
+                            // its all sorted
+                            instruments.length = instrumentCount;
+                        }
+                    }
+                }
             }, { immediate: true, deep: false });
             watch(this.renderer.loadResult, () => {
                 const res = this.renderer.loadResult.value;
@@ -255,7 +282,7 @@ class BeepboxVisualizer {
             })
         };
         if (perfMetrics.debugLevel.value > 0) console.debug('Loaded BeepBox JSON in ' + (performance.now() - start) + 'ms');
-        return markRaw(song);
+        return song;
     }
 
     /**All **VISIBLE** instances of visualizers - maintained by the visualizer instances themselves */
