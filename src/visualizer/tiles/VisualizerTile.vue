@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
-import { syncRef, useElementSize, useThrottleFn } from '@vueuse/core';
+import { useElementSize, useThrottleFn } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
 import { VisualizerTile } from '../tiles';
@@ -12,7 +12,6 @@ import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
-import ColorPicker from '@/components/inputs/colorPicker';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import ModulatorSourceItem from '@/modulation/ModulatorSourceItem.vue';
 import rotateIcon from '@/img/rotate-dark.svg';
@@ -75,16 +74,6 @@ async function reuseSource() {
 }
 
 const gainIcon = computed(() => options.value.mute ? volumeMuteIcon : (options.value.gain > 0.6 ? volume2Icon : (options.value.gain > 0 ? volume1Icon : volume0Icon)));
-
-// buh ref spam
-const colorPicker1 = ColorPicker.createReactive(options.value.color);
-const colorPicker2 = ColorPicker.createReactive(options.value.color2);
-const colorSync1A = computed({ get: () => options.value.color, set: (c) => options.value.color = c });
-const colorSync2A = computed({ get: () => options.value.color2, set: (c) => options.value.color2 = c });
-const colorSync1B = computed({ get: () => colorPicker1.colorData, set: (c) => colorPicker1.colorData = c });
-const colorSync2B = computed({ get: () => colorPicker2.colorData, set: (c) => colorPicker2.colorData = c });
-syncRef(colorSync1A, colorSync1B);
-syncRef(colorSync2A, colorSync2B);
 
 const reflectionDisabled = computed(() => options.value.mode == VisualizerData.Mode.SPECTROGRAM || options.value.mode == VisualizerData.Mode.FREQ_LUMINANCE);
 const barMinLengthDisabled = computed(() => options.value.freqOptions.bar.ledEffect || options.value.mode == VisualizerData.Mode.FREQ_LUMINANCE);
@@ -237,21 +226,21 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                 </div>
             </TileOptionsSection>
             <TileOptionsSection title="Waveform Options" v-show="waveformModes.includes(options.mode)">
-                <div class="optionsRows">
-                    <div>
+                <div class="optionsTable optionsTableColumns">
+                    <div class="optionsTable">
                         <label title="Scale factor for amplitude of waveform">
                             Scale
                             <StrictNumberInput v-model="options.waveOptions.scale" :min="0" :max="10" :strict-max="Infinity" :step="0.1" :strict-step="0"></StrictNumberInput>
                         </label>
-                        <label title="Reduce the time resolution of the waveform drawn by drawing only every N points">
-                            Downsampling
-                            <StrictNumberInput v-model="options.waveOptions.resolution" :min="1" :max="32" :step="1"></StrictNumberInput>
-                        </label>
-                    </div>
-                    <div>
                         <label title="Thickness of lines in pixels">
                             Line Width
                             <StrictNumberInput v-model="options.waveOptions.thickness" :min="1" :max="32" :strict-max="256" :step="1"></StrictNumberInput>
+                        </label>
+                    </div>
+                    <div class="optionsTable">
+                        <label title="Reduce the time resolution of the waveform drawn by drawing only every N points">
+                            Downsampling
+                            <StrictNumberInput v-model="options.waveOptions.resolution" :min="1" :max="32" :step="1"></StrictNumberInput>
                         </label>
                         <label title="Use mitered instead of rounded line joins">
                             Sharp Joins
@@ -400,11 +389,11 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     </label>
                     <label title="Visualizer primary color">
                         Primary
-                        <EnhancedColorPicker :picker="colorPicker1" badge-width="60px"></EnhancedColorPicker>
+                        <EnhancedColorPicker v-model="options.color" badge-width="60px"></EnhancedColorPicker>
                     </label>
                     <label title="Visualizer secondary color" v-if="secondaryColorSupportedModes.includes(options.mode)">
                         Secondary
-                        <EnhancedColorPicker :picker="colorPicker2" badge-width="60px"></EnhancedColorPicker>
+                        <EnhancedColorPicker v-model="options.color2" badge-width="60px"></EnhancedColorPicker>
                     </label>
                     <label title="Apply additional opacity to secondary color - setting to below 1 triggers special translucency handling for Freq. Fill mode" v-if="secondaryColorSupportedModes.includes(options.mode)">
                         Alpha

@@ -12,7 +12,6 @@ import TileOptionsSection from './options/TileOptionsSection.vue';
 import StrictNumberInput from '@/components/inputs/StrictNumberInput.vue';
 import Slider from '@/components/inputs/Slider.vue';
 import Toggle from '@/components/inputs/Toggle.vue';
-import ColorPicker from '@/components/inputs/colorPicker';
 import EnhancedColorPicker from '@/components/inputs/EnhancedColorPicker.vue';
 import pianoIcon from '@/img/piano-keys.svg';
 import rotateIcon from '@/img/rotate-dark.svg';
@@ -65,12 +64,14 @@ async function uploadJson() {
 const channelStyles = useTemplateRef('channelStyles');
 useSortable(channelStyles, options.value.channelStyles, {
     animation: 100,
-    handle: '.channelItemDragHandle',
+    handle: '.channelListItemDragHandle',
 });
+
+const selectedChannel = ref(0);
 </script>
 
 <template>
-    <Tile :tile="props.tile" :options-window="{ minWidth: 500, minHeight: 300, resizeable: true }">
+    <Tile :tile="props.tile" :options-window="{ minWidth: 500, minHeight: 400, resizeable: true }">
         <template #content>
             <div class="canvasWrapper" ref="canvasWrapper"></div>
             <div class="beepboxUploadCover" v-if="options.song === null">
@@ -86,7 +87,7 @@ useSortable(channelStyles, options.value.channelStyles, {
                     <div>
                         <label title="Set the number of times the looped part of the song plays (1 being play once)">
                             Loop count
-                            <StrictNumberInput v-model="options.loopCount" :min="1" :step="1"></StrictNumberInput>
+                            <StrictNumberInput v-model="options.loopCount" :min="1" :step="1" style="width: 100px"></StrictNumberInput>
                         </label>
                     </div>
                     <div>
@@ -102,7 +103,7 @@ useSortable(channelStyles, options.value.channelStyles, {
                 </div>
             </TileOptionsSection>
             <TileOptionsSection title="Visualizer Style">
-                <div class="optionsRows">
+                <div class="optionsTable optionsTableColumns">
                     <div class="optionsTable">
                         <label title="Enable the piano keyboard">
                             Show Piano Keys
@@ -120,7 +121,7 @@ useSortable(channelStyles, options.value.channelStyles, {
                             <Toggle v-model="options.cutSkippedBeats"></Toggle>
                         </label>
                     </div>
-                    <div class="optionsGrid">
+                    <div class="optionsTable">
                         <label title="Rotate the piano roll vertically">
                             Vertical
                             <Toggle v-model="options.rotate" :icon="rotateIcon"></Toggle>
@@ -136,13 +137,54 @@ useSortable(channelStyles, options.value.channelStyles, {
                     </div>
                 </div>
             </TileOptionsSection>
-            <TileOptionsSection title="Channel Styles" v-show="options.song !== null">
-                <div class="channelRows" ref="channelStyles">
-                    <div class="channelItem" v-for="channel in options.channelStyles" :key="channel.index">
-                        <div class="channelItemDragHandle"></div>
-                        <div class="channelItemLabel">{{ options.song?.channels[channel.index].name }}</div>
-
-                        {{ channel.instruments.length }}
+            <TileOptionsSection title="Channel Styles" v-if="options.song !== null">
+                <div class="channelSplitPane">
+                    <div class="channelList" ref="channelStyles">
+                        <div :class="{
+                            channelListItem: true,
+                            channelListItemSelected: selectedChannel == channel.index
+                        }" v-for="channel in options.channelStyles" :key="channel.index" @click="selectedChannel = channel.index">
+                            <div class="channelListItemDragHandle" title="Drag to reorder channel drawing order"></div>
+                            <div class="channelListItemLabel">{{ options.song.channels[channel.index].name }}</div>
+                        </div>
+                    </div>
+                    <div class="channelEdit">
+                        <TransitionGroup name="channel">
+                            <div class="channelEditItem" v-for="channel in options.channelStyles" :key="channel.index" v-show="selectedChannel == channel.index">
+                                <div class="instrumentItem">
+                                    <div class="instrumentTitle">{{ options.song.channels[channel.index].name }}</div>
+                                    <div class="optionsTable">
+                                        <label title="Allow each instrument to have a different style">
+                                            Separate<br>Instr. Styles
+                                            <Toggle v-model="channel.separateInstrumentStyles"></Toggle>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="instrumentItem" v-for="instrument, i in channel.separateInstrumentStyles ? channel.instruments : [channel.instruments[0]]">
+                                    <div class="instrumentTitle" v-if="channel.separateInstrumentStyles">Instrument {{ i + 1 }} ({{ options.song.channels[channel.index].instruments[i].type }})</div>
+                                    <div class="instrumentTitle" v-else>Instruments</div>
+                                    <div class="optionsRows">
+                                        <div class="optionsGrid">
+                                            <label title="Note foreground color">
+                                                Note FG
+                                                <EnhancedColorPicker v-model="instrument.noteColor"></EnhancedColorPicker>
+                                            </label>
+                                            <label title="Note background color">
+                                                Note BG
+                                                <EnhancedColorPicker v-model="instrument.noteBackground"></EnhancedColorPicker>
+                                            </label>
+                                        </div>
+                                        <div class="optionsTable">
+                                            <label title="Scale notes BeepBox-style with their note size pins">
+                                                Note Size Scaling
+                                                <Toggle v-model="instrument.noteSizeEnabled"></Toggle>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </TransitionGroup>
+                        <div class="channelEditBorder"></div>
                     </div>
                 </div>
             </TileOptionsSection>
@@ -157,7 +199,7 @@ useSortable(channelStyles, options.value.channelStyles, {
                 <div class="optionsGrid">
                     <label title="Background style of tile">
                         Background
-                        <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
+                        <EnhancedColorPicker :picker="props.tile.backgroundColor" badge-width="60px" :disabled="inCollapsedGroup"></EnhancedColorPicker>
                     </label>
                 </div>
             </TileOptionsSection>
@@ -192,21 +234,35 @@ useSortable(channelStyles, options.value.channelStyles, {
     justify-content: center;
 }
 
-.channelRows {
+.channelSplitPane {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    column-gap: 8px;
     width: 100%;
-    row-gap: 4px;
+    height: 240px;
 }
 
-.channelItem {
+.channelList {
+    display: flex;
+    flex-direction: column;
+    max-width: min(40%, 260px);
+    padding-right: 4px;
+    row-gap: 4px;
+    flex-grow: 1;
+    overflow-y: scroll;
+    --scrollbar-size: 8px;
+}
+
+.channelListItem {
     display: flex;
     flex-direction: row;
     border: 2px solid #333;
     border-radius: 2px;
+    transition: 50ms linear background-color;
+    cursor: pointer;
 }
 
-.channelItemDragHandle {
+.channelListItemDragHandle {
     width: 24px;
     background-image: url(@/img/drag-vertical.svg);
     background-position: center;
@@ -215,11 +271,92 @@ useSortable(channelStyles, options.value.channelStyles, {
     cursor: move;
 }
 
-.channelItemLabel {
+.channelListItemLabel {
     margin-right: 8px;
+    flex-shrink: 1;
+    text-overflow: ellipsis;
 }
 
-.channelItem:hover {
+.channelListItem:hover {
     border-color: #555;
+}
+
+.channelListItemSelected {
+    border-color: white !important;
+    background-color: #FFF3;
+    cursor: default;
+}
+
+.channelEdit {
+    position: relative;
+    padding-right: 4px;
+    flex-grow: 1;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    --scrollbar-size: 8px;
+}
+
+.channelEditBorder {
+    box-sizing: border-box;
+    position: sticky;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #555;
+    border-radius: 2px;
+    pointer-events: none;
+    /* render above titles */
+    z-index: 2;
+}
+
+.channelEditItem {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0px;
+    padding: 6px 10px 6px 6px;
+    width: 100%;
+    row-gap: 4px;
+}
+
+.instrumentItem {
+    padding: 0px 2px 4px 2px;
+
+}
+
+.instrumentTitle {
+    position: sticky;
+    /* hide leaks at top buh */
+    top: 1.5px;
+    width: 100%;
+    padding: 0px 2px;
+    border-bottom: 4px solid #555;
+    background-image: linear-gradient(0deg, #333A 0%, #222 80%);
+    backdrop-filter: blur(1px);
+    transform: translateX(-2px);
+    text-align: center;
+    /**Render above everything else */
+    z-index: 1;
+}
+
+/* animations */
+
+.channel-enter-active,
+.channel-leave-active {
+    transition: 200ms ease transform;
+}
+
+.channel-enter-from {
+    transform: translateX(100%);
+}
+
+.channel-leave-to {
+    transform: translateX(-100%);
+}
+
+.channel-enter-to,
+.channel-leave-from {
+    transform: translateX(0px);
 }
 </style>

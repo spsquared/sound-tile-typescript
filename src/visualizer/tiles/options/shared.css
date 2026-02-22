@@ -49,6 +49,15 @@
     column-gap: 12px;
 }
 
+.optionsTableColumns {
+    grid-auto-flow: column;
+}
+
+.optionsTableColumns>.optionsTable {
+    grid-template-columns: subgrid;
+    grid-column: span 2;
+}
+
 .optionsTable>label {
     grid-column: span 2;
     display: grid;

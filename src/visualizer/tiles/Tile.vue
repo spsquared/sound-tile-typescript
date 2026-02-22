@@ -115,18 +115,20 @@ function setIdentifyTile(v: boolean) {
                 <div class="optionsWrapper">
                     <slot name="options">
                         <TileOptionsSection title="General">
-                            <label title="Label of tile">
-                                Label
-                                <input type="text" v-model="props.tile.label">
-                            </label>
-                            <label class="sectionItem" title="Relative size of tile to sibling tiles">
-                                Size
-                                <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
-                            </label>
-                            <label class="sectionItem" title="Background color of tile">
-                                Background
-                                <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
-                            </label>
+                            <div class="optionsRows">
+                                <label title="Label of tile">
+                                    Label
+                                    <input type="text" v-model="props.tile.label">
+                                </label>
+                                <label class="sectionItem" title="Relative size of tile to sibling tiles">
+                                    Size
+                                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
+                                </label>
+                                <label class="sectionItem" title="Background color of tile">
+                                    Background
+                                    <EnhancedColorPicker :picker="props.tile.backgroundColor" :disabled="inCollapsedGroup"></EnhancedColorPicker>
+                                </label>
+                            </div>
                         </TileOptionsSection>
                     </slot>
                 </div>
@@ -136,6 +138,8 @@ function setIdentifyTile(v: boolean) {
 </template>
 
 <style scoped>
+@import url(./options/shared.css);
+
 .tile {
     contain: strict;
     position: relative;

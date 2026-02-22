@@ -49,7 +49,7 @@ watch([() => props.transform.data, polyFocused], () => {
             =
             <span style="color: var(--logo-green);">x</span>
             +
-            <input type="number" v-model="props.transform.data" step="0.1">
+            <input type="number" v-model.number="props.transform.data" step="0.1">
         </div>
         <div class="transformInfo" v-show="infoOpen">
             <p>Applies a constant offset added to the modulation value.</p>
@@ -63,10 +63,10 @@ watch([() => props.transform.data, polyFocused], () => {
         <div class="transformParams">
             <span style="color: var(--logo-blue);">f(x)</span>
             =
-            <input type="number" v-model="props.transform.data[0]" step="0.1">
+            <input type="number" v-model.number="props.transform.data[0]" step="0.1">
             <span style="color: var(--logo-green);">x</span>
             +
-            <input type="number" v-model="props.transform.data[1]" step="0.1">
+            <input type="number" v-model.number="props.transform.data[1]" step="0.1">
         </div>
         <div class="transformInfo" v-show="infoOpen">
             <p>Essentially a linear function of the modulation value.</p>
@@ -100,9 +100,9 @@ watch([() => props.transform.data, polyFocused], () => {
         <div class="transformParams">
             <span style="color: var(--logo-blue);">f(x)</span>
             =
-            <input type="number" v-model="props.transform.data[0]" step="0.1">
+            <input type="number" v-model.number="props.transform.data[0]" step="0.1">
             *
-            (<input type="number" v-model="props.transform.data[1]" step="0.1">
+            (<input type="number" v-model.number="props.transform.data[1]" step="0.1">
             ^
             <span style="color: var(--logo-green);">x</span>)
         </div>
@@ -129,14 +129,14 @@ watch([() => props.transform.data, polyFocused], () => {
                         <span>,</span>
                         <span style="color: var(--logo-green);">x</span>
                         <span>{{ props.transform.data[1] ? '>=' : '<=' }}</span>
-                                <input type="number" v-model="props.transform.data[0]" step="0.1">
+                                <input type="number" v-model.number="props.transform.data[0]" step="0.1">
                     </div>
                     <div>
-                        <input type="number" v-model="props.transform.data[2]" step="0.1">
+                        <input type="number" v-model.number="props.transform.data[2]" step="0.1">
                         <span>,</span>
                         <span style="color: var(--logo-green);">x</span>
                         <span>{{ props.transform.data[1] ? '<' : '>' }}</span>
-                                <input type="number" v-model="props.transform.data[0]" step="0.1">
+                                <input type="number" v-model.number="props.transform.data[0]" step="0.1">
                     </div>
                 </div>
             </div>

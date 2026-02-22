@@ -31,40 +31,48 @@ provide('inCollapsedGroup', computed(() => isCollapsed.value || inCollapsedGroup
         </template>
         <template #options>
             <TileOptionsSection title="General">
-                <label title="Label of tile">
-                    Label
-                    <input type="text" v-model="props.tile.label">
-                </label>
-                <label title="Relative size of tile to sibling tiles">
-                    Size
-                    <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
-                </label>
-                <label title="Layout of child tiles within the group - collapsed groups come with a few caveats">
-                    Layout
-                    <select v-model="props.tile.orientation">
-                        <option :value="GroupTile.Orientation.HORIZONTAL">Horizontal</option>
-                        <option :value="GroupTile.Orientation.VERTICAL">Vertical</option>
-                        <option :value="GroupTile.Orientation.COLLAPSED">Collapsed</option>
-                    </select>
-                </label>
-                <label v-if="!inCollapsedGroup && !isCollapsed" title="Border style of tiles within the group">
-                    Borders
-                    <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
-                </label>
-                <label v-if="!inCollapsedGroup && !isCollapsed" title="Disable borders and gaps between tiles within the group">
-                    Hide Borders
-                    <Toggle v-model="props.tile.hideBorders"></Toggle>
-                </label>
-                <label v-if="!inCollapsedGroup && isCollapsed" title="Background style of tile">
-                    Background
-                    <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
-                </label>
+                <div class="optionsRows">
+                    <div class="optionsTable">
+                        <label title="Label of tile">
+                            Label
+                            <input type="text" v-model="props.tile.label">
+                        </label>
+                        <label title="Relative size of tile to sibling tiles">
+                            Size
+                            <StrictNumberInput v-model="props.tile.size" :min="1" :max="100" :strict-max="Infinity"></StrictNumberInput>
+                        </label>
+                        <label title="Layout of child tiles within the group - collapsed groups come with a few caveats">
+                            Layout
+                            <select v-model="props.tile.orientation">
+                                <option :value="GroupTile.Orientation.HORIZONTAL">Horizontal</option>
+                                <option :value="GroupTile.Orientation.VERTICAL">Vertical</option>
+                                <option :value="GroupTile.Orientation.COLLAPSED">Collapsed</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="optionsGrid">
+                        <label v-if="!inCollapsedGroup && !isCollapsed" title="Border style of tiles within the group">
+                            Borders
+                            <EnhancedColorPicker :picker="props.tile.borderColor"></EnhancedColorPicker>
+                        </label>
+                        <label v-if="!inCollapsedGroup && !isCollapsed" title="Disable borders and gaps between tiles within the group">
+                            Hide Borders
+                            <Toggle v-model="props.tile.hideBorders"></Toggle>
+                        </label>
+                        <label v-if="!inCollapsedGroup && isCollapsed" title="Background style of tile">
+                            Background
+                            <EnhancedColorPicker :picker="props.tile.backgroundColor"></EnhancedColorPicker>
+                        </label>
+                    </div>
+                </div>
             </TileOptionsSection>
         </template>
     </Tile>
 </template>
 
 <style scoped>
+@import url(./options/shared.css);
+
 .groupChildren {
     position: relative;
     display: flex;

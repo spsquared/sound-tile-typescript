@@ -27,7 +27,7 @@ function input() {
     emit('input', checked.value);
 }
 defineExpose({
-    checked
+    checked: checked
 });
 </script>
 

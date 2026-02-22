@@ -18,6 +18,8 @@ type BeepboxData = {
         instruments: {
             /**Foreground color of notes */
             noteColor: ColorData
+            /**Background color of notes */
+            noteBackground: ColorData
             /**Note width is scaled by note size pins */
             noteSizeEnabled: boolean
         }[]
@@ -350,6 +352,7 @@ namespace BeepboxData {
     export function createDefaultInstrumentStyle(): BeepboxData['channelStyles'][number]['instruments'][number] {
         return {
             noteColor: { type: 'solid', color: '#ffffff', alpha: 1 },
+            noteBackground: { type: 'solid', color: '#eeeeee', alpha: 1 },
             noteSizeEnabled: true
         };
     }

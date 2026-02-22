@@ -519,4 +519,4 @@ TileEditor.registerTile(BeepboxTile, true);
 TileEditor.registerTile(TextTile, true);
 TileEditor.registerTile(ImageTile, true);
 TileEditor.registerTile(Tile, true);
-TileEditor.registerTile(GrassTile, false);
+TileEditor.registerTile(GrassTile, localStorage.getItem('grassy') !== null);

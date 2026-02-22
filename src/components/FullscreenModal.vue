@@ -29,7 +29,6 @@ const body = useTemplateRef('body');
 // v-bind doens't work within <Teleport> elements so we do this mess instead
 watch([() => props.color, body], () => body.value !== null && (body.value.style.borderColor = props.color ?? 'white'), { immediate: true });
 
-
 const emit = defineEmits<{
     (e: 'open'): any
     (e: 'close', res: boolean): any

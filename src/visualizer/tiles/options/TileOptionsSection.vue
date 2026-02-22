@@ -82,12 +82,7 @@ const { height } = useElementSize(bodyEl);
 
 .optSectionBody {
     box-sizing: border-box;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
     position: absolute;
-    row-gap: 4px;
-    column-gap: 12px;
     width: 100%;
     padding: 0px 4px;
 }
