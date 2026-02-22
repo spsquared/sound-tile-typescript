@@ -68,7 +68,7 @@ class BeepboxRenderInstance {
     }
 
     private drawStaticNotes(tick: number): void {
-
+        tick
         this.createColorScale
         this.createColorStyle
     }
