@@ -120,7 +120,7 @@ function setIdentifyTile(v: boolean) {
     height: 100%;
     border-radius: 6px;
     background-color: var(--mod-drag-color);
-    background-image: url(@/img/dropdown-dark.svg);
+    background-image: url(@/img/menu-dark.svg);
     background-position: center;
     background-size: 60% 60%;
     background-repeat: no-repeat;
