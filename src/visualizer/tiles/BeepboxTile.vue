@@ -239,7 +239,7 @@ const selectedChannel = ref(0);
     flex-direction: row;
     column-gap: 8px;
     width: 100%;
-    height: 240px;
+    height: 280px;
 }
 
 .channelList {
@@ -317,12 +317,10 @@ const selectedChannel = ref(0);
     top: 0px;
     padding: 6px 10px 6px 6px;
     width: 100%;
-    row-gap: 4px;
 }
 
 .instrumentItem {
-    padding: 0px 2px 4px 2px;
-
+    padding: 0px 2px;
 }
 
 .instrumentTitle {

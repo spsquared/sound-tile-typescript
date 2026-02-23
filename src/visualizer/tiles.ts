@@ -21,7 +21,6 @@ import textTileImg from '@/img/text-tile.png';
 import imageTileImg from '@/img/image-tile.png';
 import beepboxTileImg from '@/img/beepbox-tile.png';
 
-
 /**
  * Required props for all tile components.
  * Typing isn't super strict, component should have class as type for `tile`.

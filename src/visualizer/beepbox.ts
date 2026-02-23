@@ -1,5 +1,6 @@
 import { effectScope, EffectScope, reactive, Ref, ref, toRaw, watch } from 'vue';
 import { webWorkerSupported } from '@/constants';
+import { settings } from '@/settings';
 import { DeepPartial } from '@/components/utils';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
@@ -56,15 +57,22 @@ class BeepboxVisualizer {
                 if (this.data.song !== null) {
                     for (let i = 0; i < channelCount; i++) {
                         const channel = this.data.channelStyles[i];
+                        const channelData = this.data.song.channels[channel.index];
                         const instruments = channel.instruments;
-                        const instrumentCount = this.data.song.channels[channel.index].instruments.length;
-                        if (instrumentCount > instruments.length) {
-                            instruments.push(...new Array(instrumentCount - instruments.length).fill(0).map(() =>
-                                BeepboxData.createDefaultInstrumentStyle()
-                            ));
+                        // mod channels don't get included
+                        const defaultColors = settings.defaultPianoNoteColors[channelData.type as 'pitch' | 'drum'];
+                        const colors = defaultColors[channel.index % defaultColors.length];
+                        if (channelData.instruments.length > instruments.length) {
+                            instruments.push(...new Array(channelData.instruments.length - instruments.length).fill(0).map(() => {
+                                const style = BeepboxData.createDefaultInstrumentStyle();
+                                // default instrument style colors is always solid
+                                (style.noteColor as any).color = colors[0];
+                                (style.noteBackground as any).color = colors[1];
+                                return style;
+                            }));
                         } else {
                             // its all sorted
-                            instruments.length = instrumentCount;
+                            instruments.length = channelData.instruments.length;
                         }
                     }
                 }

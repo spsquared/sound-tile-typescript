@@ -351,8 +351,8 @@ namespace BeepboxData {
     }
     export function createDefaultInstrumentStyle(): BeepboxData['channelStyles'][number]['instruments'][number] {
         return {
-            noteColor: { type: 'solid', color: '#ffffff', alpha: 1 },
-            noteBackground: { type: 'solid', color: '#eeeeee', alpha: 1 },
+            noteColor: { type: 'solid', color: '#dddddd', alpha: 1 },
+            noteBackground: { type: 'solid', color: '#999999', alpha: 1 },
             noteSizeEnabled: true
         };
     }

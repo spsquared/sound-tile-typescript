@@ -71,7 +71,6 @@ namespace MediaPlayer {
 
 export default MediaPlayer;
 
-
 // default state
 {
     const root = new GroupTile();
