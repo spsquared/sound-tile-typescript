@@ -20,8 +20,12 @@ type BeepboxData = {
             noteColor: ColorData
             /**Background color of notes */
             noteBackground: ColorData
+            /**Apply gradients per note, across the whole canvas, or as solid colors sampled based on pitch */
+            gradientMode: 'note' | 'canvas' | 'pitch'
             /**Note width is scaled by note size pins */
             noteSizeEnabled: boolean
+            /**Render instrument vibrato in the piano roll */
+            showVibrato: boolean
         }[]
         /**The corresponding channel index in the song of this channel - set on creation, NEVER changes */
         readonly index: number
@@ -43,6 +47,8 @@ type BeepboxData = {
     playheadPosition: number
     /**Remove beats skipped by "next bar" modulations */
     cutSkippedBeats: boolean
+    /**Length of bars relative to the height of the canvas - essentially the aspect ratio */
+    barScale: number
     /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
     rotate: boolean
     /**Flip the visualizer's X-axis - applied after rotation (left becomes right) */
@@ -336,6 +342,7 @@ namespace BeepboxData {
             },
             playheadPosition: 0,
             cutSkippedBeats: true,
+            barScale: 0.3,
             rotate: false,
             flipX: false,
             flipY: false
@@ -353,7 +360,9 @@ namespace BeepboxData {
         return {
             noteColor: { type: 'solid', color: '#dddddd', alpha: 1 },
             noteBackground: { type: 'solid', color: '#999999', alpha: 1 },
-            noteSizeEnabled: true
+            gradientMode: 'canvas',
+            noteSizeEnabled: true,
+            showVibrato: true
         };
     }
 }

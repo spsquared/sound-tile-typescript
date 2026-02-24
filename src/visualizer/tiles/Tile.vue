@@ -61,7 +61,7 @@ function deleteTile() {
 const label = useTemplateRef('label');
 const labelFocused = ref(false);
 function resetLabelScroll() {
-    if (label.value !== null && !labelFocused) label.value.scrollLeft = 0;
+    if (label.value !== null && !labelFocused.value) label.value.scrollLeft = 0;
 }
 
 const editButton = useTemplateRef('editButton');

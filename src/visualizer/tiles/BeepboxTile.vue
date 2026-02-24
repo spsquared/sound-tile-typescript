@@ -61,10 +61,12 @@ async function uploadJson() {
     uploadJsonDisabled.value = false;
 }
 
-const channelStyles = useTemplateRef('channelStyles');
-useSortable(channelStyles, options.value.channelStyles, {
+const channelList = useTemplateRef('channelList');
+useSortable(channelList, options.value.channelStyles, {
     animation: 100,
     handle: '.channelListItemDragHandle',
+    watchElement: true, // the list can be unrendered when there's no song data
+    bubbleScroll: true,
 });
 
 const selectedChannel = ref(0);
@@ -139,7 +141,7 @@ const selectedChannel = ref(0);
             </TileOptionsSection>
             <TileOptionsSection title="Channel Styles" v-if="options.song !== null">
                 <div class="channelSplitPane">
-                    <div class="channelList" ref="channelStyles">
+                    <div class="channelList" ref="channelList">
                         <div :class="{
                             channelListItem: true,
                             channelListItemSelected: selectedChannel == channel.index
@@ -164,7 +166,7 @@ const selectedChannel = ref(0);
                                     <div class="instrumentTitle" v-if="channel.separateInstrumentStyles">Instrument {{ i + 1 }} ({{ options.song.channels[channel.index].instruments[i].type }})</div>
                                     <div class="instrumentTitle" v-else>Instruments</div>
                                     <div class="optionsRows">
-                                        <div class="optionsGrid">
+                                        <div class="optionsGrid" style="justify-content: center;">
                                             <label title="Note foreground color">
                                                 Note FG
                                                 <EnhancedColorPicker v-model="instrument.noteColor"></EnhancedColorPicker>
@@ -175,9 +177,21 @@ const selectedChannel = ref(0);
                                             </label>
                                         </div>
                                         <div class="optionsTable">
+                                            <label title="Apply gradients: individually per note; across the entire tile; as solid colors sampled from the gradient based on pitch">
+                                                Gradient Mode
+                                                <select v-model="instrument.gradientMode">
+                                                    <option value="note">Notes</option>
+                                                    <option value="canvas">Tile</option>
+                                                    <option value="pitch">Pitch</option>
+                                                </select>
+                                            </label>
                                             <label title="Scale notes BeepBox-style with their note size pins">
-                                                Note Size Scaling
+                                                Note Size
                                                 <Toggle v-model="instrument.noteSizeEnabled"></Toggle>
+                                            </label>
+                                            <label title="Render instrument vibrato in the piano roll as &nbsp;squiggling&nbsp;">
+                                                Vibrato
+                                                <Toggle v-model="instrument.showVibrato"></Toggle>
                                             </label>
                                         </div>
                                     </div>
@@ -266,7 +280,7 @@ const selectedChannel = ref(0);
     width: 24px;
     background-image: url(@/img/drag-vertical.svg);
     background-position: center;
-    background-size: 100% 100%;
+    background-size: 20px 20px;
     background-repeat: no-repeat;
     cursor: move;
 }
@@ -274,6 +288,7 @@ const selectedChannel = ref(0);
 .channelListItemLabel {
     margin-right: 8px;
     flex-shrink: 1;
+    text-wrap: nowrap;
     text-overflow: ellipsis;
 }
 

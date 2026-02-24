@@ -81,5 +81,5 @@
 }
 
 .uploadButton:disabled {
-    background-color: gray;
+    background-color: var(--input-disabled-color);
 }
