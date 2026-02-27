@@ -2,7 +2,7 @@ import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { ColorData } from '@/components/inputs/colorPicker';
 import type { RendererMessageData, RendererMessageEvent, VisualizerRendererFrameResults, VisualizerSettingsData } from './visualizerRenderer';
-import VisualizerData from './visualizerData';
+import VisualizerData from '../visualizerData';
 
 const isInWorker = 'importScripts' in globalThis;
 

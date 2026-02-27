@@ -20,8 +20,6 @@ type BeepboxData = {
             noteColor: ColorData
             /**Background color of notes */
             noteBackground: ColorData
-            /**Apply gradients per note, across the whole canvas, or as solid colors sampled based on pitch */
-            gradientMode: 'note' | 'canvas' | 'pitch'
             /**Note width is scaled by note size pins */
             noteSizeEnabled: boolean
             /**Render instrument vibrato in the piano roll */
@@ -360,7 +358,6 @@ namespace BeepboxData {
         return {
             noteColor: { type: 'solid', color: '#dddddd', alpha: 1 },
             noteBackground: { type: 'solid', color: '#999999', alpha: 1 },
-            gradientMode: 'canvas',
             noteSizeEnabled: true,
             showVibrato: true
         };

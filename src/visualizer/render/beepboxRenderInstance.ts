@@ -2,7 +2,7 @@ import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { ColorData } from '@/components/inputs/colorPicker';
 import type { RendererMessageData, RendererMessageEvent, BeepboxRendererFrameResults, BeepboxSettingsData, BeepboxRendererLoadResults } from './beepboxRenderer';
-import BeepboxData from './beepboxData';
+import BeepboxData from '../beepboxData';
 
 const isInWorker = 'importScripts' in globalThis;
 
@@ -343,6 +343,8 @@ class BeepboxRenderInstance {
 }
 
 export default BeepboxRenderInstance;
+
+
 
 class CorruptSongError extends Error {
     readonly name = 'CorruptSongError';

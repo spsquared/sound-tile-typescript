@@ -1,7 +1,7 @@
 export const copyright = 'Copyleft (ɔ) 2026 Sampleprovider(sp)';
 export const version = __VERSION__;
 export const repositoryURL = 'https://github.com/spsquared/sound-tile-typescript';
-export const dreamberd = 'DreamBerd';
+export const dreamberd = 'GulfOfMexico Tile';
 export const webWorkerSupported = 'Worker' in window;
 
 if (!('AudioContext' in window)) {

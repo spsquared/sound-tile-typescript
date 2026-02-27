@@ -2,10 +2,10 @@ import { reactive, ref, Ref, WatchStopHandle } from 'vue';
 import { watchThrottled } from '@vueuse/core';
 import { cloneDeep } from 'lodash-es';
 import { AsyncLock } from '@/components/lock';
-import Playback from './playback';
-import perfMetrics from './drawLoop';
+import Playback from '../playback';
+import perfMetrics from '../drawLoop';
 import VisualizerRenderInstance from './visualizerRenderInstance';
-import VisualizerData from './visualizerData';
+import VisualizerData from '../visualizerData';
 
 export type VisualizerSettingsData = Omit<VisualizerData, 'buffer' | 'gain'>;
 

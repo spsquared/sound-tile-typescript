@@ -3,7 +3,7 @@ import { webWorkerSupported } from '@/constants';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
 import VisualizerData from './visualizerData';
-import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './visualizerRenderer';
+import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './render/visualizerRenderer';
 
 /**
  * Audio and visual rendering context of visualizer tiles.

@@ -2,10 +2,10 @@ import { reactive, ref, Ref, WatchStopHandle } from 'vue';
 import { watchThrottled } from '@vueuse/core';
 import { cloneDeep } from 'lodash-es';
 import { AsyncLock } from '@/components/lock';
-import Playback from './playback';
-import perfMetrics from './drawLoop';
+import Playback from '../playback';
+import perfMetrics from '../drawLoop';
 import BeepboxRenderInstance from './beepboxRenderInstance';
-import BeepboxData from './beepboxData';
+import BeepboxData from '../beepboxData';
 
 // much of this is just a copy of visualizerRenderer.ts
 // what are you gonna do about it? complain?

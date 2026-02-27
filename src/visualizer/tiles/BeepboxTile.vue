@@ -177,14 +177,6 @@ const selectedChannel = ref(0);
                                             </label>
                                         </div>
                                         <div class="optionsTable">
-                                            <label title="Apply gradients: individually per note; across the entire tile; as solid colors sampled from the gradient based on pitch">
-                                                Gradient Mode
-                                                <select v-model="instrument.gradientMode">
-                                                    <option value="note">Notes</option>
-                                                    <option value="canvas">Tile</option>
-                                                    <option value="pitch">Pitch</option>
-                                                </select>
-                                            </label>
                                             <label title="Scale notes BeepBox-style with their note size pins">
                                                 Note Size
                                                 <Toggle v-model="instrument.noteSizeEnabled"></Toggle>

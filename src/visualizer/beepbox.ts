@@ -5,7 +5,7 @@ import { DeepPartial } from '@/components/utils';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
 import BeepboxData, { BeepboxJsonSkeleton } from './beepboxData';
-import { BeepboxFallbackRenderer, BeepboxRenderer, BeepboxWorkerRenderer } from './beepboxRenderer';
+import { BeepboxFallbackRenderer, BeepboxRenderer, BeepboxWorkerRenderer } from './render/beepboxRenderer';
 
 /**
  * Rendering context of BeepBox tiles. BeepBox tile only handles visual rendering of notes

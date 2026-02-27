@@ -38,7 +38,7 @@ const { x: dragX, y: dragY, style: dragStyle } = useDraggable(winContainer, {
     containerElement: winBounds,
     preventDefault: true,
     onStart: () => { bringToTop(); },
-    initialValue: { x: 100, y: 100 }
+    initialValue: { x: 100, y: 140 }
 });
 const size = reactive({ w: 300, h: 200 });
 watch([() => props.minWidth, () => props.minHeight], () => {
