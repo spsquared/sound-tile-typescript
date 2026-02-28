@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { ref, useTemplateRef, watch } from 'vue';
 import arrowDownIcon from '@/img/arrow-down.svg';
 import arrowRightIcon from '@/img/arrow-right.svg';
 import { useElementSize } from '@vueuse/core';
@@ -10,8 +10,10 @@ const props = defineProps<{
 
 const open = ref(true);
 
+const wrapperEl = useTemplateRef('wrapper');
 const bodyEl = useTemplateRef('body');
 const { height } = useElementSize(bodyEl);
+watch(height, (h) => requestAnimationFrame(() => wrapperEl.value != null && (wrapperEl.value.style.height = h + 'px')));
 </script>
 
 <template>
@@ -22,7 +24,7 @@ const { height } = useElementSize(bodyEl);
             <div class="optSectionHeaderText">{{ props.title }}</div>
         </label>
         <Transition>
-            <div class="optSectionBodyWrapper" v-show="open">
+            <div class="optSectionBodyWrapper" v-show="open" ref="wrapper">
                 <div class="optSectionBody" ref="body">
                     <slot></slot>
                 </div>
@@ -75,7 +77,7 @@ const { height } = useElementSize(bodyEl);
 
 .optSectionBodyWrapper {
     position: relative;
-    min-height: v-bind("height + 'px'");
+    /* binding removed to avoid infinite loop */
     padding: 4px 0px;
     overflow: clip;
 }

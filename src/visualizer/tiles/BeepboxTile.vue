@@ -27,12 +27,11 @@ const wrapper = useTemplateRef('canvasWrapper');
 onMounted(() => {
     wrapper.value?.appendChild(props.tile.canvas);
 });
-props.tile.canvas.classList.add('visualizerCanvas');
+props.tile.canvas.classList.add('beepboxCanvas');
 
-const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
-const onResize = useThrottleFn(() => {
-    props.tile.visualizer.resize(canvasWidth.value * window.devicePixelRatio, canvasHeight.value * window.devicePixelRatio);
-}, 50, true, true);
+// device pixel content box gets the actual size of the canvas on the screen (no device pixel ratio decimals)
+const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper, undefined, { box: 'device-pixel-content-box' });
+const onResize = useThrottleFn(() => props.tile.visualizer.resize(canvasWidth.value, canvasHeight.value), 50, true, true);
 watch([canvasWidth, canvasHeight], onResize);
 onMounted(() => window.addEventListener('resize', onResize, { passive: true }));
 onUnmounted(() => window.removeEventListener('resize', onResize));
@@ -217,6 +216,7 @@ const selectedChannel = ref(0);
 .beepboxCanvas {
     width: 100%;
     height: 100%;
+    image-rendering: pixelated;
 }
 </style>
 <style scoped>

@@ -33,10 +33,9 @@ onMounted(() => {
 });
 props.tile.canvas.classList.add('visualizerCanvas');
 
-const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper);
-const onResize = useThrottleFn(() => {
-    props.tile.visualizer.resize(canvasWidth.value * window.devicePixelRatio, canvasHeight.value * window.devicePixelRatio);
-}, 50, true, true);
+// device pixel content box gets the actual size of the canvas on the screen (no device pixel ratio decimals)
+const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper, undefined, { box: 'device-pixel-content-box' });
+const onResize = useThrottleFn(() => props.tile.visualizer.resize(canvasWidth.value, canvasHeight.value), 50, true, true);
 watch([canvasWidth, canvasHeight], onResize);
 onMounted(() => window.addEventListener('resize', onResize, { passive: true }));
 onUnmounted(() => window.removeEventListener('resize', onResize));
@@ -419,6 +418,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
 .visualizerCanvas {
     width: 100%;
     height: 100%;
+    image-rendering: pixelated;
 }
 </style>
 <style scoped>
