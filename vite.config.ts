@@ -58,7 +58,8 @@ export default defineConfig(async () => ({
         }
     },
     assetsInclude: [
-        resolve(srcDir, 'assets/*.html') // importing html for Trix editor
+        resolve(srcDir, 'assets/*.html'), // importing html for Trix editor
+        '*.wgsl' // webgpu shaders
     ],
     // prevent vite from obscuring rust errors
     clearScreen: false,

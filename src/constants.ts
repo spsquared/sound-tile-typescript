@@ -2,10 +2,11 @@ export const copyright = 'Copyleft (ɔ) 2026 Sampleprovider(sp)';
 export const version = __VERSION__;
 export const repositoryURL = 'https://github.com/spsquared/sound-tile-typescript';
 export const dreamberd = 'GulfOfMexico Tile';
-export const webWorkerSupported = 'Worker' in window && false;
+export const isInWorker = 'importScripts' in globalThis;
+export const webWorkerSupported = !isInWorker && 'Worker' in window;
 export const webgpuSupported = 'gpu' in navigator;
 
-if (!('AudioContext' in window)) {
+if (!isInWorker && !('AudioContext' in window)) {
     throw new TypeError('AudioContext is not enabled - Sound Tile requires the Web Audio API to function!');
 }
 

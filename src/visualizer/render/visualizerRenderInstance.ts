@@ -1,6 +1,6 @@
 import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
-import { ColorData } from '@/components/inputs/colorPicker';
+import type { ColorData } from '@/components/inputs/colorPicker';
 import type { VisualizerRendererFrameResults, VisualizerSettingsData } from './visualizerRenderer';
 import VisualizerData from '../visualizerData';
 
@@ -134,7 +134,7 @@ class VisualizerRenderInstance {
             approximatePeak: buffer instanceof Float32Array ? (frameResultMax - frameResultMin) / 2 : frameResultMax / 255,
             renderTime: endTime - startTime,
             debugText: this.debugText
-        }
+        };
         this.resized = undefined;
         this.dataUpdated = false;
     }

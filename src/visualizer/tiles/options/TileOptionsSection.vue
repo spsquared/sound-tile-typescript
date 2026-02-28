@@ -104,7 +104,6 @@ watch(height, (h) => requestAnimationFrame(() => wrapperEl.value != null && (wra
     transition: 100ms ease transform;
 }
 
-
 .v-enter-from>.optSectionBody,
 .v-leave-to>.optSectionBody {
     transform: translateY(-100%);

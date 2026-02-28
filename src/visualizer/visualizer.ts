@@ -123,12 +123,12 @@ class Visualizer {
         }, 50);
     }
 
+    private drawing: boolean = false;
     /**
      * Reused array buffer used for all analyzer data. It will be re-created if resizing is needed,
      * as AnalyserNode doesn't allow resizable buffers being passed to it.
      */
     private dataBuffer: ArrayBuffer = new ArrayBuffer(512);
-    private drawing: boolean = false;
     private readonly debug: {
         startTime: number
         readonly frames: number[]

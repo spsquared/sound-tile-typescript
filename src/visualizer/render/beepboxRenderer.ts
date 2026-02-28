@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash-es';
 import { AsyncLock } from '@/components/lock';
 import Playback from '../playback';
 import perfMetrics from '../drawLoop';
-import BeepboxRenderInstance from './beepboxRenderInstance';
+import BeepboxRenderInstance, { createBeepboxRenderInstance } from './beepboxRenderInstance';
 import BeepboxData from '../beepboxData';
 
 export type BeepboxSettingsData = BeepboxData; // idk nothing to omit
@@ -122,13 +122,13 @@ export class BeepboxFallbackRenderer extends BeepboxRenderer {
 
     constructor(data: BeepboxSettingsData) {
         super(data);
-        this.renderer = BeepboxRenderInstance.createInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
+        this.renderer = createBeepboxRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
     }
 
     async draw(time: number): Promise<BeepboxRendererFrameResults> {
         this.renderer.playing = Playback.playing.value;
         this.renderer.debugInfo = perfMetrics.debugLevel.value;
-        this.renderer.draw(time);
+        await this.renderer.draw(time);
         return this.frameResult.value = this.renderer.frameResult;
     }
     resize(w: number, h: number): void {

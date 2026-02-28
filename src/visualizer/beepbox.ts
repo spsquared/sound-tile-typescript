@@ -1,5 +1,5 @@
 import { effectScope, EffectScope, reactive, Ref, ref, toRaw, watch } from 'vue';
-import { webWorkerSupported } from '@/constants';
+import { webgpuSupported, webWorkerSupported } from '@/constants';
 import { settings } from '@/settings';
 import { DeepPartial } from '@/components/utils';
 import Playback from './playback';
@@ -130,7 +130,7 @@ class BeepboxVisualizer {
         if (perfMetrics.debugLevel.value > 0) {
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
-                this.renderer.isWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
+                `${this.renderer.isWorker ? 'Worker (asynchronous)' : 'Fallback (synchronous)'} ${webgpuSupported ? 'WebGPU' : 'Canvas2D'} renderer`,
                 `Playing: ${Playback.playing.value}`,
                 `FPS: ${this.debug.frames.length} (${avgArr(this.debug.fpsHistory).toFixed(1)} / [${Math.min(...this.debug.fpsHistory)} - ${Math.max(...this.debug.fpsHistory)}])`,
                 `Total:  ${(frameTime).toFixed(1)}ms (${avgArr(this.debug.totalTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.totalTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.totalTimingHistory).toFixed(1)}ms])`,
