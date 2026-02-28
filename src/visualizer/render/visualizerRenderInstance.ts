@@ -14,6 +14,11 @@ class VisualizerRenderInstance {
     private data: VisualizerSettingsData;
     private dataUpdated: boolean = false;
     private resized: [number, number] | undefined = undefined;
+
+    playing: boolean = false;
+    debugInfo: 0 | 1 | 2 = 0;
+    private readonly debugText: string[] = [];
+
     private colorStyle: CanvasGradient | string = '#FFFFFF';
     private colorStyle2: CanvasGradient | string = '#FFFFFF';
     private colorScale: chroma.Scale = chroma.scale(['#FFFFFF']);
@@ -24,10 +29,6 @@ class VisualizerRenderInstance {
     } | null = null;
     private spectogramData: OffscreenCanvas | null = null;
     private levelsData: number[] | null = null;
-
-    playing: boolean = false;
-    debugInfo: 0 | 1 | 2 = 0;
-    private readonly debugText: string[] = [];
 
     frameResult: VisualizerRendererFrameResults = {
         valueMax: 0,
@@ -44,7 +45,9 @@ class VisualizerRenderInstance {
         this.data = data;
     }
 
-    draw(buffer: Uint8Array | Float32Array | Uint8Array[]): void {
+    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<void> {
+        // note: any async-await before canvas calls may cause compositing to happen before drawing is done!
+        // this may cause latency and/or flickering, so async should only be used after canvas calls are made
         const startTime = performance.now();
         this.debugText.length = 0;
         this.ctx.reset();

@@ -142,7 +142,7 @@ class Visualizer {
         rendererTimingHistory: [],
         totalTimingHistory: []
     });
-    private draw(): void {
+    private async draw(): Promise<void> {
         if (this.drawing || this.data.buffer === null || !this.visible.value) return;
         // spam-resizing hopefully doesn't cause a bunch of performance issues? it stops flickering...
         this.drawing = true;
@@ -166,7 +166,7 @@ class Visualizer {
                 if (this.dataBuffer.byteLength != bufSize) this.dataBuffer = new ArrayBuffer(bufSize);
                 const data = new Uint8Array(this.dataBuffer, 0, this.analyzers[0].frequencyBinCount);
                 this.analyzers[0].getByteFrequencyData(data);
-                this.renderer.draw(data);
+                await this.renderer.draw(data);
             }
         } else if ([VisualizerData.Mode.WAVE_DIRECT, VisualizerData.Mode.WAVE_CORRELATED].includes(this.data.mode)) {
             if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
@@ -175,7 +175,7 @@ class Visualizer {
                 if (this.dataBuffer.byteLength != bufSize) this.dataBuffer = new ArrayBuffer(bufSize);
                 const data = new Float32Array(this.dataBuffer, 0, this.analyzers[0].fftSize);
                 this.analyzers[0].getFloatTimeDomainData(data);
-                this.renderer.draw(data);
+                await this.renderer.draw(data);
             }
         } else if (this.data.mode == VisualizerData.Mode.CHANNEL_PEAKS) {
             // we actually create multiple views of the same array buffer
@@ -187,7 +187,7 @@ class Visualizer {
                 this.analyzers[i].getByteTimeDomainData(buffer);
                 data[i] = buffer;
             }
-            this.renderer.draw(data);
+            await this.renderer.draw(data);
         } else {
             this.ctx.reset();
             this.drawErrorText('Invalid mode');
@@ -296,8 +296,9 @@ class Visualizer {
         });
     }
 
-    static draw(): void {
-        for (const instance of this.instances) instance.draw();
+    /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
+    static async draw(): Promise<void> {
+        await Promise.all([...this.instances.values()].map((v) => v.draw()));
     }
 }
 

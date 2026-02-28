@@ -57,8 +57,8 @@ function preventScrollIfNotFocus(e: WheelEvent) {
     <div id="mdatControls">
         <div id="mdatBody" :inert="!MediaPlayer.state.mediaDataTabOpen">
             <img id="mdatCoverArt" :src="MediaPlayer.media.current.coverArt" @dblclick="uploadCoverArt" title="Album cover (double-click to change)">
-            <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.media.current.title" @wheel.passive="preventScrollIfNotFocus" placeholder="Title" autocomplete="off" spellcheck="false">
-            <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.media.current.subtitle" @wheel.passive="preventScrollIfNotFocus" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
+            <input id="mdatTitle" ref="title" type="text" v-model="MediaPlayer.media.current.title" @wheel="preventScrollIfNotFocus" placeholder="Title" autocomplete="off" spellcheck="false">
+            <input id="mdatSubtitle" ref="subtitle" type="text" v-model="MediaPlayer.media.current.subtitle" @wheel="preventScrollIfNotFocus" placeholder="Artist - Album" autocomplete="off" spellcheck="false">
             <div id="mdatPlaylist">
                 <div id="mdatPlaylistOptions">
                     <input id="mdatPlaylistShuffleToggle" type="checkbox" v-model="MediaPlayer.state.shuffle">

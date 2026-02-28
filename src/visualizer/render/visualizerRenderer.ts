@@ -37,10 +37,10 @@ export class VisualizerRenderer {
         }, { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
-    draw(buffer: Uint8Array | Float32Array | Uint8Array[]): VisualizerRendererFrameResults {
+    async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
         this.renderer.playing = Playback.playing.value;
         this.renderer.debugInfo = perfMetrics.debugLevel.value;
-        this.renderer.draw(buffer);
+        await this.renderer.draw(buffer);
         return this.frameResult.value = this.renderer.frameResult;
     }
     resize(w: number, h: number): void {
