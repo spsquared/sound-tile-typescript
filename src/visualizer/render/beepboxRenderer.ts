@@ -7,10 +7,6 @@ import perfMetrics from '../drawLoop';
 import BeepboxRenderInstance from './beepboxRenderInstance';
 import BeepboxData from '../beepboxData';
 
-// much of this is just a copy of visualizerRenderer.ts
-// what are you gonna do about it? complain?
-// there are some differences that make this better than Even More Abstraction
-
 export type BeepboxSettingsData = BeepboxData; // idk nothing to omit
 
 /**
@@ -126,7 +122,7 @@ export class BeepboxFallbackRenderer extends BeepboxRenderer {
 
     constructor(data: BeepboxSettingsData) {
         super(data);
-        this.renderer = new BeepboxRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
+        this.renderer = BeepboxRenderInstance.createInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
     }
 
     async draw(time: number): Promise<BeepboxRendererFrameResults> {

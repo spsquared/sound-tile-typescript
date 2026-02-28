@@ -269,7 +269,7 @@ export class VisualizerTile extends Tile implements Modulation.Modulator<{
     constructor(data?: VisualizerData) {
         super();
         this.canvas = document.createElement('canvas');
-        this.visualizer = new Visualizer(data ?? VisualizerData.createDefault(), this.canvas);
+        this.visualizer = new Visualizer(data ?? VisualizerData.createDefault(), this.canvas.transferControlToOffscreen());
         // when dragging/moving tiles, unmount happens immediately and remount happens 1 tick later
         // nextTick stops visualizer "glitching" (sounds & behavior) when drag & drop used
         this.mountedListeners.add(() => this.visualizer.visible.value = true);

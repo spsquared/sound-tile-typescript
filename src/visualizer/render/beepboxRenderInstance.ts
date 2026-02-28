@@ -1,5 +1,6 @@
 import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
+import { webgpuSupported } from '@/constants';
 import { ColorData } from '@/components/inputs/colorPicker';
 import type { RendererMessageData, RendererMessageEvent, BeepboxRendererFrameResults, BeepboxSettingsData, BeepboxRendererLoadResults } from './beepboxRenderer';
 import BeepboxData from '../beepboxData';
@@ -9,15 +10,14 @@ const isInWorker = 'importScripts' in globalThis;
 /**
  * Renderer class used by both the worker renderer and the fallback renderer.
  */
-class BeepboxRenderInstance {
+abstract class BeepboxRenderInstance {
     readonly canvas: OffscreenCanvas;
-    readonly ctx: OffscreenCanvasRenderingContext2D;
-    private data: BeepboxSettingsData;
-    private resized: [number, number] | undefined = undefined;
+    protected data: BeepboxSettingsData;
+    protected resized: [number, number] | undefined = undefined;
 
     playing: boolean = false;
     debugInfo: 0 | 1 | 2 = 0;
-    private readonly debugText: string[] = [];
+    protected readonly debugText: string[] = [];
 
     /**
      * Time, progress (ticks), and tempo (ticks per second), sorted by time. Binary-searchable.
@@ -33,29 +33,21 @@ class BeepboxRenderInstance {
 
     constructor(canvas: OffscreenCanvas, data: BeepboxSettingsData) {
         this.canvas = canvas;
-        this.ctx = this.canvas.getContext('2d')!;
         this.data = data;
+    }
+
+    /**Attempt to create a WebGPU renderer, and if WGPU isn't supported, use fallback Canvas2D renderer */
+    static createInstance(canvas: OffscreenCanvas, data: BeepboxSettingsData): BeepboxRenderInstance {
+        if (webgpuSupported) return new WGPURenderer(canvas, data);
+        return new Canvas2dRenderer(canvas, data);
     }
 
     draw(time: number): void {
         const startTime = performance.now();
         this.debugText.length = 0;
-        this.ctx.reset();
-        if (this.resized !== undefined) {
-            this.canvas.width = this.resized[0];
-            this.canvas.height = this.resized[1];
-        }
-        // move origin to bottom left and apply transforms
-        this.ctx.translate(0, this.canvas.height);
-        this.ctx.scale(1, -1);
-        this.ctx.scale(this.data.flipX ? -1 : 1, this.data.flipY ? -1 : 1);
-        this.ctx.translate(this.data.flipX ? -this.canvas.width : 0, this.data.flipY ? -this.canvas.height : 0);
-        if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
-        // spaghetti v2
-        this.ctx.save();
         const tick = this.lookupTicks(time);
         if (this.debugInfo > 0) this.debugText.push(`Tick=${this.ticksToBar(tick)}/${this.ticksInBar(tick).toFixed(2)} (${tick.toFixed(2)}) KF=${this.tickLookupKeyframes.length}`);
-        this.drawStaticNotes(tick);
+        this.drawFrame(tick);
         // track performance metrics
         const endTime = performance.now();
         if (this.playing && this.debugInfo == 2) this.printDebugInfo(time);
@@ -67,13 +59,9 @@ class BeepboxRenderInstance {
         this.resized = undefined;
     }
 
-    private drawStaticNotes(tick: number): void {
-        tick
-        this.createColorScale
-        this.createColorStyle
-    }
+    protected abstract drawFrame(tick: number): void
 
-    private lookupTicks(time: number): number {
+    protected lookupTicks(time: number): number {
         if (this.tickLookupKeyframes.length == 0) return 0;
         if (this.tickLookupKeyframes.length == 1) return this.tickLookupKeyframes[0][2] * time;
         // we binary search the tempo modulations to find what part of the song we're in
@@ -105,50 +93,19 @@ class BeepboxRenderInstance {
         const r = (tps2 - tps1) / (tk2 - tk1);
         return tps1 / r * (Math.E ** (r * (time - t1))) + tk1 - tps1 / r;
     }
-    private ticksToBar(tick: number): number {
+    protected ticksToBar(tick: number): number {
         // skipped beats don't cut bars short
         return Math.floor(tick / (this.data.song?.barLength ?? 1));
     }
-    private ticksInBar(tick: number): number {
+    protected ticksInBar(tick: number): number {
         return tick % (this.data.song?.barLength ?? 1);
     }
 
-    private calcViewportSize(): { readonly width: number, readonly height: number } {
+    protected calcViewportSize(): { readonly width: number, readonly height: number } {
         return {
             width: this.data.rotate ? this.canvas.height : this.canvas.width,
             height: this.data.rotate ? this.canvas.width : this.canvas.height
         };
-    }
-    private createColorStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {
-        if (color.type == 'solid') {
-            return chroma(color.color).alpha(color.alpha * alpha).hex();
-        } else if (color.type == 'gradient') {
-            const { width, height } = this.calcViewportSize();
-            const angle = color.angle * Math.PI / 180;
-            const halfWidth = width / 2;
-            const halfHeight = height / 2;
-            const edgeX = ((Math.abs(Math.tan(angle)) > width / height) ? (halfWidth * Math.sign(Math.sin(angle))) : (Math.tan(angle) * halfHeight * Math.sign(Math.cos(angle))));
-            const edgeY = ((Math.abs(Math.tan(angle)) < width / height) ? (halfHeight * Math.sign(Math.cos(angle))) : (((angle % 180) == 0) ? (halfHeight * Math.sign(Math.cos(angle))) : (halfWidth / Math.tan(angle * Math.sign(Math.sin(angle))))));
-            const gradient = color.pattern == 'linear'
-                ? this.ctx.createLinearGradient(halfWidth - edgeX, halfHeight - edgeY, halfWidth + edgeX, halfHeight + edgeY)
-                : (color.pattern == 'radial'
-                    ? this.ctx.createRadialGradient(color.x * width, color.y * height, 0, color.x * width, color.y * height, color.radius * Math.min(width, height))
-                    : this.ctx.createConicGradient(angle, color.x * width, color.y * height));
-            for (const stop of color.stops) {
-                gradient.addColorStop(Math.max(0, Math.min(1, stop.t)), chroma(stop.c).alpha(stop.a * alpha).hex());
-            }
-            return gradient;
-        }
-        return 'white';
-    }
-    private createColorScale(color: ColorData, alpha: number = 1): chroma.Scale {
-        if (color.type == 'solid') {
-            return chroma.scale([chroma(color.color).alpha(color.alpha * alpha)]);
-        } else if (color.type == 'gradient') {
-            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a * alpha))).domain(color.stops.map((c) => Math.max(0, Math.min(1, c.t))));
-        }
-        // idk
-        return chroma.scale(['#FFFFFF']);
     }
 
     resize(w: number, h: number): void {
@@ -344,7 +301,76 @@ class BeepboxRenderInstance {
 
 export default BeepboxRenderInstance;
 
+class WGPURenderer extends BeepboxRenderInstance {
+    protected drawFrame(tick: number): void {
+        tick
+    }
+}
 
+class Canvas2dRenderer extends BeepboxRenderInstance {
+    readonly ctx: OffscreenCanvasRenderingContext2D;
+
+    constructor(canvas: OffscreenCanvas, data: BeepboxSettingsData) {
+        super(canvas, data);
+        this.ctx = this.canvas.getContext('2d')!;
+    }
+
+    protected drawFrame(tick: number): void {
+        this.ctx.reset();
+        if (this.resized !== undefined) {
+            this.canvas.width = this.resized[0];
+            this.canvas.height = this.resized[1];
+        }
+        // move origin to bottom left and apply transforms
+        this.ctx.translate(0, this.canvas.height);
+        this.ctx.scale(1, -1);
+        this.ctx.scale(this.data.flipX ? -1 : 1, this.data.flipY ? -1 : 1);
+        this.ctx.translate(this.data.flipX ? -this.canvas.width : 0, this.data.flipY ? -this.canvas.height : 0);
+        if (this.data.rotate) this.ctx.transform(0, 1, 1, 0, 0, 0);
+        // spaghetti v2
+        this.ctx.save();
+
+        this.drawStaticNotes(tick)
+    }
+
+    private drawStaticNotes(tick: number): void {
+        tick
+        this.createColorScale
+        this.createColorStyle
+    }
+
+    private createColorStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {
+        if (color.type == 'solid') {
+            return chroma(color.color).alpha(color.alpha * alpha).hex();
+        } else if (color.type == 'gradient') {
+            const { width, height } = this.calcViewportSize();
+            const angle = color.angle * Math.PI / 180;
+            const halfWidth = width / 2;
+            const halfHeight = height / 2;
+            const edgeX = ((Math.abs(Math.tan(angle)) > width / height) ? (halfWidth * Math.sign(Math.sin(angle))) : (Math.tan(angle) * halfHeight * Math.sign(Math.cos(angle))));
+            const edgeY = ((Math.abs(Math.tan(angle)) < width / height) ? (halfHeight * Math.sign(Math.cos(angle))) : (((angle % 180) == 0) ? (halfHeight * Math.sign(Math.cos(angle))) : (halfWidth / Math.tan(angle * Math.sign(Math.sin(angle))))));
+            const gradient = color.pattern == 'linear'
+                ? this.ctx.createLinearGradient(halfWidth - edgeX, halfHeight - edgeY, halfWidth + edgeX, halfHeight + edgeY)
+                : (color.pattern == 'radial'
+                    ? this.ctx.createRadialGradient(color.x * width, color.y * height, 0, color.x * width, color.y * height, color.radius * Math.min(width, height))
+                    : this.ctx.createConicGradient(angle, color.x * width, color.y * height));
+            for (const stop of color.stops) {
+                gradient.addColorStop(Math.max(0, Math.min(1, stop.t)), chroma(stop.c).alpha(stop.a * alpha).hex());
+            }
+            return gradient;
+        }
+        return 'white';
+    }
+    private createColorScale(color: ColorData, alpha: number = 1): chroma.Scale {
+        if (color.type == 'solid') {
+            return chroma.scale([chroma(color.color).alpha(color.alpha * alpha)]);
+        } else if (color.type == 'gradient') {
+            return chroma.scale(color.stops.map((c) => chroma(c.c).alpha(c.a * alpha))).domain(color.stops.map((c) => Math.max(0, Math.min(1, c.t))));
+        }
+        // idk
+        return chroma.scale(['#FFFFFF']);
+    }
+}
 
 class CorruptSongError extends Error {
     readonly name = 'CorruptSongError';
@@ -357,7 +383,7 @@ class CorruptSongError extends Error {
 // wrap a visualizer render instance for communication
 if (isInWorker) {
     onmessage = (e) => {
-        const renderer = new BeepboxRenderInstance(e.data[0], e.data[1]);
+        const renderer = BeepboxRenderInstance.createInstance(e.data[0], e.data[1]);
         onmessage = (e: RendererMessageEvent) => {
             switch (e.data.type) {
                 case 'draw':

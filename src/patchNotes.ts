@@ -21,10 +21,11 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         breaking: [],
         changes: [
             'Disabled play button when there\'s nothing to play',
-            ['Global render loop now waits for all tiles to complete their draw function before resolving', [
-                'This now forces all tiles to run at the same frame rate rather than individually dropping frames',
-                'This should only affect a few edge cases - invidiual frame drops are rare as the GPU is usually the bottleneck'
-            ]]
+            ['Simplification + performance improvements for visualizer tile rendering', [
+                'Visualizer rendering is GPU-bound and using workers for threading increases overhead without parallelizing GPU operations, so they were removed and only the fallback main-thread renderer is used now',
+                'There should be no performance hits from this change - every case tested either showed improvement in frame times and JS overhead or stayed the same',
+                'Additional optimizations were made to reduce memory allocation rate'
+            ]],
         ],
         fixes: [
             'Fixed ResizeObserver errors (infinite resizing loops) in "edit" panel of sidebar',

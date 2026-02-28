@@ -1,9 +1,8 @@
 import { effectScope, EffectScope, reactive, ref, Ref, toRaw, watch, watchEffect } from 'vue';
-import { webWorkerSupported } from '@/constants';
 import Playback from './playback';
 import perfMetrics from './drawLoop';
 import VisualizerData from './visualizerData';
-import { VisualizerFallbackRenderer, VisualizerRenderer, VisualizerWorkerRenderer } from './render/visualizerRenderer';
+import { VisualizerRenderer } from './render/visualizerRenderer';
 
 /**
  * Audio and visual rendering context of visualizer tiles.
@@ -26,21 +25,21 @@ class Visualizer {
 
     /**Renderer renders to its own canvas so we can add extra stuff onto the visualizer */
     readonly renderer: VisualizerRenderer;
-    readonly canvas: HTMLCanvasElement;
-    readonly ctx: CanvasRenderingContext2D;
+    readonly canvas: OffscreenCanvas;
+    readonly ctx: OffscreenCanvasRenderingContext2D;
 
     /**Sets if the visualizer is visible/playable */
     readonly visible: Ref<boolean> = ref(false);
 
     private readonly effectScope: EffectScope;
 
-    constructor(initData: VisualizerData, canvas: HTMLCanvasElement) {
+    constructor(initData: VisualizerData, canvas: OffscreenCanvas) {
         this.data = reactive(initData);
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d')!;
         this.gain = Playback.audioContext.createGain();
         this.gain.connect(Playback.gain);
-        this.renderer = webWorkerSupported ? new VisualizerWorkerRenderer(this.data) : new VisualizerFallbackRenderer(this.data);
+        this.renderer = new VisualizerRenderer(this.data, this.canvas);
         this.effectScope = effectScope();
         this.effectScope.run(() => {
             watch(this.visible, () => {
@@ -124,6 +123,11 @@ class Visualizer {
         }, 50);
     }
 
+    /**
+     * Reused array buffer used for all analyzer data. It will be re-created if resizing is needed,
+     * as AnalyserNode doesn't allow resizable buffers being passed to it.
+     */
+    private dataBuffer: ArrayBuffer = new ArrayBuffer(512);
     private drawing: boolean = false;
     private readonly debug: {
         startTime: number
@@ -138,19 +142,11 @@ class Visualizer {
         rendererTimingHistory: [],
         totalTimingHistory: []
     });
-    private async draw(): Promise<void> {
+    private draw(): void {
         if (this.drawing || this.data.buffer === null || !this.visible.value) return;
         // spam-resizing hopefully doesn't cause a bunch of performance issues? it stops flickering...
         this.drawing = true;
         this.debug.startTime = performance.now();
-        const copyCanvas = () => {
-            this.ctx.reset();
-            if (this.canvas.width !== this.renderer.canvas.width || this.canvas.height !== this.renderer.canvas.height) {
-                this.canvas.width = this.renderer.canvas.width;
-                this.canvas.height = this.renderer.canvas.height;
-            }
-            this.ctx.drawImage(this.renderer.canvas, 0, 0);
-        };
         if (this.audioBuffer === null) {
             this.ctx.reset();
             const boxSize = Math.min(this.canvas.width, this.canvas.height);
@@ -166,28 +162,32 @@ class Visualizer {
         } else if ([VisualizerData.Mode.FREQ_BAR, VisualizerData.Mode.FREQ_LINE, VisualizerData.Mode.FREQ_FILL, VisualizerData.Mode.FREQ_LUMINANCE, VisualizerData.Mode.SPECTROGRAM].includes(this.data.mode)) {
             if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
             else {
-                const data = new Uint8Array(this.analyzers[0].frequencyBinCount);
+                const bufSize = this.analyzers[0].frequencyBinCount;
+                if (this.dataBuffer.byteLength != bufSize) this.dataBuffer = new ArrayBuffer(bufSize);
+                const data = new Uint8Array(this.dataBuffer, 0, this.analyzers[0].frequencyBinCount);
                 this.analyzers[0].getByteFrequencyData(data);
-                await this.renderer.draw(data);
-                copyCanvas();
+                this.renderer.draw(data);
             }
         } else if ([VisualizerData.Mode.WAVE_DIRECT, VisualizerData.Mode.WAVE_CORRELATED].includes(this.data.mode)) {
             if (this.analyzers.length != 1) this.drawErrorText('Visualizer error - unexpected count ' + this.analyzers.length);
             else {
-                const data = new Float32Array(this.analyzers[0].fftSize);
+                const bufSize = this.analyzers[0].fftSize * 4;
+                if (this.dataBuffer.byteLength != bufSize) this.dataBuffer = new ArrayBuffer(bufSize);
+                const data = new Float32Array(this.dataBuffer, 0, this.analyzers[0].fftSize);
                 this.analyzers[0].getFloatTimeDomainData(data);
-                await this.renderer.draw(data);
-                copyCanvas();
+                this.renderer.draw(data);
             }
         } else if (this.data.mode == VisualizerData.Mode.CHANNEL_PEAKS) {
+            // we actually create multiple views of the same array buffer
+            const bufSize = this.analyzers.length * 512; // fft size is 1024
+            if (this.dataBuffer.byteLength != bufSize) this.dataBuffer = new ArrayBuffer(bufSize);
             const data: Uint8Array[] = [];
-            for (const a of this.analyzers) {
-                const buffer = new Uint8Array(a.frequencyBinCount);
-                a.getByteTimeDomainData(buffer);
-                data.push(buffer);
+            for (let i = 0; i < this.analyzers.length; i++) {
+                const buffer = new Uint8Array(this.dataBuffer, i * 512, 512);
+                this.analyzers[i].getByteTimeDomainData(buffer);
+                data[i] = buffer;
             }
-            await this.renderer.draw(data);
-            copyCanvas();
+            this.renderer.draw(data);
         } else {
             this.ctx.reset();
             this.drawErrorText('Invalid mode');
@@ -212,7 +212,6 @@ class Visualizer {
         if (perfMetrics.debugLevel.value > 0) {
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
-                this.renderer.isWorker ? 'Worker (asynchronous) renderer' : 'Fallback (synchronous) renderer',
                 `Playing: ${Playback.playing.value}`,
                 `FPS: ${this.debug.frames.length} (${avgArr(this.debug.fpsHistory).toFixed(1)} / [${Math.min(...this.debug.fpsHistory)} - ${Math.max(...this.debug.fpsHistory)}])`,
                 `Total:  ${(frameTime).toFixed(1)}ms (${avgArr(this.debug.totalTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.totalTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.totalTimingHistory).toFixed(1)}ms])`,
@@ -297,9 +296,8 @@ class Visualizer {
         });
     }
 
-    /**Await this to wait for all renders to complete, or decouple visualizers and drop frames individually */
-    static async draw(): Promise<void> {
-        await Promise.all([...this.instances.values()].map((v) => v.draw()));
+    static draw(): void {
+        for (const instance of this.instances) instance.draw();
     }
 }
 

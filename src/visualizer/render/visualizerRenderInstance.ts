@@ -1,13 +1,12 @@
 import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
 import { ColorData } from '@/components/inputs/colorPicker';
-import type { RendererMessageData, RendererMessageEvent, VisualizerRendererFrameResults, VisualizerSettingsData } from './visualizerRenderer';
+import type { VisualizerRendererFrameResults, VisualizerSettingsData } from './visualizerRenderer';
 import VisualizerData from '../visualizerData';
 
-const isInWorker = 'importScripts' in globalThis;
-
 /**
- * Renderer class used by both the worker renderer and the fallback renderer.
+ * Visualizer renderer class that draws FFT/sample data to canvas. Encapsulated so
+ * export rendering uses the same renderer as the realtime renderer (which uses a wrapper).
  */
 class VisualizerRenderInstance {
     readonly canvas: OffscreenCanvas;
@@ -686,33 +685,3 @@ class VisualizerRenderInstance {
 }
 
 export default VisualizerRenderInstance;
-
-// wrap a visualizer render instance for communication
-if (isInWorker) {
-    onmessage = (e) => {
-        const renderer = new VisualizerRenderInstance(e.data[0], e.data[1]);
-        onmessage = (e: RendererMessageEvent) => {
-            switch (e.data.type) {
-                case 'draw':
-                    renderer.playing = e.data.playing;
-                    renderer.debugInfo = e.data.debug;
-                    renderer.draw(e.data.buffer);
-                    postMessage({
-                        type: 'drawResponse',
-                        ...renderer.frameResult
-                    } satisfies RendererMessageData);
-                    break;
-                case 'resize':
-                    renderer.resize(e.data.w, e.data.h);
-                    break;
-                case 'settings':
-                    renderer.updateData(e.data.data);
-                    break;
-                case 'stop':
-                    // everything should be blocking in the worker, no async, so no need for locks
-                    close();
-                    break;
-            }
-        };
-    }
-}
