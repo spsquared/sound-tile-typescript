@@ -53,7 +53,7 @@ defineExpose({
 </script>
 
 <template>
-    <input type="number" v-model="displayedValue" @input="input" @keydown="keydown" @blur="blur" :min="props.min" :max="props.max" :step="props.step">
+    <input type="number" v-model.number="displayedValue" @input="input" @keydown="keydown" @blur="blur" :min="props.min" :max="props.max" :step="props.step">
 </template>
 
 <style scoped></style>

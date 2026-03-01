@@ -73,7 +73,7 @@ watch(value, () => scrollValue.value = value.value);
 
 <template>
     <label :class="{ slider: true, sliderVertical: props.vertical, sliderDisabled: props.disabled }">
-        <input type="range" class="sliderInput" v-model="value" @input="emit('input', value)" @wheel="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
+        <input type="range" class="sliderInput" v-model.number="value" @input="emit('input', value)" @wheel="onWheel" @mouseleave="endWheel" :title="props.title" :min="props.min ?? 0" :max="props.max ?? 100" :step="props.step ?? 1" :disabled="disabled">
         <div class="sliderTrack"></div>
         <div class="sliderThumbWrapper">
             <div class="sliderThumb"></div>
