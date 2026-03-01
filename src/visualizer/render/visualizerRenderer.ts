@@ -3,8 +3,12 @@ import { watchThrottled } from '@vueuse/core';
 import { cloneDeep } from 'lodash-es';
 import Playback from '../playback';
 import perfMetrics from '../drawLoop';
-import VisualizerRenderInstance from './visualizerRenderInstance';
+import type VisualizerRenderInstance from './visualizerRenderInstance';
 import VisualizerData from '../visualizerData';
+
+// the renderer is code-split to avoid bundling it twice (and thus bundling chroma-js 3 times)
+// we must be careful what we import to avoid bundling a bunch of dead/redundant code with the async imports
+const renderInstance = import('./visualizerRenderInstance');
 
 export type VisualizerSettingsData = Omit<VisualizerData, 'buffer' | 'gain'>;
 
@@ -23,28 +27,29 @@ export class VisualizerRenderer {
         debugText: []
     });
     readonly canvas: OffscreenCanvas;
-    private readonly renderer: VisualizerRenderInstance;
+    private readonly renderer: Promise<VisualizerRenderInstance>;
 
     private readonly stopWatching: WatchStopHandle;
 
     constructor(data: VisualizerSettingsData, canvas: OffscreenCanvas) {
         this.data = reactive(data);
         this.canvas = canvas;
-        this.renderer = new VisualizerRenderInstance(this.canvas, cloneDeep({ ...this.data, buffer: undefined }));
-        this.stopWatching = watchThrottled(this.data, () => {
+        this.renderer = renderInstance.then((res) => new res.default(this.canvas, cloneDeep({ ...this.data, buffer: undefined })));
+        this.stopWatching = watchThrottled(this.data, async () => {
             // even though we're no longer using a worker, we still clone it to remove Vue proxies and improve performance
-            this.renderer.updateData(cloneDeep({ ...this.data, buffer: undefined }));
+            (await this.renderer).updateData(cloneDeep({ ...this.data, buffer: undefined }));
         }, { deep: true, throttle: 50, leading: true, trailing: true });
     }
 
     async draw(buffer: Uint8Array | Float32Array | Uint8Array[]): Promise<VisualizerRendererFrameResults> {
-        this.renderer.playing = Playback.playing.value;
-        this.renderer.debugInfo = perfMetrics.debugLevel.value;
-        await this.renderer.draw(buffer);
-        return this.frameResult.value = this.renderer.frameResult;
+        const renderer = await this.renderer;
+        renderer.playing = Playback.playing.value;
+        renderer.debugInfo = perfMetrics.debugLevel.value;
+        await renderer.draw(buffer);
+        return this.frameResult.value = renderer.frameResult;
     }
-    resize(w: number, h: number): void {
-        this.renderer.resize(w, h);
+    async resize(w: number, h: number): Promise<void> {
+        (await this.renderer).resize(w, h);
     }
 
     destroy(): void {

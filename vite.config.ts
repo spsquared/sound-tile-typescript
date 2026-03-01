@@ -48,7 +48,7 @@ export default defineConfig(async () => ({
                 },
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash][extname]'
-            },
+            }
         }
     },
     resolve: {

@@ -143,7 +143,8 @@ class WGPURenderer extends BeepboxRenderInstance {
                         ]
                     },
                     primitive: {
-                        topology: 'triangle-strip'
+                        topology: 'triangle-strip',
+                        stripIndexFormat: 'uint16'
                     }
                 })
             });

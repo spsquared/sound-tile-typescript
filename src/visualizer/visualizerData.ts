@@ -1,4 +1,4 @@
-import { ColorData } from '@/components/inputs/colorPicker'
+import type { ColorData } from '@/components/inputs/colorPicker'
 
 /**
  * Audio data and visualizer configurations for a visualizer tile.

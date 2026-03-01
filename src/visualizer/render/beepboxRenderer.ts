@@ -4,8 +4,13 @@ import { cloneDeep } from 'lodash-es';
 import { AsyncLock } from '@/components/lock';
 import Playback from '../playback';
 import perfMetrics from '../drawLoop';
-import BeepboxRenderInstance, { createBeepboxRenderInstance } from './beepboxRenderInstance';
+import type BeepboxRenderInstance from './beepboxRenderInstance';
 import BeepboxData from '../beepboxData';
+
+// renderer is once again code-split (it will get very large so the split is a loading speedup too)
+// we must be careful what we import to avoid bundling a bunch of dead/redundant code with the async imports
+// since we won't have a worker and a fallback ever on the same platform this is fine (but still suboptimal)
+// the import is only done once it's needed
 
 export type BeepboxSettingsData = BeepboxData; // idk nothing to omit
 
@@ -36,7 +41,7 @@ export abstract class BeepboxRenderer {
     }
 
     abstract draw(time: number): Promise<BeepboxRendererFrameResults>
-    abstract resize(w: number, h: number): void
+    abstract resize(w: number, h: number): Promise<void>
     protected abstract updateData(): void
 
     destroy(): void {
@@ -55,7 +60,7 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
 
     constructor(data: BeepboxSettingsData) {
         super(data);
-        this.worker = new Worker(new URL('./beepboxRenderInstance.ts', import.meta.url), { type: 'module' });
+        this.worker = new Worker(new URL('./beepboxRenderInstance', import.meta.url), { type: 'module' });
         // initialize worker with canvas immediately, this sets up communications as well
         const workerCanvas = this.canvas.transferControlToOffscreen();
         const cleanData = cloneDeep(this.data);
@@ -78,7 +83,7 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
         });
         return this.frameResult.value;
     }
-    resize(w: number, h: number): void {
+    async resize(w: number, h: number): Promise<void> {
         this.postMessage('resize', { w: w, h: h });
     }
     protected updateData(): void {
@@ -118,24 +123,26 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
  */
 export class BeepboxFallbackRenderer extends BeepboxRenderer {
     readonly isWorker: false = false;
-    private readonly renderer: BeepboxRenderInstance;
+    private readonly renderer: Promise<BeepboxRenderInstance>;
 
     constructor(data: BeepboxSettingsData) {
         super(data);
-        this.renderer = createBeepboxRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data));
+        // get browser cached haha
+        this.renderer = import('./beepboxRenderInstance').then((res) => res.createBeepboxRenderInstance(this.canvas.transferControlToOffscreen(), cloneDeep(this.data)));
     }
 
     async draw(time: number): Promise<BeepboxRendererFrameResults> {
-        this.renderer.playing = Playback.playing.value;
-        this.renderer.debugInfo = perfMetrics.debugLevel.value;
-        await this.renderer.draw(time);
-        return this.frameResult.value = this.renderer.frameResult;
+        const renderer = await this.renderer;
+        renderer.playing = Playback.playing.value;
+        renderer.debugInfo = perfMetrics.debugLevel.value;
+        await renderer.draw(time);
+        return this.frameResult.value = renderer.frameResult;
     }
-    resize(w: number, h: number): void {
-        this.renderer.resize(w, h);
+    async resize(w: number, h: number): Promise<void> {
+        (await this.renderer).resize(w, h);
     }
-    protected updateData(): void {
-        this.loadResult.value = this.renderer.updateData(cloneDeep(this.data));
+    protected async updateData(): Promise<void> {
+        this.loadResult.value = (await this.renderer).updateData(cloneDeep(this.data));
     }
 
     destroy(): void {

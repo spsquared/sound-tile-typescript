@@ -1,4 +1,4 @@
-import { ColorData } from '@/components/inputs/colorPicker';
+import type { ColorData } from '@/components/inputs/colorPicker';
 
 /**
  * BeepBox song data and visualizer configurations for a BeepBox tile.
