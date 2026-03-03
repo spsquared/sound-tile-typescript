@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ComputedRef, inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { refThrottled, useElementSize } from '@vueuse/core';
+import { pointerPositionNaive } from '@/components/inputs';
 import TileEditor from '../editor';
 import { Tile } from '../tiles';
 import DraggableWindow from '@/components/DraggableWindow.vue';
@@ -42,11 +43,12 @@ onBeforeUnmount(() => {
 });
 
 const destroyDisabled = computed(() => TileEditor.lock.locked || TileEditor.root == props.tile || TileEditor.root.children.length == 1 && TileEditor.root.children[0] == props.tile);
-function dragTile(e: MouseEvent) {
+function dragTile(e: MouseEvent | TouchEvent) {
     const rect = tile.value?.getBoundingClientRect();
+    const pos = pointerPositionNaive(e);
     TileEditor.startDrag(props.tile, {
-        x: e.clientX - (rect?.left ?? e.clientX),
-        y: e.clientY - (rect?.top ?? e.clientY),
+        x: pos.x - (rect?.left ?? pos.x),
+        y: pos.y - (rect?.top ?? pos.y),
     }, {
         w: rect?.width ?? 200,
         h: rect?.height ?? 150
@@ -98,7 +100,7 @@ function setIdentifyTile(v: boolean) {
         <slot name="content"></slot>
         <div class="tileHeader" v-if="!props.hideHeader && (!inCollapsedGroup || props.ignoreCollapsedGroup) && !TileEditor.state.hideTabs">
             <input type="text" class="tileLabel" ref="label" v-model="props.tile.label" :size="Math.max(1, props.tile.label.length)" @focus="labelFocused = true" @blur="labelFocused = false" @mouseleave="resetLabelScroll">
-            <div class="tileDrag" v-if="!destroyDisabled" title="Move tile" @mousedown="dragTile"></div>
+            <div class="tileDrag" v-if="!destroyDisabled" title="Move tile" @mousedown="dragTile" @touchstart.passive="dragTile"></div>
             <div class="tileDragDisabled" v-else></div>
             <input type="button" class="tileEditButton" title="Edit tile options" @click="toggleEditTile"></input>
             <input type="button" class="tileDeleteButton" title="Delete tile" @click="deleteTile" :disabled="destroyDisabled">

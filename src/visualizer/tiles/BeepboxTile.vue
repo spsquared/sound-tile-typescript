@@ -154,7 +154,7 @@ const selectedChannel = ref(0);
                             <div class="channelEditItem" v-for="channel in options.channelStyles" :key="channel.index" v-show="selectedChannel == channel.index">
                                 <div class="instrumentItem">
                                     <div class="instrumentTitle">{{ options.song.channels[channel.index].name }}</div>
-                                    <div class="optionsTable">
+                                    <div class="optionsTable" style="justify-content: center;">
                                         <label title="Allow each instrument to have a different style">
                                             Separate<br>Instr. Styles
                                             <Toggle v-model="channel.separateInstrumentStyles"></Toggle>
@@ -168,11 +168,11 @@ const selectedChannel = ref(0);
                                         <div class="optionsGrid" style="justify-content: center;">
                                             <label title="Note foreground color">
                                                 Note FG
-                                                <EnhancedColorPicker v-model="instrument.noteColor"></EnhancedColorPicker>
+                                                <EnhancedColorPicker v-model="instrument.noteColor" :features="instrument.perNoteGradient ? 'gradient-stops' : 'all'"></EnhancedColorPicker>
                                             </label>
                                             <label title="Note background color">
                                                 Note BG
-                                                <EnhancedColorPicker v-model="instrument.noteBackground"></EnhancedColorPicker>
+                                                <EnhancedColorPicker v-model="instrument.noteBackground" :features="instrument.perNoteGradient ? 'gradient-stops' : 'all'"></EnhancedColorPicker>
                                             </label>
                                         </div>
                                         <div class="optionsTable">
@@ -328,6 +328,11 @@ const selectedChannel = ref(0);
 
 .instrumentItem {
     padding: 0px 2px;
+}
+
+/* padding/row gap makes awkward gaps in sticky so this slightly-unstable thing exists */
+.instrumentItem>div:last-child {
+    margin-bottom: 4px;
 }
 
 .instrumentTitle {

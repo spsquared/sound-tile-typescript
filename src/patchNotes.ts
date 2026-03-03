@@ -26,6 +26,7 @@ export const patchNotes: readonly PatchNoteEntry[] = [
                 'There should be no performance hits from this change - every case tested either showed improvement in frame times and JS overhead or stayed the same',
                 'Additional optimizations were made to reduce memory allocation rate'
             ]],
+            'Slight improvements to color picker to make when some gradient settings apply clearer'
         ],
         fixes: [
             'Fixed ResizeObserver errors (infinite resizing loops) in "edit" panel of sidebar',

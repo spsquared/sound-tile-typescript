@@ -157,7 +157,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         </label>
                     </div>
                     <div class="optionsGrid">
-                        <label title="Rotate the visualizer vertically">
+                        <label title="Rotate the visualizer vertically (this is actually an axis swap, so higher values are always up or right with no flipping)">
                             Rotate
                             <Toggle v-model="options.rotate" :icon="rotateIcon"></Toggle>
                         </label>
@@ -388,7 +388,7 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                     </label>
                     <label title="Visualizer primary color">
                         Primary
-                        <EnhancedColorPicker v-model="options.color" badge-width="60px"></EnhancedColorPicker>
+                        <EnhancedColorPicker v-model="options.color" badge-width="60px" :features="altColorSupportedModes.includes(options.mode) && options.altColorMode ? 'gradient-stops' : 'all'"></EnhancedColorPicker>
                     </label>
                     <label title="Visualizer secondary color" v-if="secondaryColorSupportedModes.includes(options.mode)">
                         Secondary

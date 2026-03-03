@@ -1,7 +1,8 @@
 import { computed, reactive, watch, watchEffect } from 'vue';
 import { useIdle } from '@vueuse/core';
-import { AsyncLock } from '@/components/lock';
 import { matchTextInput } from '@/constants';
+import { AsyncLock } from '@/components/lock';
+import { pointerPositionNaive } from '@/components/inputs';
 import { BeepboxTile, GrassTile, GroupTile, ImageTile, TextTile, Tile, VisualizerTile } from './tiles';
 import Modulation from './modulation';
 
@@ -217,13 +218,7 @@ class TileEditor {
     }
     private static updateDrag(e: MouseEvent | TouchEvent): void {
         if (this.drag.current === null) return;
-        const pos = 'touches' in e ? {
-            x: e.touches[0]?.clientX ?? 0,
-            y: e.touches[0]?.clientY ?? 0
-        } : {
-            x: e.clientX,
-            y: e.clientY
-        };
+        const pos = pointerPositionNaive(e);
         // reset
         this.drag.drop.tile = null;
         // sidebar drag and drop switch
@@ -473,7 +468,10 @@ class TileEditor {
         watch(() => this.state.sidebarScreenWidth, () => window.localStorage.setItem('sidebarScreenWidth', this.state.sidebarScreenWidth.toString()));
         // this isn't a vue composable, no lifecycle hooks
         document.addEventListener('mousemove', (e) => this.updateDrag(e), { passive: true });
+        document.addEventListener('touchmove', (e) => this.updateDrag(e), { passive: true });
         document.addEventListener('mouseup', () => (this.endDrag(), this.endModulatorDrag()));
+        document.addEventListener('touchend', () => (this.endDrag(), this.endModulatorDrag()));
+        document.addEventListener('touchcancel', () => (this.endDrag(), this.endModulatorDrag()));
         window.addEventListener('blur', () => (this.endDrag(), this.endModulatorDrag()));
         // wow the undo stack
         document.addEventListener('keydown', (e) => {

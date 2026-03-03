@@ -9,8 +9,9 @@ import BeepboxData from '../beepboxData';
 
 // renderer is once again code-split (it will get very large so the split is a loading speedup too)
 // we must be careful what we import to avoid bundling a bunch of dead/redundant code with the async imports
-// since we won't have a worker and a fallback ever on the same platform this is fine (but still suboptimal)
-// the import is only done once it's needed
+// this still results in chroma-js getting duplicated as well as two outputted files with nearly the
+// same code, but Vite/Rollup does worker bundling that way and only one will ever be downloaded at a
+// time, so this is (practically) fine (still suboptimal but I'm not fighting the bundler)
 
 export type BeepboxSettingsData = BeepboxData; // idk nothing to omit
 

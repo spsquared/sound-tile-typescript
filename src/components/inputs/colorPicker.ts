@@ -6,8 +6,6 @@ import chroma from 'chroma-js';
 export type ColorData = ({ type: 'solid' } & ColorPicker['solidData'])
     | ({ type: 'gradient' } & ColorPicker['gradientData']);
 
-const clipboard = useLocalStorage<ColorData>('colorPickerClipboard', { type: 'solid', color: '#FFFFFF', alpha: 1 } satisfies ColorData);
-
 /**
  * Custom color picker, for use the EnhancedColorPicker Vue component.
  * Note that reactivity DOES NOT work by default, needs wrapping in `reactive()` call!
@@ -111,11 +109,13 @@ export class ColorPicker {
         }
     }
 
+    static readonly clipboard = useLocalStorage<ColorData>('colorPickerClipboard', { type: 'solid', color: '#FFFFFF', alpha: 1 } satisfies ColorData);
+
     copyColor(): void {
-        clipboard.value = cloneDeep(this.colorData);
+        ColorPicker.clipboard.value = cloneDeep(this.colorData);
     }
     pasteColor(): void {
-        this.colorData = cloneDeep(clipboard.value);
+        this.colorData = cloneDeep(ColorPicker.clipboard.value);
     }
 }
 
