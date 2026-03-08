@@ -24,8 +24,13 @@ if (props.type == 'target') {
     if (hoveredElement === undefined) throw new Error('ModulatorItem target missing modulatorHoveredElement injection!');
     watch([hoveredElement, () => TileEditor.modulatorDrag.source], () => {
         dragHovering.value = (modItem.value?.contains(hoveredElement.value) ?? false) && TileEditor.modulatorDrag.source !== null;
-        // sometimes the items are cut off and scrolling can't be done while drag-and-drop is active
-        if (dragHovering.value) modDragScrollAnchor.value?.scrollIntoView({ behavior: 'smooth' });
+        if (dragHovering.value) {
+            setIdentifyTile(true);
+            // sometimes the items are cut off and scrolling can't be done while drag-and-drop is active
+            modDragScrollAnchor.value?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            setIdentifyTile(false);
+        }
     });
 }
 

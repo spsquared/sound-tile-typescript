@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ComputedRef, inject, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, ComputedRef, inject, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useElementSize, useThrottleFn } from '@vueuse/core';
 import FileAccess from '@/components/inputs/fileAccess';
 import TileEditor from '../editor';
@@ -37,8 +37,6 @@ props.tile.canvas.classList.add('visualizerCanvas');
 const { width: canvasWidth, height: canvasHeight } = useElementSize(wrapper, undefined, { box: 'device-pixel-content-box' });
 const onResize = useThrottleFn(() => props.tile.visualizer.resize(canvasWidth.value, canvasHeight.value), 50, true, true);
 watch([canvasWidth, canvasHeight], onResize);
-onMounted(() => window.addEventListener('resize', onResize, { passive: true }));
-onUnmounted(() => window.removeEventListener('resize', onResize));
 
 const inCollapsedGroup = inject<ComputedRef<boolean>>('inCollapsedGroup', computed(() => false));
 
