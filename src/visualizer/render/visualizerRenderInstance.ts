@@ -1,5 +1,6 @@
 import { useThrottleFn } from '@vueuse/core';
 import chroma from 'chroma-js';
+import { xorShift32 } from '@/components/utils';
 import type { ColorData } from '@/components/inputs/colorPicker';
 import type { VisualizerRendererFrameResults, VisualizerSettingsData } from './visualizerRenderer';
 import VisualizerData from '../visualizerData';
@@ -371,6 +372,7 @@ class VisualizerRenderInstance {
     }
     private drawCorrWave(buffer: Float32Array): void {
         const windowSize = buffer.length / 2;
+        const useStochastic = this.data.waveOptions.correlation.stochasticSampling > 0;
         if (this.corrwaveData === null || this.corrwaveData.buffer.length != windowSize) {
             this.corrwaveData = {
                 buffer: buffer.slice(0, windowSize),
@@ -388,14 +390,23 @@ class VisualizerRenderInstance {
             const debugText: string[] = [];
             let bestError = Infinity;
             let lastShift = Infinity; // prevents calculating the same shift multiple times on edge cases
+            const stochasticSamples: number[] | undefined = useStochastic ? (() => {
+                const rand = xorShift32();
+                return Array.from({ length: Math.ceil(this.data.waveOptions.correlation.stochasticSampling * windowSize) }, () => rand.next().value % windowSize);
+            })() : undefined;
             for (let i = 0; i < samples; i++) {
                 const shift = Math.round(windowSize * i / (samples - 1));
                 if (shift == lastShift) continue;
                 lastShift = shift;
                 let error = 0;
-                // TODO - stochastic sampling or similar to reduce performance hit of large buffers
-                for (let j = 0; j < windowSize; j++) {
-                    error += Math.abs(this.corrwaveData.buffer[j] - buffer[shift + j]);
+                if (useStochastic) {
+                    for (let j = stochasticSamples!.length - 1; j >= 0; j--) {
+                        error += Math.abs(this.corrwaveData.buffer[stochasticSamples![j]] - buffer[shift + stochasticSamples![j]]);
+                    }
+                } else {
+                    for (let j = 0; j < windowSize; j++) {
+                        error += Math.abs(this.corrwaveData.buffer[j] - buffer[shift + j]);
+                    }
                 }
                 if (this.debugInfo == 2) debugText.push(`${i}/${shift}/${Math.round(error)}`);
                 if (error < bestError) {
@@ -413,16 +424,28 @@ class VisualizerRenderInstance {
             debugText.push(`gain=${gain}`);
             for (let i = 0; i < 16; i++) { // arbitrary maximum iterations
                 let adjError = 0;
-                // again stochastic sampling
+                // oh the spaghetti (edge case forces sign flip)
                 if (bestShift == windowSize) {
                     const adjShift = bestShift - 1;
-                    for (let j = 0; j < windowSize; j++) {
-                        adjError -= Math.abs(this.corrwaveData.buffer[j] - buffer[adjShift + j]);
+                    if (useStochastic) {
+                        for (let j = stochasticSamples!.length - 1; j >= 0; j--) {
+                            adjError -= Math.abs(this.corrwaveData.buffer[stochasticSamples![j]] - buffer[adjShift + stochasticSamples![j]]);
+                        }
+                    } else {
+                        for (let j = 0; j < windowSize; j++) {
+                            adjError -= Math.abs(this.corrwaveData.buffer[j] - buffer[adjShift + j]);
+                        }
                     }
                 } else {
                     const adjShift = bestShift + 1;
-                    for (let j = 0; j < windowSize; j++) {
-                        adjError += Math.abs(this.corrwaveData.buffer[j] - buffer[adjShift + j]);
+                    if (useStochastic) {
+                        for (let j = stochasticSamples!.length - 1; j >= 0; j--) {
+                            adjError += Math.abs(this.corrwaveData.buffer[stochasticSamples![j]] - buffer[adjShift + stochasticSamples![j]]);
+                        }
+                    } else {
+                        for (let j = 0; j < windowSize; j++) {
+                            adjError += Math.abs(this.corrwaveData.buffer[j] - buffer[adjShift + j]);
+                        }
                     }
                 }
                 // get error for new shift

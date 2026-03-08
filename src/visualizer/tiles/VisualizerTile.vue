@@ -365,13 +365,13 @@ const channelCounts = Array.from(new Array(8), (_v, i) => i + 1);
                         Smoothing<br>({{ Math.round(options.waveOptions.correlation.frameSmoothing * 100) }}%)
                         <Slider length="100px" v-model="options.waveOptions.correlation.frameSmoothing" :min="0" :max="1" :step="0.05" :scroll-speed="0.02" :title="`Smoothing: ${Math.round(options.waveOptions.correlation.frameSmoothing * 100)}%`"></Slider>
                     </label>
-                    <label title="Number of samples in initial sampling of frame, higher is better but slower">
-                        Samples
+                    <label title="Number of shift offsets to sample, higher is better but slower (CorrWave samples the error of N evenly spaced shifts)">
+                        Shift<br>Samples
                         <StrictNumberInput v-model="options.waveOptions.correlation.samples" :min="2" :max="64" :strict-max="128" :step="2"></StrictNumberInput>
                     </label>
-                    <label title="Randomly sample points when sampling error. For FFT size N, N*T non-unique random samples are chosen - best for larger correlation windows">
+                    <label title="Randomly sample points when sampling error in shift samples. For window (FFT) size N, N*T non-unique random samples are chosen - best for large correlation windows">
                         Stochastic<br>({{ options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : (Math.floor(options.waveOptions.correlation.stochasticSampling * 100) + '%') }})
-                        <Slider length="100px" v-model="options.waveOptions.correlation.stochasticSampling" :min="0" :max="1" :step="0.05" :scroll-speed="0.1" :title="`Sample count: ${options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : Math.floor(options.waveOptions.correlation.stochasticSampling * options.fftSize)}`" disabled></Slider>
+                        <Slider length="100px" v-model="options.waveOptions.correlation.stochasticSampling" :min="0" :max="1" :step="0.05" :scroll-speed="0.1" :title="`Sample count: ${options.waveOptions.correlation.stochasticSampling == 0 ? 'Disabled' : Math.floor(options.waveOptions.correlation.stochasticSampling * options.fftSize)}`"></Slider>
                     </label>
                     <label title="Gain of gradient descent error minimization of frame">
                         GD<br>Gain

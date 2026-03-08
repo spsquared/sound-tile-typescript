@@ -20,6 +20,10 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         `,
         breaking: [],
         changes: [
+            ['Implemented and enabled CorrWave stochastic sampling', [
+                'Stochastic sampling allows better performance with more shift samples and larger buffer sizes',
+                'Technical details: CorrWave samples N uniformly spaced shifts, and for each samples error for either the entire window or a subset of the window\'s audio samples'
+            ]],
             'Disabled play button when there\'s nothing to play',
             ['Simplification + performance improvements for visualizer tile rendering', [
                 'Visualizer rendering is GPU-bound and using workers for threading increases overhead without parallelizing GPU operations, so they were removed and only the fallback main-thread renderer is used now',
