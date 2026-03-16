@@ -20,11 +20,17 @@ type BeepboxData = {
             noteColor: ColorData
             /**Background color of notes */
             noteBackground: ColorData
+            /**Create unscaled note "shadow" unaffected by note size or envelopes */
+            enableBackground: boolean
+            /**Gradients are done linearly per-note top-to-bottom */
+            perNoteGradient: boolean
             /**Note width is scaled by note size pins */
             noteSizeEnabled: boolean
             /**Render instrument vibrato in the piano roll */
             showVibrato: boolean
         }[]
+        /**Multiplier for the global barScale - larger values makes bars longer and thus move faster */
+        parallax: number
         /**The corresponding channel index in the song of this channel - set on creation, NEVER changes */
         readonly index: number
     }[]
@@ -34,18 +40,27 @@ type BeepboxData = {
     piano: {
         /**Show a piano keyboard for the playhead instead of a line */
         enabled: boolean
+        /**Height of the keys relative to the width of the keyboards - essentially the aspect ratio */
+        size: number
         /**Label each octave starting on a specific key, or no labels if null */
         octaveLabels: BeepboxData.ScaleKeys | null
-        /**Place the piano roll so the playhead is "above" the keys (on the side of black keys) instead of below (default) */
+        /**
+         * Change the piano roll position to have the notes "come out" of the keyboard rather than "running into"
+         * the keyboard. The keyboard is always positioned so higher notes are on "the right" like a real keyboard,
+         * so a horizontal piano roll has the "bottom" facing the keys and a vertical piano roll has the "top"
+         * facing the keys by default. Changing this doesn't move the keyboard, it changes the playhead position.
+         */
         playheadSide: boolean
-        /**Flip the alignment of piano keys to make the keyboard "upside down" */
-        flip: boolean
     }
-    /**Range [0-1] interpolating from only showing notes in the future and only showing notes that have been played */
+    /**Range [0-1] interpolating from only showing notes in the future and only showing notes that have been played. */
     playheadPosition: number
+    /**Color of the playhead (solid only) */
+    playheadColor: ColorData & { type: 'solid' }
     /**Remove beats skipped by "next bar" modulations */
     cutSkippedBeats: boolean
-    /**Length of bars relative to the height of the canvas - essentially the aspect ratio */
+    /**Render notes as constant thickness lines instead of parallelograms */
+    constantThickness: boolean
+    /**Length of bars relative to the height of the viewport - essentially the aspect ratio */
     barScale: number
     /**Rotate the visualizer - applied first, rotates 90 degrees clockwise and flips X-axis (left becomes bottom, bottom becomes left) */
     rotate: boolean
@@ -334,12 +349,14 @@ namespace BeepboxData {
             loopCount: 1,
             piano: {
                 enabled: false,
+                size: 0.04,
                 octaveLabels: ScaleKeys.C,
-                playheadSide: false,
-                flip: false
+                playheadSide: false
             },
             playheadPosition: 0,
+            playheadColor: { type: 'solid', color: '#FFFFFF', alpha: 1 },
             cutSkippedBeats: true,
+            constantThickness: false,
             barScale: 0.3,
             rotate: false,
             flipX: false,
@@ -351,6 +368,7 @@ namespace BeepboxData {
         return {
             separateInstrumentStyles: false,
             instruments: [],
+            parallax: 1,
             index: index
         };
     }
@@ -358,6 +376,8 @@ namespace BeepboxData {
         return {
             noteColor: { type: 'solid', color: '#dddddd', alpha: 1 },
             noteBackground: { type: 'solid', color: '#999999', alpha: 1 },
+            enableBackground: true,
+            perNoteGradient: false,
             noteSizeEnabled: true,
             showVibrato: true
         };

@@ -34,6 +34,10 @@ class Canvas2dRenderer extends BeepboxRenderInstance {
         this.createColorStyle
     }
 
+    protected async onDataUpdated(): Promise<void> {
+        
+    }
+
     private createColorStyle(color: ColorData, alpha: number = 1): CanvasGradient | string {
         if (color.type == 'solid') {
             return chroma(color.color).alpha(color.alpha * alpha).hex();
@@ -64,6 +68,10 @@ class Canvas2dRenderer extends BeepboxRenderInstance {
         }
         // idk
         return chroma.scale(['#FFFFFF']);
+    }
+
+    async destroy(): Promise<void> {
+        // yeah nothing to do here really
     }
 }
 

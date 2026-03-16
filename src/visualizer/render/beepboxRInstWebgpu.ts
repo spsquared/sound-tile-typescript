@@ -184,6 +184,22 @@ class WGPURenderer extends BeepboxRenderInstance {
         // oof
         this.bindGroups // oof
         tick // oof
+    protected async onDataUpdated(): Promise<void> {
+        const device = await this.device;
+        await this.lock.acquire();
+        await device.queue.onSubmittedWorkDone();
+        await this.updateInstrumentResources();
+        this.lock.release();
+    }
+
+    }
+
+    async destroy(): Promise<void> {
+        const device = await this.device;
+        await this.lock.acquire();
+        await device.queue.onSubmittedWorkDone();
+        device.destroy();
+        // and now the lock is permanently locked
     }
 }
 

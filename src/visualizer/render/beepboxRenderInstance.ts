@@ -32,14 +32,14 @@ if (isInWorker) {
                     renderer.resize(e.data.w, e.data.h);
                     break;
                 case 'settings':
-                    const res = renderer.updateData(e.data.data);
+                    const res = await renderer.updateData(e.data.data);
                     postMessage({
                         type: 'loadResult',
                         ...res
                     } satisfies RendererMessageData);
                     break;
                 case 'stop':
-                    // everything should be blocking in the worker, no async, so no need for locks
+                    await renderer.destroy();
                     close();
                     break;
             }

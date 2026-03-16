@@ -2,6 +2,11 @@ export class AsyncLock {
     private _locked = false;
     private readonly queue: (() => void)[] = [];
 
+    constructor(locked: boolean = false) {
+        // starting locked is useful for things like initialization
+        this._locked = locked;
+    }
+
     async acquire(): Promise<void> {
         if (this._locked) return new Promise<void>((resolve) => {
             this.queue.push(() => resolve());

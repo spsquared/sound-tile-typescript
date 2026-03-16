@@ -102,37 +102,56 @@ const selectedChannel = ref(0);
                 </div>
             </TileOptionsSection>
             <TileOptionsSection title="Visualizer Style">
-                <div class="optionsTable optionsTableColumns">
-                    <div class="optionsTable">
-                        <label title="Enable the piano keyboard">
-                            Show Piano Keys
-                            <Toggle v-model="options.piano.enabled" :icon="pianoIcon"></Toggle>
-                        </label>
-                        <label title="Controls the playhead position in the tile, or the proportion of space where past notes are shown past the playhead">
-                            Playhead Pos
-                            <span>
-                                <Slider length="100px" v-model="options.playheadPosition" :min="0" :max="1" :step="0.01" :scroll-speed="0.05" :title="`Playhead position: ${Math.round(options.playheadPosition * 100)}%`"></Slider>
-                                {{ Math.round(options.playheadPosition * 100) }}%
-                            </span>
-                        </label>
-                        <label title="Hide beats and measures skipped by &quot;Next Bar&quot; modulations">
-                            Hide Skipped Bars
-                            <Toggle v-model="options.cutSkippedBeats"></Toggle>
-                        </label>
+                <div class="optionsRows">
+                    <div class="optionsTable optionsTableColumns">
+                        <div class="optionsTable">
+                            <label title="Controls the playhead position in the tile, or the proportion of space where past notes are shown past the playhead">
+                                Playhead Pos
+                                <span>
+                                    <Slider length="100px" v-model="options.playheadPosition" :min="0" :max="1" :step="0.01" :scroll-speed="0.05" :title="`Playhead position: ${Math.round(options.playheadPosition * 100)}%`"></Slider>
+                                    {{ Math.round(options.playheadPosition * 100) }}%
+                                </span>
+                            </label>
+                            <label title="Essentially the aspect ratio of bars - width / height">
+                                Bar Ratio
+                                <span>
+                                    <Slider length="100px" v-model="options.barScale" :min="0.01" :max="2" :step="0.01" :scroll-speed="0.05" :title="`Aspect ratio: ${options.barScale}x`"></Slider>
+                                    {{ options.barScale.toFixed(2) }}x
+                                </span>
+                            </label>
+                            <label title="Hide beats and measures skipped by &quot;Next Bar&quot; modulations">
+                                Hide Skipped
+                                <Toggle v-model="options.cutSkippedBeats"></Toggle>
+                            </label>
+                        </div>
+                        <div class="optionsTable">
+                            <label title="Rotate the piano roll vertically (this is actually an axis swap, so higher pitches are up or to the right without flipping)">
+                                Vertical
+                                <Toggle v-model="options.rotate" :icon="rotateIcon"></Toggle>
+                            </label>
+                            <label title="Flip the piano roll horizontally, after rotating">
+                                Flip X
+                                <Toggle v-model="options.flipX" :icon="flipHorizontalIcon"></Toggle>
+                            </label>
+                            <label title="Flip the piano roll vertically, after rotating">
+                                Flip Y
+                                <Toggle v-model="options.flipY" :icon="flipVerticalIcon"></Toggle>
+                            </label>
+                        </div>
                     </div>
-                    <div class="optionsTable">
-                        <label title="Rotate the piano roll vertically">
-                            Vertical
-                            <Toggle v-model="options.rotate" :icon="rotateIcon"></Toggle>
-                        </label>
-                        <label title="Flip the piano roll horizontally, after rotating">
-                            Flip X
-                            <Toggle v-model="options.flipX" :icon="flipHorizontalIcon"></Toggle>
-                        </label>
-                        <label title="Flip the piano roll vertically, after rotating">
-                            Flip Y
-                            <Toggle v-model="options.flipY" :icon="flipVerticalIcon"></Toggle>
-                        </label>
+                    <div class="optionsTable optionsTableColumns">
+                        <div class="optionsTable">
+                            <label title="Render notes as constant-thickness lines instead of parallelograms">
+                                Thick Notes
+                                <Toggle v-model="options.constantThickness"></Toggle>
+                            </label>
+                        </div>
+                        <div class="optionsTable">
+                            <label title="Enable the piano keyboard">
+                                Show Piano Keys
+                                <Toggle v-model="options.piano.enabled" :icon="pianoIcon"></Toggle>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </TileOptionsSection>
@@ -157,6 +176,10 @@ const selectedChannel = ref(0);
                                             Separate<br>Instr. Styles
                                             <Toggle v-model="channel.separateInstrumentStyles"></Toggle>
                                         </label>
+                                        <label title="Extra multiplier for bar ">
+                                            Parallax Ratio
+                                            <StrictNumberInput v-model="channel.parallax" :min="0.1" :max="5" :step="0.1" :strict-min="0.0001" :strict-max="1e100" :strict-step="0.0001"></StrictNumberInput>
+                                        </label>
                                     </div>
                                 </div>
                                 <div class="instrumentItem" v-for="instrument, i in channel.separateInstrumentStyles ? channel.instruments : [channel.instruments[0]]">
@@ -166,14 +189,24 @@ const selectedChannel = ref(0);
                                         <div class="optionsGrid" style="justify-content: center;">
                                             <label title="Note foreground color">
                                                 Note FG
-                                                <EnhancedColorPicker v-model="instrument.noteColor" :features="instrument.perNoteGradient ? 'gradient-stops' : 'all'"></EnhancedColorPicker>
+                                                <EnhancedColorPicker v-model="instrument.noteColor" :features="instrument.perNoteGradient ? 'gradient-stops' : 'all'" badge-width="80px" badge-height="22px"></EnhancedColorPicker>
                                             </label>
                                             <label title="Note background color">
                                                 Note BG
-                                                <EnhancedColorPicker v-model="instrument.noteBackground" :features="instrument.perNoteGradient ? 'gradient-stops' : 'all'"></EnhancedColorPicker>
+                                                <span style="display: flex; column-gap: 4px;">
+                                                    <EnhancedColorPicker v-model="instrument.noteBackground" :features="instrument.perNoteGradient ? 'gradient-stops' : 'all'" badge-height="22px" :disabled="!instrument.noteBackground"></EnhancedColorPicker>
+                                                    <Toggle v-model="instrument.enableBackground"></Toggle>
+                                                </span>
                                             </label>
                                         </div>
-                                        <div class="optionsTable">
+                                        <div class="optionsTable" style="justify-content: center;">
+                                            <label title="Apply gradients on each note rather than as a global sample (due to technical limitations only vertical linear gradients can be done)">
+                                                Gradient
+                                                <select v-model="instrument.perNoteGradient">
+                                                    <option :value="false">Global</option>
+                                                    <option :value="true">Note</option>
+                                                </select>
+                                            </label>
                                             <label title="Scale notes BeepBox-style with their note size pins">
                                                 Note Size
                                                 <Toggle v-model="instrument.noteSizeEnabled"></Toggle>
@@ -203,6 +236,10 @@ const selectedChannel = ref(0);
                     <label title="Background style of tile">
                         Background
                         <EnhancedColorPicker :picker="props.tile.backgroundColor" badge-width="60px" :disabled="inCollapsedGroup"></EnhancedColorPicker>
+                    </label>
+                    <label title="Color of playhead" v-if="!options.piano.enabled">
+                        Playhead
+                        <EnhancedColorPicker v-model="options.playheadColor" badge-width="60px" features="solid-only"></EnhancedColorPicker>
                     </label>
                 </div>
             </TileOptionsSection>

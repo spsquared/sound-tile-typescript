@@ -11,6 +11,7 @@ import BeepboxData from '../beepboxData';
 abstract class BeepboxRenderInstance {
     readonly canvas: OffscreenCanvas;
     protected data: BeepboxSettingsData;
+    protected dataUpdated: boolean = false;
     protected resized: [number, number] | undefined = undefined;
 
     playing: boolean = false;
@@ -22,9 +23,15 @@ abstract class BeepboxRenderInstance {
      * Tempo linearly interpolates to the next lookup point with respect to ticks.
      */
     private tickLookupKeyframes: [number, number, number][] = [];
+    /**
+     * Prefix sum of bar lengths - the number of ticks of each bar that are visible.
+     * Next bar modulations can cut bar short, so this exists as a quick LUT.
+     */
+    private barOffsets: number[] = [];
     private songLength: number = 0;
 
     frameResult: BeepboxRendererFrameResults = {
+        tick: 0,
         renderTime: 0,
         debugText: []
     };
@@ -45,14 +52,31 @@ abstract class BeepboxRenderInstance {
         if (this.playing && this.debugInfo == 2) this.printDebugInfo(time);
         // finalize
         this.frameResult = {
+            tick: tick,
             renderTime: endTime - startTime,
             debugText: this.debugText
         };
         this.resized = undefined;
+        this.dataUpdated = false;
     }
 
     protected abstract drawFrame(tick: number): Promise<void>
 
+    protected calcViewportSize(): { readonly width: number, readonly height: number } {
+        return {
+            width: this.data.rotate ? this.canvas.height : this.canvas.width,
+            height: this.data.rotate ? this.canvas.width : this.canvas.height
+        };
+    }
+    protected calcPlayheadPosition(): number {
+        const { width, height } = this.calcViewportSize();
+        if (!this.data.piano.enabled) {
+            return width * this.data.playheadPosition;
+        } else {
+            const pianoSpace = height * this.data.piano.size;
+            return (width - pianoSpace) * this.data.playheadPosition + (!this.data.piano.playheadSide ? pianoSpace : 0);
+        }
+    }
     protected lookupTicks(time: number): number {
         if (this.tickLookupKeyframes.length == 0) return 0;
         if (this.tickLookupKeyframes.length == 1) return this.tickLookupKeyframes[0][2] * time;
@@ -92,21 +116,28 @@ abstract class BeepboxRenderInstance {
     protected ticksInBar(tick: number): number {
         return tick % (this.data.song?.barLength ?? 1);
     }
-
-    protected calcViewportSize(): { readonly width: number, readonly height: number } {
-        return {
-            width: this.data.rotate ? this.canvas.height : this.canvas.width,
-            height: this.data.rotate ? this.canvas.width : this.canvas.height
-        };
+    protected getVisibleBarRange(tick: number, ratio: number): [number, number] {
+        if (this.data.song === null) return [0, 0];
+        const { width, height } = this.calcViewportSize();
+        const invTickWidth = this.data.song.barLength / (ratio * height);
+        const playhead = this.calcPlayheadPosition();
+        const minTick = tick - playhead * invTickWidth;
+        const maxTick = tick + (width - playhead) * invTickWidth;
+        return [
+            Math.max(0, this.barOffsets.findLastIndex((offset) => offset > minTick) - 1),
+            Math.min(this.data.song.songLength - 1, this.barOffsets.findLastIndex((offset) => offset < maxTick))
+        ];
     }
 
     resize(w: number, h: number): void {
         this.resized = [w, h];
     }
-    updateData(data: BeepboxSettingsData): BeepboxRendererLoadResults {
+    async updateData(data: BeepboxSettingsData): Promise<BeepboxRendererLoadResults> {
         this.data = data;
+        this.dataUpdated = true;
         const start = performance.now();
         this.createTickLUT();
+        await this.onDataUpdated();
         const loadTime = performance.now() - start;
         return {
             songLength: this.songLength,
@@ -115,6 +146,8 @@ abstract class BeepboxRenderInstance {
     }
     private createTickLUT() {
         const keyframes: typeof this.tickLookupKeyframes = [];
+        const barOffsets: number[] = [];
+        let visibleTicksElapsed = 0;
         if (this.data.song !== null) {
             const song = this.data.song;
             // create initial point with just normal tempo
@@ -269,6 +302,8 @@ abstract class BeepboxRenderInstance {
                     tk1 = tk2;
                     tps1 = tps2;
                 }
+                // we use a prefix sum because thats actually more useful
+                barOffsets.push(visibleTicksElapsed += firstNextBarTick);
             }
             // create final point at song end by extrapolating from last keyframe
             const finalLength = loopSequence.length * song.barLength;
@@ -276,8 +311,12 @@ abstract class BeepboxRenderInstance {
             keyframes.push([prevFrame[0] + (finalLength - prevFrame[1]) / prevFrame[2], finalLength, prevFrame[2]]);
         }
         this.tickLookupKeyframes = keyframes;
+        this.barOffsets = barOffsets;
         this.songLength = keyframes.length > 0 ? keyframes[keyframes.length - 1][0] : 0;
     }
+    protected abstract onDataUpdated(): Promise<void>
+
+    abstract destroy(): Promise<void>;
 
     private printDebugInfo = useThrottleFn((time: number) => {
         console.debug({

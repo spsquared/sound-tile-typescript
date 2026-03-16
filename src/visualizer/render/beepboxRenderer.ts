@@ -24,6 +24,7 @@ export abstract class BeepboxRenderer {
     /**Reactive data of visualizer, should be a reference to the same object used in the visualizer instance */
     readonly data: BeepboxSettingsData;
     readonly frameResult: Ref<BeepboxRendererFrameResults> = ref<BeepboxRendererFrameResults>({
+        tick: 0,
         renderTime: 0,
         debugText: []
     });
@@ -87,9 +88,9 @@ export class BeepboxWorkerRenderer extends BeepboxRenderer {
     async resize(w: number, h: number): Promise<void> {
         this.postMessage('resize', { w: w, h: h });
     }
-    protected updateData(): void {
+    protected async updateData(): Promise<void> {
         const clean = cloneDeep(this.data);
-        this.postMessageWithAck('settings', 'loadResult', { data: clean satisfies BeepboxSettingsData }).then((res) => {
+        await this.postMessageWithAck('settings', 'loadResult', { data: clean satisfies BeepboxSettingsData }).then((res) => {
             this.loadResult.value = res;
         });
     }
@@ -143,7 +144,7 @@ export class BeepboxFallbackRenderer extends BeepboxRenderer {
         (await this.renderer).resize(w, h);
     }
     protected async updateData(): Promise<void> {
-        this.loadResult.value = (await this.renderer).updateData(cloneDeep(this.data));
+        this.loadResult.value = await (await this.renderer).updateData(cloneDeep(this.data));
     }
 
     destroy(): void {
@@ -152,6 +153,7 @@ export class BeepboxFallbackRenderer extends BeepboxRenderer {
 }
 
 export type BeepboxRendererFrameResults = {
+    tick: number
     renderTime: number
     debugText: string[]
 }
