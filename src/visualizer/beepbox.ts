@@ -131,6 +131,7 @@ class BeepboxVisualizer {
             const avgArr = (a: number[]): number => a.reduce((p, c) => p + c, 0) / a.length;
             const text = [
                 `${this.renderer.isWorker ? 'Worker (asynchronous)' : 'Fallback (synchronous)'} ${webgpuSupported ? 'WebGPU' : 'Canvas2D'} renderer`,
+                ...this.renderer.frameResult.value.errorText,
                 `Playing: ${Playback.playing.value}`,
                 `FPS: ${this.debug.frames.length} (${avgArr(this.debug.fpsHistory).toFixed(1)} / [${Math.min(...this.debug.fpsHistory)} - ${Math.max(...this.debug.fpsHistory)}])`,
                 `Total:  ${(frameTime).toFixed(1)}ms (${avgArr(this.debug.totalTimingHistory).toFixed(1)}ms / [${Math.min(...this.debug.totalTimingHistory).toFixed(1)}ms - ${Math.max(...this.debug.totalTimingHistory).toFixed(1)}ms])`,
@@ -145,7 +146,15 @@ class BeepboxVisualizer {
             this.ctx.fillStyle = '#FFFFFF';
             this.ctx.textAlign = 'left';
             this.ctx.textBaseline = 'top';
-            for (let i = 0; i < text.length; i++) {
+            // we do a bit of funnies
+            this.ctx.fillText(text[0], 12, 12);
+            this.ctx.fillStyle = '#FF0000';
+            const errorTextLen = this.renderer.frameResult.value.errorText.length + 1;
+            for (let i = 1; i < errorTextLen; i++) {
+                this.ctx.fillText(text[i], 12, 12 + i * 16);
+            }
+            this.ctx.fillStyle = '#FFFFFF';
+            for (let i = errorTextLen; i < text.length; i++) {
                 this.ctx.fillText(text[i], 12, 12 + i * 16);
             }
         }

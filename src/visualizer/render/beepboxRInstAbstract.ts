@@ -17,6 +17,7 @@ abstract class BeepboxRenderInstance {
     playing: boolean = false;
     debugInfo: 0 | 1 | 2 = 0;
     protected readonly debugText: string[] = [];
+    protected readonly errorText: string[] = [];
 
     /**
      * Time, progress (ticks), and tempo (ticks per second), sorted by time. Binary-searchable.
@@ -33,7 +34,8 @@ abstract class BeepboxRenderInstance {
     frameResult: BeepboxRendererFrameResults = {
         tick: 0,
         renderTime: 0,
-        debugText: []
+        debugText: [],
+        errorText: []
     };
 
     constructor(canvas: OffscreenCanvas, data: BeepboxSettingsData) {
@@ -54,7 +56,8 @@ abstract class BeepboxRenderInstance {
         this.frameResult = {
             tick: tick,
             renderTime: endTime - startTime,
-            debugText: this.debugText
+            debugText: this.debugText,
+            errorText: this.errorText
         };
         this.resized = undefined;
         this.dataUpdated = false;
@@ -136,6 +139,7 @@ abstract class BeepboxRenderInstance {
         this.data = data;
         this.dataUpdated = true;
         const start = performance.now();
+        this.errorText.length = 0;
         this.createTickLUT();
         await this.onDataUpdated();
         const loadTime = performance.now() - start;
@@ -323,6 +327,7 @@ abstract class BeepboxRenderInstance {
             width: this.canvas.width,
             height: this.canvas.height,
             debug: this.debugText,
+            errors: this.errorText,
             data: this.data,
             time: time,
             tickLut: this.tickLookupKeyframes

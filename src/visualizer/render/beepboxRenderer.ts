@@ -26,7 +26,8 @@ export abstract class BeepboxRenderer {
     readonly frameResult: Ref<BeepboxRendererFrameResults> = ref<BeepboxRendererFrameResults>({
         tick: 0,
         renderTime: 0,
-        debugText: []
+        debugText: [],
+        errorText: []
     });
     readonly canvas: HTMLCanvasElement;
     readonly loadResult: Ref<BeepboxRendererLoadResults> = ref<BeepboxRendererLoadResults>({
@@ -156,6 +157,7 @@ export type BeepboxRendererFrameResults = {
     tick: number
     renderTime: number
     debugText: string[]
+    errorText: string[]
 }
 export type BeepboxRendererLoadResults = {
     songLength: number
