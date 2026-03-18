@@ -40,7 +40,7 @@ export abstract class BeepboxRenderer {
     constructor(data: BeepboxSettingsData) {
         this.data = reactive(data);
         this.canvas = document.createElement('canvas');
-        this.stopWatching = watchThrottled(this.data, () => this.updateData(), { deep: true, throttle: 50, leading: true, trailing: true });
+        this.stopWatching = watchThrottled(this.data, () => this.updateData(), { deep: true, throttle: 100, leading: true, trailing: true });
     }
 
     abstract draw(time: number): Promise<BeepboxRendererFrameResults>

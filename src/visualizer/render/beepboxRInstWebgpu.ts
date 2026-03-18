@@ -8,6 +8,7 @@ class WGPURenderer extends BeepboxRenderInstance {
     readonly ctx: GPUCanvasContext;
     private readonly device: Promise<GPUDevice>;
     private readonly textureFormat: GPUTextureFormat;
+    private deviceLost: boolean = false;
 
     /**This lock is very important. Don't do anything without acquiring it first. */
     private readonly lock: AsyncLock = new AsyncLock(true);
@@ -67,6 +68,10 @@ class WGPURenderer extends BeepboxRenderInstance {
             console.debug('GPU limits', gpu.limits);
             console.debug('GPU features', gpu.features);
             resolve(gpu);
+            gpu.lost.then(() => {
+                this.deviceLost = true;
+                this.errorText.push('WebGPU device lost');
+            });
         });
         this.modules = new Promise(async (resolve) => {
             const device = await this.device;
@@ -267,6 +272,10 @@ class WGPURenderer extends BeepboxRenderInstance {
     }
 
     protected async drawFrame(tick: number): Promise<void> {
+        if (this.deviceLost) {
+            this.debugText.push('Frame abort due to lost WebGPU device');
+            return;
+        }
         const device = await this.device;
         const buffers = await this.buffers;
         const textures = await this.textures;

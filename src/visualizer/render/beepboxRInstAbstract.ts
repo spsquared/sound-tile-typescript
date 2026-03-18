@@ -1,4 +1,5 @@
 import { useThrottleFn } from '@vueuse/core';
+import { AsyncLock } from '@/components/lock';
 import type { BeepboxRendererFrameResults, BeepboxSettingsData, BeepboxRendererLoadResults } from './beepboxRenderer';
 import BeepboxData from '../beepboxData';
 
@@ -31,6 +32,9 @@ abstract class BeepboxRenderInstance {
     private barOffsets: number[] = [];
     private songLength: number = 0;
 
+    /**Prevents resize/updateData calls happening mid-frame */
+    private readonly drawLock: AsyncLock = new AsyncLock();
+
     frameResult: BeepboxRendererFrameResults = {
         tick: 0,
         renderTime: 0,
@@ -45,6 +49,7 @@ abstract class BeepboxRenderInstance {
 
     async draw(time: number): Promise<void> {
         const startTime = performance.now();
+        await this.drawLock.acquire();
         this.debugText.length = 0;
         const tick = this.lookupTicks(time);
         if (this.debugInfo > 0) this.debugText.push(`Tick=${this.ticksToBar(tick)}/${this.ticksInBar(tick).toFixed(2)} (${tick.toFixed(2)}) KF=${this.tickLookupKeyframes.length}`);
@@ -61,6 +66,7 @@ abstract class BeepboxRenderInstance {
         };
         this.resized = undefined;
         this.dataUpdated = false;
+        this.drawLock.release();
     }
 
     protected abstract drawFrame(tick: number): Promise<void>
@@ -133,15 +139,19 @@ abstract class BeepboxRenderInstance {
     }
 
     resize(w: number, h: number): void {
-        this.resized = [w, h];
+        this.drawLock.acquire().then(() => {
+            this.resized = [w, h];
+            this.drawLock.release();
+        });
     }
     async updateData(data: BeepboxSettingsData): Promise<BeepboxRendererLoadResults> {
+        await this.drawLock.acquire();
         this.data = data;
         this.dataUpdated = true;
         const start = performance.now();
-        this.errorText.length = 0;
         this.createTickLUT();
         await this.onDataUpdated();
+        this.drawLock.release();
         const loadTime = performance.now() - start;
         return {
             songLength: this.songLength,
