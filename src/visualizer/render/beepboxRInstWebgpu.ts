@@ -1,6 +1,6 @@
 import { AsyncLock } from '@/components/lock';
 import type { BeepboxSettingsData } from './beepboxRenderer';
-import BeepboxRenderInstance from './beepboxRInstAbstract';
+import BeepboxRenderInstance, { CorruptSongError } from './beepboxRInstAbstract';
 import BufferMapper from './beepboxWebgpuBufferMapper';
 import renderNotesShader from './shaders/renderNotes.wgsl?raw';
 
@@ -88,18 +88,17 @@ class WGPURenderer extends BeepboxRenderInstance {
                 viewport: device.createBuffer({
                     label: 'Viewport buffer',
                     size: BufferMapper.Viewport.byteLength,
-                    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+                    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST
                 }),
                 instruments: null as any,
-                // notes will resize dynamically with number of notes
                 notesVertex: device.createBuffer({
                     label: 'Note vertex buffer',
-                    size: 128 * BufferMapper.Note.vertexStride,
+                    size: 1 * BufferMapper.Note.vertexStride,
                     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
                 }),
                 notesIndex: device.createBuffer({
                     label: 'Note index buffer',
-                    size: 128,
+                    size: 1,
                     usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
                 })
             });
@@ -259,13 +258,16 @@ class WGPURenderer extends BeepboxRenderInstance {
                     },
                     depthStencil: {
                         depthWriteEnabled: true,
-                        depthCompare: 'greater', // reverse-Z method
+                        depthCompare: 'less', // no reverse Z since 2d orthographic projection
                         format: 'depth24plus'
                     }
                 })
             });
         });
-        this.updateInstrumentResources().then(() => {
+        Promise.all([
+            this.updateInstrumentResources(),
+            this.updateNoteGeometry()
+        ]).then(() => {
             initLock.release();
             this.lock.release();
         });
@@ -282,7 +284,7 @@ class WGPURenderer extends BeepboxRenderInstance {
         const bindGroups = await this.bindGroups;
         const pipelines = await this.pipelines;
         await this.lock.acquire();
-        await device.queue.onSubmittedWorkDone();
+        // resizing means manually remaking depth texture
         if (this.resized !== undefined) {
             this.canvas.width = Math.max(1, Math.min(this.resized[0], device.limits.maxTextureDimension2D));
             this.canvas.height = Math.max(1, Math.min(this.resized[1], device.limits.maxTextureDimension2D));
@@ -293,7 +295,9 @@ class WGPURenderer extends BeepboxRenderInstance {
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             });
         }
-        await this.updateAndSendGeometry(tick);
+        // update viewport and indirect buffers
+        this.viewportMapper.tickOffset = tick;
+        this.viewportMapper.setVertexRange(this.getVisibleVertexRange(tick));
         device.queue.writeBuffer(buffers.viewport, 0, this.viewportMapper.buffer);
         const encoder = device.createCommandEncoder();
         // no compute pass yet, no particles oof
@@ -317,7 +321,7 @@ class WGPURenderer extends BeepboxRenderInstance {
         renderPass.setBindGroup(1, bindGroups.instruments);
         renderPass.setVertexBuffer(0, buffers.notesVertex);
         renderPass.setIndexBuffer(buffers.notesIndex, 'uint16');
-        renderPass.drawIndexed(10);
+        renderPass.drawIndexedIndirect(buffers.viewport, 0);
         renderPass.end();
         // submit
         device.queue.submit([encoder.finish()]);
@@ -325,13 +329,7 @@ class WGPURenderer extends BeepboxRenderInstance {
         this.lock.release();
     }
 
-    protected async updateAndSendGeometry(tick: number): Promise<void> {
-        // get visible bars for all channels
-        // if the bars changed generate missing geometry and rebuild vertex and index buffers
-        // all textures and instrument styles are pre-generated and constant
-        tick
-    }
-
+    /**Rebuild instrument style buffers & textures, and replace the GPU resources for them */
     private async updateInstrumentResources(): Promise<void> {
         const device = await this.device;
         const buffers = await this.buffers;
@@ -394,11 +392,67 @@ class WGPURenderer extends BeepboxRenderInstance {
         }
     }
 
+    /**Index of first index in index buffer for each bar, used for culling. */
+    private barVertexOffsets: number[] = [];
+    /**The smallest parallax value since geometry culling is done by entire bars */
+    private cullingParallax: number = 1;
+    /**Build all note geometry and replace the vertex buffer with a new one */
+    private async updateNoteGeometry(): Promise<void> {
+        const device = await this.device;
+        const buffers = await this.buffers;
+        if (this.data.song !== null) {
+            try {
+                const song = this.data.song;
+                const loopSequence = this.calcLoopSequence();
+                const builder = new BufferMapper.Note.GeometryBuilder(song.barLength, device.limits.maxBufferSize);
+                for (let i = 0; i < loopSequence.length; i++) {
+                    const seqIndex = loopSequence[i];
+                    let instrument = 0;
+                    for (let j = 0; j < song.channels.length; j++) {
+                        const channel = song.channels[j];
+                        if (channel.sequence[seqIndex] == 0) continue;
+                        const pattern = channel.patterns[channel.sequence[seqIndex] - 1]
+                        if (pattern === undefined) throw new CorruptSongError(`pattern ${channel.sequence[seqIndex]} at ${seqIndex} (in ${channel.name})`);
+                        // buh decoupled data that lives in two places
+                        // hopefully this aligns with the instrument ordering from the instrument resource generation
+                        if (this.data.channelStyles[j]?.separateInstrumentStyles) {
+                            for (let k = 0; k < channel.instruments.length; k++) {
+                                if (pattern.instruments.includes(k)) {
+
+                                }
+                                instrument++;
+                            }
+                        } else {
+                            instrument++;
+                        }
+                    }
+                }
+                const { vertex, index, vertexOffsets } = builder.finish();
+                this.cullingParallax = Math.min(...this.data.channelStyles.map(({ parallax }) => parallax)) * this.data.barScale;
+                return;
+            } catch (err) {
+                if (err instanceof CorruptSongError) throw err;
+                else throw new CorruptSongError(undefined, { cause: err });
+            }
+        }
+        this.barVertexOffsets = [0];
+        this.cullingParallax = this.data.barScale;
+    }
+    /**Culling - vertices are sorted/grouped by bar, so setting a vertex range is mostly-effective culling */
+    private getVisibleVertexRange(tick: number): [number, number] {
+        // use the smallest bars (there will be overdraw for bars with more parallax)
+        const [barMin, barMax] = this.getVisibleBarRange(tick, this.cullingParallax);
+        return [this.barVertexOffsets[barMin], this.barVertexOffsets[barMax + 1]];
+    }
+
     protected async onDataUpdated(): Promise<void> {
         const device = await this.device;
         await this.lock.acquire();
+        await Promise.all([
+            this.updateInstrumentResources(),
+            this.updateNoteGeometry()
+        ]);
         await device.queue.onSubmittedWorkDone();
-        await this.updateInstrumentResources();
         this.lock.release();
     }
 

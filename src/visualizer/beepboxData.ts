@@ -118,6 +118,12 @@ namespace BeepboxData {
 
     export type Instrument = {
         type: Exclude<InstrumentType, InstrumentType.MOD>
+        vibrato: {
+            depth: number
+            delay: number
+            speed: number
+            shaky: boolean
+        } | null
         envelopes: Envelope[]
     } | {
         type: InstrumentType.MOD
@@ -411,7 +417,16 @@ export type BeepboxJsonSkeleton = {
             modSettings: number[]
             modFilterTypes: number[]
             modEnvelopeNumbers?: number[]
+        }) & ({
+            vibrato: string
+            vibratoDepth: number
+            vibratoDelay: number
+            vibratoSpeed: number
+            vibratoType: number
+        } | {
+            vibrato: undefined
         }) & {
+            effects: string[]
             envelopeSpeed?: number
             envelopes: {
                 target: string

@@ -17,6 +17,17 @@ export const patchNotes: readonly PatchNoteEntry[] = [
         releaseURL: 'https://github.com/spsquared/sound-tile-typescript/releases/tag/v2.1.0',
         headline: 'The BeepBox Tile',
         description: `
+            <p>
+                The long-awaited BeepBox tile is here! The BeepBox tile aims to be an equivalent or better
+                to the BeepBox piano roll "song player" (or a MIDI piano roll), just without the sound. I've
+                decided to not do any audio synthesis since that would add a lot of complexity bundling BeepBox
+                and its mods with Sound Tile and be unmaintainable.
+            </p>
+            <p>
+                It does, however, do everything the BeepBox piano roll view does <i>and more</i>! All you
+                need to do is upload a JSON export of the song (in the normal BeepBox/derivative format)
+                to get started!
+            </p>
         `,
         breaking: [],
         changes: [

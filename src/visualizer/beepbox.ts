@@ -227,6 +227,12 @@ class BeepboxVisualizer {
                         } satisfies BeepboxData.Song['channels'][number]['instruments'][number] & { type: BeepboxData.InstrumentType.MOD };
                         else return {
                             type: type,
+                            vibrato: instrument.effects?.includes('vibrato') && instrument.vibrato !== undefined ? {
+                                depth: instrument.vibratoDepth ?? 0,
+                                delay: instrument.vibratoDelay ?? 0,
+                                speed: instrument.vibratoSpeed ?? 10,
+                                shaky: instrument.vibratoType == 1
+                            } : null,
                             envelopes: instrument.envelopes?.map((env) => {
                                 if (env.target === undefined) return abortInvalidInstrumentData();
                                 const dictEntry = BeepboxData.Envelope.beepboxEnvelopeTable[env.envelope as keyof typeof BeepboxData.Envelope.beepboxEnvelopeTable];
