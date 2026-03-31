@@ -398,13 +398,13 @@ class WGPURenderer extends BeepboxRenderInstance {
     private cullingParallax: number = 1;
     /**Build all note geometry and replace the vertex buffer with a new one */
     private async updateNoteGeometry(): Promise<void> {
-        const device = await this.device;
-        const buffers = await this.buffers;
+        // const device = await this.device;
+        // const buffers = await this.buffers;
         if (this.data.song !== null) {
             try {
                 const song = this.data.song;
                 const loopSequence = this.calcLoopSequence();
-                const builder = new BufferMapper.Note.GeometryBuilder(song.barLength, device.limits.maxBufferSize);
+                // const builder = new BufferMapper.Note.GeometryBuilder(song.barLength, device.limits.maxBufferSize);
                 for (let i = 0; i < loopSequence.length; i++) {
                     const seqIndex = loopSequence[i];
                     let instrument = 0;
@@ -427,7 +427,7 @@ class WGPURenderer extends BeepboxRenderInstance {
                         }
                     }
                 }
-                const { vertex, index, vertexOffsets } = builder.finish();
+                // const { vertex, index, vertexOffsets } = builder.finish();
                 this.cullingParallax = Math.min(...this.data.channelStyles.map(({ parallax }) => parallax)) * this.data.barScale;
                 return;
             } catch (err) {

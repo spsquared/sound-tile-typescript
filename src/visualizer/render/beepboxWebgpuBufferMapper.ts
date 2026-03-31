@@ -140,53 +140,53 @@ namespace BufferMapper {
          * Helper thing for turning notes into vertices, and tracking offsets for bar culling.
          * tbh idk why this exists other than to put more code in this file.
          */
-        export class GeometryBuilder {
-            private readonly buffer: ArrayBuffer;
-            private readonly f32View: Float32Array;
-            private readonly u32View: Uint32Array;
-            private readonly indexBuffer: Uint32Array<ArrayBuffer>;
+        // export class GeometryBuilder {
+        //     private readonly buffer: ArrayBuffer;
+        //     private readonly f32View: Float32Array;
+        //     private readonly u32View: Uint32Array;
+        //     private readonly indexBuffer: Uint32Array<ArrayBuffer>;
 
-            private static readonly blockSize: number = 256;
-            private static readonly blockByteLength: number = this.blockSize * vertexStride;
+        //     private static readonly blockSize: number = 256;
+        //     private static readonly blockByteLength: number = this.blockSize * vertexStride;
 
-            private readonly data: BeepboxData['channelStyles'];
-            private tickOffset: number = 0;
-            private length: number = 0;
-            private indexLength: number = 0;
-            private readonly barVertexOffsets: number[] = [0];
+        //     private readonly data: BeepboxData['channelStyles'];
+        //     private tickOffset: number = 0;
+        //     private length: number = 0;
+        //     private indexLength: number = 0;
+        //     private readonly barVertexOffsets: number[] = [0];
 
-            private finished: boolean = false;
+        //     private finished: boolean = false;
 
-            constructor(data: BeepboxData['channelStyles'], maxBufferSize: number) {
-                this.data = data;
-                this.buffer = new ArrayBuffer(GeometryBuilder.blockByteLength, { maxByteLength: maxBufferSize });
-                this.f32View = new Float32Array(this.buffer);
-                this.u32View = new Uint32Array(this.buffer);
-                this.indexBuffer = new Uint32Array(new ArrayBuffer(GeometryBuilder.blockSize * 4, { maxByteLength: maxBufferSize }));
-            }
+        //     constructor(data: BeepboxData['channelStyles'], maxBufferSize: number) {
+        //         this.data = data;
+        //         this.buffer = new ArrayBuffer(GeometryBuilder.blockByteLength, { maxByteLength: maxBufferSize });
+        //         this.f32View = new Float32Array(this.buffer);
+        //         this.u32View = new Uint32Array(this.buffer);
+        //         this.indexBuffer = new Uint32Array(new ArrayBuffer(GeometryBuilder.blockSize * 4, { maxByteLength: maxBufferSize }));
+        //     }
 
-            nextBar(tickOffset: number): void {
-                if (this.finished) throw new Error('Cannot invoke "nextBar()" on finished geometry builder');
-                this.barVertexOffsets.push(this.indexLength - this.barVertexOffsets[this.barVertexOffsets.length - 1]);
-                this.tickOffset = tickOffset;
-            }
+        //     nextBar(tickOffset: number): void {
+        //         if (this.finished) throw new Error('Cannot invoke "nextBar()" on finished geometry builder');
+        //         this.barVertexOffsets.push(this.indexLength - this.barVertexOffsets[this.barVertexOffsets.length - 1]);
+        //         this.tickOffset = tickOffset;
+        //     }
 
-            submit(note: Note): void {
-                if (this.finished) throw new Error('Cannot invoke "submit()" on finished geometry builder');
+        //     submit(note: Note): void {
+        //         if (this.finished) throw new Error('Cannot invoke "submit()" on finished geometry builder');
+        //         note
+        //     }
 
-            }
-
-            finish(): { vertex: ArrayBuffer, index: ArrayBuffer, vertexOffsets: number[] } {
-                if (this.finished) throw new Error('Cannot invoke "finish()" on finished geometry builder');
-                this.finished = true;
-                const ret = {
-                    vertex: this.buffer.transferToFixedLength(this.length * vertexStride),
-                    index: this.indexBuffer.buffer.transferToFixedLength(this.indexLength * 4),
-                    vertexOffsets: this.barVertexOffsets.slice()
-                };
-                return ret;
-            }
-        }
+        //     finish(): { vertex: ArrayBuffer, index: ArrayBuffer, vertexOffsets: number[] } {
+        //         if (this.finished) throw new Error('Cannot invoke "finish()" on finished geometry builder');
+        //         this.finished = true;
+        //         const ret = {
+        //             vertex: this.buffer.transferToFixedLength(this.length * vertexStride),
+        //             index: this.indexBuffer.buffer.transferToFixedLength(this.indexLength * 4),
+        //             vertexOffsets: this.barVertexOffsets.slice()
+        //         };
+        //         return ret;
+        //     }
+        // }
     }
 }
 
