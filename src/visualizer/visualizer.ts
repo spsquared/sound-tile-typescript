@@ -131,7 +131,7 @@ export class Visualizer {
             });
         });
         // who cares about resource leak lmao this is a joke
-            if (window.localStorage.getItem('wtfmode') !== null || (new Date().getMonth() == 3 && new Date().getDate() == 1)) setInterval(() => {
+        if ((window.localStorage.getItem('wtfmode') !== null) != (new Date().getMonth() == 3 && new Date().getDate() == 1)) setInterval(() => {
             this.source?.playbackRate.linearRampToValueAtTime(Math.sin(performance.now() / 50) * 0.2 + 1, Visualizer.audioContext.currentTime + 0.05);
         }, 50);
     }
